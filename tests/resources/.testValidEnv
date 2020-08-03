@@ -1,0 +1,6 @@
+TUNNEL_PARAM=30041:10.253.108.214:30041
+CHISEL_URL=https://chisel6bb53d2a-b9f6-44f8-b70a-6429e0cba998.cfapps.sap.hana.ondemand.com
+CHISEL_USER=chisel-devx
+CHISEL_PASSWORD=6a72652c90fb11549a0792a60aa32685
+VCAP_SERVICES={"hana":[{"name":"hdi-test-instance","instance_name":"hdi-test-instance","label":"hana","tags":["hana","database","relational","mta-resource-name:bookshop-hdi-container"],"plan":"hdi-shared","credentials":{"driver":"com.sap.db.jdbc.Driver","hdi_password":"Bj791YSyb7FRLPlBCs7nVW5nMmYDxb3QLUBdpzKDQQxcOP-7Em5Nw4vG5fTbgl8I_PUZ-inW2SpFvKMku.IuaNNnfVVu9fY9QEL2RxcERoI3N5CNDzB6Bx1F9bqWKLG5","hdi_user":"SBSS_57816717469415618733748842691827845615420853976097149186358484082","host":"127.0.0.1","password":"Uo6NxnV0oqYcCmYc002uc-.EI1q_3.XFtC-HyQkDlOkc3KWEYZ_YQJefPDpIwvwIDeXB9CmQq-byVVb2BZ.ph3V6-seUTx.qsOQBA96Sr5ZzSXAGIc9GFcXH.wpbl2mD","port":"30041","schema":"75E5972370654FCDA62A3D4C2C9A5C93","url":"jdbc:sap://127.0.0.1:30041?currentschema=75E5972370654FCDA62A3D4C2C9A5C93","user":"SBSS_39889490192491495296622724225837454105370333117360108961543126400"}}]}
+JBP_CONFIG_RESOURCE_CONFIGURATION=[tomcat/webapps/ROOT/META-INF/context.xml: {"service_name_for_DefaultDB" : "hdi-test-instance"}]

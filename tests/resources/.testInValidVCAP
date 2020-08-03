@@ -1,0 +1,6 @@
+TUNNEL_PARAM=30041:10.253.108.214:30041
+CHISEL_URL=https://chisel6bb53d2a-b9f6-44f8-b70a-6429e0cba998.cfapps.sap.hana.ondemand.com
+CHISEL_USER=chisel-devx
+CHISEL_PASSWORD=6a72652c90fb11549a0792a60aa32685
+VCAP_SERVICES={"hana":"}
+JBP_CONFIG_RESOURCE_CONFIGURATION=[tomcat/webapps/ROOT/META-INF/context.xml: {"service_name_for_DefaultDB" : "hdi-test-instance"}]

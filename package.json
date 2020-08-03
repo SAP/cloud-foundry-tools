@@ -1,0 +1,251 @@
+{
+	"name": "vscode-wing-cf-tools",
+	"displayName": "vscode-wing-cf-tools",
+	"description": "vscode Wing Cloud Foundry tools",
+	"version": "5.0.2",
+	"author": "SAP SE",
+	"publisher": "SAP",
+	"license": "Apache 2.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sap-staging/cloud-foundry-tools.git"
+	},
+	"bugs": {
+		"url": "https://github.com/sap-staging/cloud-foundry-tools.git/issues"
+	},
+	"icon": "",
+	"engines": {
+		"vscode": "^1.36.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"*",
+		"onView:cfView",
+		"onCommand:cf.login",
+		"onCommand:cf.services.bind.local",
+		"onCommand:cf.services.unbind",
+		"onCommand:cf.services.bind",
+		"onCommand:cf.services.binding.state",
+		"onCommand:cf.services.create",
+		"onCommand:cf.select.space",
+		"onCommand:cf.deploy-service.api"
+	],
+	"main": "./dist/extension.js",
+	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "cf-view",
+					"title": "Cloud Foundry",
+					"icon": "resources/common/cf.svg"
+				}
+			]
+		},
+		"views": {
+			"cf-view": [
+				{
+					"id": "cfView",
+					"name": "Targets"
+				}
+			]
+		},
+		"menus": {
+			"commandPalette": [
+				{
+					"when": "false",
+					"command": "cf.target.delete"
+				},
+				{
+					"when": "false",
+					"command": "cf.deploy-service.api"
+				},
+				{
+					"when": "false",
+					"command": "cf.target.set"
+				},
+				{
+					"when": "false",
+					"command": "cf.services.unbind"
+				},
+				{
+					"when": "false",
+					"command": "cf.services.bind"
+				},
+				{
+					"when": "false",
+					"command": "cf.services.binding.state"
+				}
+			],
+			"view/title": [
+				{
+					"command": "cf.targets.create",
+					"when": "view == cfView",
+					"group": "navigation@1"
+				},
+				{
+					"command": "cf.targets.reload",
+					"when": "view == cfView"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "cf.services.create",
+					"when": "view == cfView && viewItem == Services",
+					"group": "inline"
+				},
+				{
+					"command": "cf.login",
+					"when": "view == cfView && viewItem == cf-login-required",
+					"group": "inline"
+				},
+				{
+					"command": "cf.services.bind.local",
+					"when": "view == cfView && viewItem == cf-service"
+				},
+				{
+					"command": "cf.target.set",
+					"when": "view == cfView && viewItem == cf-target"
+				},
+				{
+					"command": "cf.target.delete",
+					"when": "view == cfView && viewItem == cf-target"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "cf.login",
+				"title": "CF: Login to cloud foundry",
+				"icon": "resources/common/login.svg"
+			},
+			{
+				"command": "cf.set.orgspace",
+				"title": "CF: Set Org and Space"
+			},
+			{
+				"command": "cf.select.space",
+				"title": "CF: Select a space from your allowed spaces"
+			},
+			{
+				"command": "cf.targets.create",
+				"title": "CF: Create new target Cloud Foundry",
+				"icon": "resources/common/login.svg"
+			},
+			{
+				"command": "cf.targets.reload",
+				"title": "CF: Reload targets tree"
+			},
+			{
+				"command": "cf.target.set",
+				"title": "CF: Set Current target Cloud Foundry"
+			},
+			{
+				"command": "cf.target.delete",
+				"title": "CF: Delete target Cloud Foundry"
+			},
+			{
+				"command": "cf.services.bind.local",
+				"title": "CF: Bind a service to a locally run application"
+			},
+			{
+				"command": "cf.services.unbind",
+				"title": "CF: Unbind a service from a locally run application - (Hidden from command palette)"
+			},
+			{
+				"command": "cf.services.bind",
+				"title": "Bind a service to a locally run application - (Hidden from command palette)"
+			},
+			{
+				"command": "cf.services.binding.state",
+				"title": "Get bind state to a service - (Hidden from command palette)"
+			},
+			{
+				"command": "cf.services.create",
+				"title": "CF: Create a new service instance",
+				"icon": "resources/common/login.svg"
+			},
+			{
+				"command": "cf.deploy-service.api",
+				"title": "CF: Make a rest API call to the Deploy Service"
+			}
+		],
+		"problemMatchers": [
+			{
+				"name": "chisel-client",
+				"pattern": [
+					{
+						"regexp": "!!!DO NOT MATCH ME!!!",
+						"file": 1,
+						"location": 2,
+						"message": 3
+					}
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^.+client: Connecting.+",
+					"endsPattern": "^.+client: Connected.+"
+				}
+			}
+		]
+	},
+	"extensionDependencies": [
+		"sap.vscode-wing-run-config"
+	],
+	"scripts": {
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"lint": "eslint . --ext .ts,.tsx --cache",
+		"lint:fix": "eslint . --ext .ts,.tsx --cache --fix",
+		"build": "npm run compile && webpack --mode production && vsce package",
+		"pretest": "npm run compile",
+		"test": "nyc mocha -p tsconfig.json --config ./.mocharc.yaml",
+		"webpack": "webpack --mode development",
+		"webpack-dev": "webpack --mode development --watch",
+		"vscode:prepublish": "npm run compile && webpack --mode production"
+	},
+	"devDependencies": {
+		"@types/chai": "^4.1.7",
+		"@types/comment-json": "1.1.1",
+		"@types/fs-extra": "^5.0.5",
+		"@types/lodash": "^4.14.123",
+		"@types/mocha": "^7.0.2",
+		"@types/node": "^10.12.21",
+		"@types/properties-reader": "0.0.1",
+		"@types/sinon": "^7.0.13",
+		"@types/vscode": "1.36.0",
+		"@typescript-eslint/parser": "^2.30.0",
+		"@typescript-eslint/eslint-plugin": "^2.30.0",
+		"eslint": "^6.8.0",
+		"eslint-config-prettier": "^6.11.0",
+		"prettier": "^2.0.5",
+		"typescript": "^3.9.7",
+		"chai": "^4.2.0",
+		"grunt": "^1.0.4",
+		"grunt-contrib-clean": "^2.0.0",
+		"grunt-contrib-copy": "^1.0.0",
+		"grunt-mkdir": "^1.0.0",
+		"grunt-move": "^1.0.1",
+		"grunt-run": "^0.8.0",
+		"grunt-text-replace": "^0.4.0",
+		"mocha": "^7.2.0",
+		"nyc": "^14.1.1",
+		"sinon": "^7.3.2",
+		"ts-loader": "^7.0.4",
+		"ts-node": "^8.3.0",
+		"vsce": "^1.61.0",
+		"webpack": "^4.43.0",
+		"webpack-cli": "^3.3.11",
+		"clean-webpack-plugin": "^3.0.0"
+	},
+	"dependencies": {
+		"@sap/wing-run-config-types": "4.0.0",
+		"@sap/cf-tools": "0.4.3",
+		"comment-json": "2.1.0",
+		"fs-extra": "7.0.1",
+		"lodash": "4.17.16",
+		"properties-reader": "0.3.1",
+		"url": "0.11.0"
+	}
+}
