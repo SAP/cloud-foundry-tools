@@ -209,7 +209,7 @@
 		"@types/chai": "^4.1.7",
 		"@types/comment-json": "1.1.1",
 		"@types/fs-extra": "^5.0.5",
-		"@types/lodash": "^4.14.123",
+		"@types/lodash": "^4.14.158",
 		"@types/mocha": "^7.0.2",
 		"@types/node": "^10.12.21",
 		"@types/properties-reader": "0.0.1",
@@ -244,7 +244,7 @@
 		"@sap/cf-tools": "0.4.3",
 		"comment-json": "2.1.0",
 		"fs-extra": "7.0.1",
-		"lodash": "4.17.16",
+		"lodash": "4.17.19",
 		"properties-reader": "0.3.1",
 		"url": "0.11.0"
 	}
