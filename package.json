@@ -199,7 +199,7 @@
 		"lint": "eslint . --ext .ts,.tsx --cache",
 		"lint:fix": "eslint . --ext .ts,.tsx --cache --fix",
 		"build": "npm run compile && webpack --mode production && vsce package",
-		"pretest": "npm run compile",
+		"pretest": "npm run compile & npm run lint",
 		"test": "nyc mocha -p tsconfig.json --config ./.mocharc.yaml",
 		"webpack": "webpack --mode development",
 		"webpack-dev": "webpack --mode development --watch",

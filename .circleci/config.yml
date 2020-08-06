@@ -1,0 +1,62 @@
+version: 2.1 # use CircleCI 2.1
+
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    - image: circleci/node:10.17.0
+
+jobs: # a collection of steps 
+  build-and-test:
+    <<: *defaults  
+    steps:
+      - checkout
+      
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install
+          command: npm install
+      - run:
+          name: test
+          command: npm run test
+      - run:
+          name: create .vsix
+          command: npx vsce package .
+      - save_cache:
+          paths:
+            - node_modules
+          key: dependency-cache-{{ checksum "package.json" }}
+      - persist_to_workspace:
+          root: .
+          paths: 
+           # https://golang.org/pkg/path/filepath/#Match
+            - vscode-wing-cf-tools-*
+  
+  deploy:
+    docker:
+      - image: circleci/golang:1.13
+    steps:
+      - attach_workspace:
+          at: ./dist
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ./dist/ 
+
+workflows:
+  version: 2
+  test-deploy:
+    jobs:
+      - build-and-test:
+          filters:
+            tags:
+              only: /.*/
+      - deploy:
+          requires:
+            - build-and-test
+          filters:
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
