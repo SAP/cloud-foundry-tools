@@ -6,14 +6,17 @@
 
 import * as types from '@sap/wing-run-config-types';
 import * as cfViewCommands from './cfViewCommands';
-import { getEnvResources, removeResourceFromEnv } from './utils';
+import { getEnvResources, removeResourceFromEnv, toText } from './utils';
 import { checkAndCreateChiselTask } from './chisel';
 import * as _ from 'lodash';
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 import * as cfLocal from '@sap/cf-tools';
+import { messages } from './messages';
+import { getModuleLogger } from './logger/logger-wrapper';
 
 export class DependencyHandler implements types.IDependencyHandler {
   private readonly id: string;
+  private static readonly MODULE_NAME = 'DependencyHandler'; // workarround in minimized mode
 
   constructor(id: string) {
     this.id = id;
@@ -27,13 +30,13 @@ export class DependencyHandler implements types.IDependencyHandler {
         bindState = types.BindState.cloud;
       }
     } catch (e) {
-        vscode.window.showErrorMessage(_.get(e, 'message'));
+      vscode.window.showErrorMessage(toText(e));
+      getModuleLogger(DependencyHandler.MODULE_NAME).error("getBindState: processing failed", { message: toText(e) });
     }
     return bindState;
   }
 
   public async bind(bindContext: types.IBindContext): Promise<void | types.IBindResult> {
-
     const resourceTag: string = _.get(bindContext, "depContext.data.resourceTag");
     const serviceType: cfLocal.ServiceTypeInfo[] = [{
       name: bindContext.depContext.type,
@@ -52,6 +55,7 @@ export class DependencyHandler implements types.IDependencyHandler {
           const chiselTask = await checkAndCreateChiselTask(bindContext.envPath?.fsPath, chiselTaskNameSuffix);
           if (!_.isEmpty(chiselTask.label)) {
             vscode.window.showInformationMessage(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`);
+            getModuleLogger(DependencyHandler.MODULE_NAME).info("bind: <%s> task for opening the VPN tunnel to the Cloud Foundry space has been created", chiselTask.label);
 
             if (_.isNil(bindContext.configData.dependentTasks)) {
               bindContext.configData.dependentTasks = [];
@@ -68,7 +72,8 @@ export class DependencyHandler implements types.IDependencyHandler {
         };
       }
     } catch (e) {
-        vscode.window.showErrorMessage(_.get(e, 'message'));
+      vscode.window.showErrorMessage(toText(e));
+      getModuleLogger(DependencyHandler.MODULE_NAME).error("bind: processing failed", { message: toText(e) });
     }
   }
 
@@ -80,7 +85,8 @@ export class DependencyHandler implements types.IDependencyHandler {
     const configurationData: types.IConfigurationData = { config: configObject, dependentTasks: [] };
     try {
       const removedResourceDetails = await removeResourceFromEnv(bindContext);
-      vscode.window.showInformationMessage(`Successful unbind service ${_.get(removedResourceDetails, "resourceName")} from ${_.get(removedResourceDetails, "envPath")}`);
+      vscode.window.showInformationMessage(messages.service_unbound_successful(_.get(removedResourceDetails, "resourceName")));
+      getModuleLogger(DependencyHandler.MODULE_NAME).info("unbind: the <%s> service has been unbound", _.get(removedResourceDetails, "resourceName"));
       return Promise.resolve({
         configData: configurationData,
         resource: {
@@ -90,12 +96,12 @@ export class DependencyHandler implements types.IDependencyHandler {
         }
       });
     } catch (e) {
-        vscode.window.showErrorMessage(_.get(e, 'message'));
+      vscode.window.showErrorMessage(toText(e));
+      getModuleLogger(DependencyHandler.MODULE_NAME).error("unbind: processing failed", { message: toText(e) });
     }
   }
 
   public getId(): string {
     return this.id;
   }
-
 }

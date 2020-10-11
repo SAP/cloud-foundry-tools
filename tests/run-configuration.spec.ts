@@ -4,63 +4,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect, assert } from "chai";
 import * as _ from "lodash";
 import * as sinon from "sinon";
-import { mockVscode } from "./mockUtil";
-import * as vscode from 'vscode';
+import * as nsVsMock from "./ext/mockVscode";
+import { mockVscode } from "./ext/mockUtil";
 
-class Uri {
-    public static file(testpath: string): vscode.Uri {
-        return new Uri("", "", testpath, "", "");
-    }
-    public readonly path: string;
-    public readonly scheme: string;
-    public readonly authority: string;
-    public readonly query: string;
-    public readonly fragment: string;
-    public readonly fsPath: string;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private constructor(scheme: string, authority: string, testpath: string, query: string, fragment: string) { return ;}
-    public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
-        return new Uri("", "", change.path, "", "");
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public toString(skipEncoding?: boolean): string { return ""; }
-    public toJSON(): unknown { return {}; }
-}
-
-const testVscode = {
-    Uri,
-    window: {
-        showInputBox: () => Promise.reject(),
-        showInformationMessage: () => Promise.reject(),
-        showWarningMessage: () => Promise.reject(),
-        showErrorMessage: () => Promise.reject(),
-        withProgress: () => Promise.reject(),
-        showQuickPick: () => Promise.reject()
-    },
-    commands: {
-        executeCommand: () => Promise.reject()
-    },
-    TreeItem: class MockTreeItem { },
-    ProgressLocation: {
-        Window: 10,
-        Notification: 15
-    }
-};
-mockVscode(testVscode, "src/run-configuration.ts");
+mockVscode(nsVsMock.testVscode, "src/run-configuration.ts");
 import * as cfViewCommands from "../src/cfViewCommands";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
 import * as chisel from "../src/chisel";
 import { DependencyHandler } from "../src/run-configuration";
 import * as utils from "../src/utils";
 import { IBindContext, ConfigurationTarget, ConfigMetadata, BindState } from "@sap/wing-run-config-types";
+import { messages } from "../src/messages";
 
 describe("run-configuration tests package", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let sandbox: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let vscodeWindowMock: any;
 
     before(() => {
@@ -68,12 +29,12 @@ describe("run-configuration tests package", () => {
     });
 
     beforeEach(() => {
-        vscodeWindowMock = sandbox.mock(testVscode.window);
+        vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
     });
 
     afterEach(() => {
-        sandbox.restore();
         vscodeWindowMock.verify();
+        sandbox.restore();
     });
 
     describe("DependencyHandler scope", () => {
@@ -85,7 +46,7 @@ describe("run-configuration tests package", () => {
                     data: ConfigMetadata.get(ConfigurationTarget.launch)
                 }
             },
-            envPath: testVscode.Uri.file("envPath"),
+            envPath: nsVsMock.testVscode.Uri.file("envPath"),
             depContext: {
                 type: "hdi_type",
                 displayName: "",
@@ -172,7 +133,7 @@ describe("run-configuration tests package", () => {
         });
 
         it("bind - create chisel task - empty label", async () => {
-            sandbox.stub(chisel, "checkAndCreateChiselTask").withArgs(_.get(bindContext, "configData.config.data.envFile"), instances.join('&')).resolves({});
+            sandbox.stub(chisel, "checkAndCreateChiselTask").withArgs(bindContext.envPath.fsPath, instances.join('&')).resolves({});
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
             const copyContext = _.cloneDeep(bindContext);
@@ -183,7 +144,7 @@ describe("run-configuration tests package", () => {
         it("bind - create chisel task - no depended tasks", async () => {
             const chiselLabel = "chiselLabel";
             sandbox.stub(chisel, "checkAndCreateChiselTask")
-                .withArgs(_.get(bindContext, "configData.config.data.envFile"), instances.join('&'))
+                .withArgs(_.get(bindContext, "envPath.fsPath"), instances.join('&'))
                 .resolves({ label: chiselLabel, data: { context: "some" } });
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
@@ -199,7 +160,7 @@ describe("run-configuration tests package", () => {
             const tsk = { name: 'task' };
             const chiselJson = { label: chiselLabel, data: { context: "some" } };
             sandbox.stub(chisel, "checkAndCreateChiselTask")
-                .withArgs(undefined, instances.join('&'))
+                .withArgs(bindContext.envPath.fsPath, instances.join('&'))
                 .resolves(chiselJson);
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
@@ -217,7 +178,7 @@ describe("run-configuration tests package", () => {
             configurationData.dependentTasks = [];
             const property = { resourceName: 'propName', envPath: "env Path", resourceData: { label: "resource-type" } };
             sandbox.stub(utils, "removeResourceFromEnv").resolves(property);
-            vscodeWindowMock.expects("showInformationMessage").withExactArgs(`Successful unbind service ${property.resourceName} from ${property.envPath}`).resolves();
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_unbound_successful(property.resourceName)).resolves();
             assert.deepEqual(await new DependencyHandler("test.Handler.id").unbind(bindContext), { configData: configurationData, resource: { name: "propName", type: "resource-type", data: { label: "resource-type" } } });
         });
 
@@ -226,7 +187,7 @@ describe("run-configuration tests package", () => {
             configurationData.dependentTasks = [];
             const property = {};
             sandbox.stub(utils, "removeResourceFromEnv").resolves(property);
-            vscodeWindowMock.expects("showInformationMessage").withExactArgs(`Successful unbind service ${_.get(property, "resourceName")} from ${_.get(property, "envPath")}`).resolves();
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_unbound_successful(_.get(property, "resourceName"))).resolves();
             assert.deepEqual(await new DependencyHandler("test.Handler.id").unbind(bindContext), { configData: configurationData, resource: { name: "", type: "", data: {} } });
         });
 
@@ -236,6 +197,5 @@ describe("run-configuration tests package", () => {
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message).resolves();
             expect(await new DependencyHandler("test.Handler.id").unbind(bindContext)).to.be.equal(undefined);
         });
-
     });
 });

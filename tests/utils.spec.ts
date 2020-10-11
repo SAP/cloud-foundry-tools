@@ -6,7 +6,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect, assert } from "chai";
-import * as utils from "../src/utils";
 import * as sinon from "sinon";
 import * as fsextra from 'fs-extra';
 import * as path from 'path';
@@ -14,41 +13,47 @@ import * as fs from 'fs';
 import _ = require("lodash");
 import { stringify } from "comment-json";
 import { fail } from "assert";
+import * as nsVsMock from "./ext/mockVscode";
+import { mockVscode } from "./ext/mockUtil";
+
+mockVscode(nsVsMock.testVscode, "src/utils.ts");
+import * as utils from "../src/utils";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
 import { ServiceInstanceInfo, eFilters } from "@sap/cf-tools";
 const PropertiesReader = require('properties-reader');
 
 describe('utils unit tests', () => {
-
     let sandbox: any;
+    let vscodeWorkspaceMock: any;
+    let fsExtraMock: any;
 
     before(() => {
         sandbox = sinon.createSandbox();
     });
 
+    beforeEach(() => {
+        vscodeWorkspaceMock = sandbox.mock(nsVsMock.testVscode.workspace);
+        fsExtraMock = sandbox.mock(fsextra);
+    });
+
     afterEach(() => {
+        vscodeWorkspaceMock.verify();
+        fsExtraMock.verify();
         sandbox.restore();
     });
 
-    it("Test getOutputChannel - when output channel is not defined - defines new outputChannel", () => {
-        const outputChannel = utils.getOutputChannel();
-        // tslint:disable-next-line: no-unused-expression
-        expect(outputChannel).not.to.be.undefined;
-    });
-
-    it("Test getOutputChannel - when output channel is defined - returns existing outputChannel", () => {
-        const outputChannel = utils.getOutputChannel();
-        const outputChannel2 = utils.getOutputChannel();
-        expect(outputChannel).to.equal(outputChannel2);
+    it("toText", () => {
+        const name = "test name";
+        const e = new Error();
+        e.name = name;
+        expect(utils.toText(e)).to.be.equal(name);
     });
 
     it("Test getEnvResources - sanity with valid VCAP_SERVICES value", async () => {
         sandbox.stub(fsextra, "pathExists").returns(true);
         const envFilePath: string = path.join(__dirname, "resources", ".testValidEnv");
         const vcapServicesObj = await utils.getEnvResources(envFilePath);
-        // tslint:disable-next-line: no-unused-expression
         expect(vcapServicesObj).to.not.be.empty;
-        // tslint:disable-next-line: no-unused-expression
         expect(vcapServicesObj.hana).to.exist;
     });
 
@@ -60,7 +65,6 @@ describe('utils unit tests', () => {
             vcapServicesObj = await utils.getEnvResources(envFilePath);
             fail("test should fail here");
         } catch (e) {
-            // tslint:disable-next-line: no-unused-expression
             expect(vcapServicesObj).to.be.undefined;
         }
     });
@@ -69,7 +73,6 @@ describe('utils unit tests', () => {
         sandbox.stub(fsextra, "pathExists").returns(true);
         const envFilePath: string = path.join(__dirname, "resources", ".notExists");
         const vcapServicesObj = await utils.getEnvResources(envFilePath);
-        // tslint:disable-next-line: no-unused-expression
         expect(vcapServicesObj).to.be.null;
     });
 
@@ -77,7 +80,6 @@ describe('utils unit tests', () => {
         sandbox.stub(fsextra, "pathExists").returns(true);
         const envFilePath: string = path.join(__dirname, "resources", ".envNoVCAP");
         const vcapServicesObj = await utils.getEnvResources(envFilePath);
-        // tslint:disable-next-line: no-unused-expression
         expect(vcapServicesObj).to.be.null;
     });
 
@@ -112,13 +114,11 @@ describe('utils unit tests', () => {
                 }
             };
             fs.chmodSync(bindContext.envPath.fsPath, 0o444);
-            const mockOutput = sandbox.mock(utils.getOutputChannel());
-            mockOutput.expects('appendLine').atLeast(1).returns();
             try {
                 await utils.removeResourceFromEnv(bindContext);
                 fail("test should fail here");
             } catch (e) {
-                mockOutput.verify();
+                // ...
             }
         });
 
@@ -248,7 +248,6 @@ describe('utils unit tests', () => {
         const plan = 'application';
         it("generateParams4Service - xsuaa, plan - application", () => {
             const data = utils.generateParams4Service("xsuaa", plan);
-            // tslint:disable-next-line: no-unused-expression
             expect(_.startsWith(data.xsappname, 'xsuaa_')).to.be.true;
             expect(data['tenant-mode']).to.be.equal("dedicated");
             expect(_.size(data['oauth2-configuration']['redirect-uris'])).to.be.equal(1);
@@ -259,17 +258,15 @@ describe('utils unit tests', () => {
         });
 
         it("validateParams - other : valid", () => {
-            // tslint:disable-next-line: no-unused-expression
             expect(utils.validateParams('other')('{ "key" : "value" }')).to.be.undefined;
         });
 
-        it("validateParams - other : incorrect",  () => {
+        it("validateParams - other : incorrect", () => {
             expect(_.size(utils.validateParams('other')('{ "key" :: "value" }'))).to.be.gt(1);
         });
 
         it("validateParams - xsuaa : valid", () => {
             const xsuaaData = utils.generateParams4Service('xsuaa', plan);
-            // tslint:disable-next-line: no-unused-expression
             expect(utils.validateParams('xsuaa', plan)(stringify(xsuaaData))).to.be.undefined;
         });
 
@@ -312,7 +309,6 @@ describe('utils unit tests', () => {
         it("validateParams - xsuaa : missing redirect-uris", () => {
             const xsuaaData = utils.generateParams4Service('xsuaa', plan);
             delete xsuaaData["oauth2-configuration"]["redirect-uris"];
-            // tslint:disable-next-line: no-unused-expression
             expect(utils.validateParams('xsuaa', plan)(stringify(xsuaaData))).to.be.undefined;
         });
     });
@@ -320,7 +316,7 @@ describe('utils unit tests', () => {
     describe("suite for getAllServiceInstances", () => {
 
         const services: ServiceInstanceInfo[] = [{ label: 's1', serviceName: 'hana' }, { label: 's1', serviceName: 'hana' }];
-        const ups = [{ label: 'ups1', serviceName: 'user-provided-service', tags: ['monodb', 'hana'] }, { label: 'ups2', serviceName: 'user-provided-service', tags: ['david'] }];
+        const ups = [{ label: 'ups1', serviceName: 'user-provided-service', credentials: { tags: ['monodb', 'hana'] } }, { label: 'ups2', serviceName: 'user-provided-service', credentials: { tags: ['david'] } }];
 
         it("getAllServiceInstances - there are both kind of services", async () => {
             sandbox.stub(cfLocal, 'cfGetServiceInstances').resolves(services);
@@ -365,7 +361,77 @@ describe('utils unit tests', () => {
             sandbox.stub(cfLocal, 'cfGetUpsInstances').withArgs(expectedQuery).resolves(ups);
             assert.deepEqual(await utils.getAllServiceInstances(opts), _.concat(services, ups[0]));
         });
-
     });
 
+    const UTF8 = "utf8";
+    const EOL = require('os').EOL;
+    const GITIGNORE = ".gitignore";
+
+    describe("updateGitIgnoreList suite", () => {
+
+        const project: any = { uri: nsVsMock.testVscode.Uri.file(path.resolve("myProject")) };
+        const ignorePattern = new nsVsMock.testVscode.RelativePattern(project, GITIGNORE);
+        const gitIgnoreFile = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/${GITIGNORE}`));
+
+        it("updateGitIgnoreList - .env pattern added", async () => {
+            const gitIgnoreContent = _.join(["     # empty line"], EOL);
+            const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
+            vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
+            vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([gitIgnoreFile]);
+            fsExtraMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, UTF8).resolves(gitIgnoreContent);
+            const patterns = _.split(gitIgnoreContent, EOL);
+            const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);
+            fsExtraMock.expects("writeFile").withExactArgs(gitIgnoreFile.fsPath, expectedPatterns, { encoding: UTF8 }).resolves();
+            await utils.updateGitIgnoreList(testEnv.fsPath);
+        });
+
+        it("updateGitIgnoreList - .env pattern not added - already exists", async () => {
+            const gitIgnoreContent = _.join(["     # empty line", "subFolder/.env"], EOL);
+            const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
+            vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
+            vscodeWorkspaceMock.expects("findFiles").exactly(2).returns([testEnv]);
+            fsExtraMock.expects("readFile").resolves(gitIgnoreContent);
+            fsExtraMock.expects("writeFile").never();
+            await utils.updateGitIgnoreList(testEnv.fsPath);
+        });
+
+        it("updateGitIgnoreList - empty project", async () => {
+            const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
+            vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(undefined);
+            await utils.updateGitIgnoreList(testEnv.fsPath);
+        });
+
+        it("updateGitIgnoreList - .env pattern added, .gitIgnore file not exist", async () => {
+            const gitIgnoreContent = "";
+            const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
+            vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
+            vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([]);
+            fsExtraMock.expects("createFileSync").withExactArgs(path.resolve(gitIgnoreFile.fsPath)).returns();
+            fsExtraMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, UTF8).resolves(gitIgnoreContent);
+            const patterns = _.split(gitIgnoreContent, EOL);
+            const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);
+            fsExtraMock.expects("writeFile").withExactArgs(gitIgnoreFile.fsPath, expectedPatterns, { encoding: UTF8 }).resolves();
+            await utils.updateGitIgnoreList(testEnv.fsPath);
+        });
+
+        it("updateGitIgnoreList - .env pattern NOT added, .gitIgnore file not exist, creation failed", async () => {
+            const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
+            vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
+            vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([]);
+            fsExtraMock.expects("createFileSync").withExactArgs(path.resolve(gitIgnoreFile.fsPath)).throws(new Error("access denied"));
+            await utils.updateGitIgnoreList(testEnv.fsPath);
+        });
+
+        it("updateGitIgnoreList - .env pattern NOT added, writeFile failed", async () => {
+            const gitIgnoreContent = _.join(["     # empty line"], EOL);
+            const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
+            vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
+            vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([gitIgnoreFile]);
+            fsExtraMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, UTF8).resolves(gitIgnoreContent);
+            const patterns = _.split(gitIgnoreContent, EOL);
+            const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);
+            fsExtraMock.expects("writeFile").withExactArgs(gitIgnoreFile.fsPath, expectedPatterns, { encoding: UTF8 }).throws(new Error("access denied"));
+            await utils.updateGitIgnoreList(testEnv.fsPath);
+        });
+    });
 });

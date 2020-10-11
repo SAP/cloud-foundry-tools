@@ -4,25 +4,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as vscode from "vscode"; // NOSONAR
+import * as vscode from "vscode";
 import * as _ from "lodash";
 import { CFView } from "./cfView";
 import { messages } from "./messages";
 import {
 	cmdLogin, cmdCreateService, cmdCreateTarget,
-	cmdCFSetOrgSpace, cmdSelectSpace
+	cmdCFSetOrgSpace, cmdSelectSpace, cmdCreateUps
 } from "./commands";
-import { cmdDeployServiceAPI, cmdSetCurrentTarget, cmdDeleteTarget, cmdBindLocal, cmdReloadTargets } from "./cfViewCommands";
+import { cmdDeployServiceAPI, cmdSetCurrentTarget, cmdDeleteTarget, cmdBindLocal, cmdReloadTargets, cmdGetSpaceServices } from "./cfViewCommands";
 
 import { cfGetConfigFilePath, cfGetConfigFileField } from "@sap/cf-tools";
 import * as fsextra from "fs-extra";
 import { DependencyHandler } from "./run-configuration";
-/** import { RunConfigHandler } from "./run-configuration-example"; */
 import { IRunConfigRegistry } from "@sap/wing-run-config-types";
-import { getOutputChannel } from "./utils";
+import { createLoggerAndSubscribeToLogSettingsChanges, getModuleLogger } from "./logger/logger-wrapper";
 
+const LOGGER_MODULE = "extension";
 let cfStatusBarItem: vscode.StatusBarItem;
-const extensionName = "vscode-wing-cf-tools";
 const runConfigExtName = "sap.vscode-wing-run-config";
 let treeDataProvider: CFView;
 
@@ -30,33 +29,38 @@ async function updateStatusBar() {
 	const results = await Promise.all([cfGetConfigFileField("OrganizationFields"), cfGetConfigFileField("SpaceFields")]);
 	const orgField = _.get(results, "[0].Name");
 	const spaceField = _.get(results, "[1].Name");
-	const notTargeted: boolean = _.isEmpty(orgField) && _.isEmpty(spaceField);
-	_.set(cfStatusBarItem, "text", (notTargeted ? messages.not_targeted : messages.targeting(orgField, spaceField)));
-}
+	const updatedText = `$(home) ${ _.isEmpty(orgField) && _.isEmpty(spaceField) ? messages.not_targeted : messages.targeting(orgField, spaceField)}`;
 
-export function onCFConfigFileChange() {
-	getOutputChannel().appendLine(messages.cf_config_changed);
-	updateStatusBar();
-	if (treeDataProvider) {  // unneccessary: keep it because tests
-		treeDataProvider.refresh();
+	if (_.get(cfStatusBarItem, 'text') !== updatedText) {
+		_.set(cfStatusBarItem, "text", updatedText);
 	}
 }
 
-export function activate(context: vscode.ExtensionContext) {
-	getOutputChannel().appendLine(messages.activation_extension(extensionName));
-	const cfConfigFilePath: string = cfGetConfigFilePath();
+export function onCFConfigFileChange() {
+	getModuleLogger(LOGGER_MODULE).debug("onCFConfigFileChange: the Cloud Foundry 'config' file has changed. The status bar will be updated");
+	updateStatusBar();
+	treeDataProvider.refresh();
+}
 
+export function activate(context: vscode.ExtensionContext) {
+	createLoggerAndSubscribeToLogSettingsChanges(context);
+
+	const cfConfigFilePath: string = cfGetConfigFilePath();
 	treeDataProvider = new CFView(context, cfConfigFilePath);
 	vscode.window.registerTreeDataProvider("cfView", treeDataProvider);
-
-	getOutputChannel().appendLine(messages.extension_active(extensionName));
 
 	const loginCmdId = "cf.login";
 	context.subscriptions.push(vscode.commands.registerCommand(loginCmdId, cmdLogin));
 	cfStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
 	context.subscriptions.push(cfStatusBarItem);
 
-	cfStatusBarItem.command = loginCmdId;
+	// !!!! does not work on theia 1.5.0
+	// cfStatusBarItem.command = {command: loginCmdId, arguments: [true], title: ""};
+	// start workarround  --> remove following workarround in future theia releases
+	context.subscriptions.push(vscode.commands.registerCommand("cf.login.weak", cmdLogin.bind(null, true)));
+	cfStatusBarItem.command = "cf.login.weak";
+	// end workarround
+
 	updateStatusBar();
 
 	if (!_.isEmpty(cfConfigFilePath)) {
@@ -67,6 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand("cf.target.set", cmdSetCurrentTarget));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.services.create", cmdCreateService));
+	context.subscriptions.push(vscode.commands.registerCommand("cf.ups.create", cmdCreateUps));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.services.bind.local", cmdBindLocal));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.set.orgspace", cmdCFSetOrgSpace));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.targets.create", cmdCreateTarget));
@@ -74,11 +79,10 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand("cf.targets.reload", cmdReloadTargets));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.select.space", cmdSelectSpace));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.deploy-service.api", cmdDeployServiceAPI));
+	context.subscriptions.push(vscode.commands.registerCommand("cf.services.get-space-services", cmdGetSpaceServices));
 
 	const platformExtension: vscode.Extension<IRunConfigRegistry> = vscode.extensions.getExtension<IRunConfigRegistry>(runConfigExtName);
-	// register dependency handler
 	if (platformExtension) {
-		/** platformExtension.exports.registerRunConfig(new RunConfigHandler("cf-handler")); */
 		const genericDependencyHandler = new DependencyHandler("cf-tools-rsource-dependency");
 		platformExtension.exports.registerDependency(genericDependencyHandler);
 		context.subscriptions.push(vscode.commands.registerCommand("cf.services.bind", genericDependencyHandler.bind));
@@ -86,7 +90,7 @@ export function activate(context: vscode.ExtensionContext) {
 		context.subscriptions.push(vscode.commands.registerCommand("cf.services.binding.state", genericDependencyHandler.getBindState));
 	}
 	else {
-		getOutputChannel().appendLine(messages.ext_not_set(runConfigExtName));
+		getModuleLogger(LOGGER_MODULE).error("activate: the <%s> extension has not been set", runConfigExtName);
 	}
 }
 
@@ -95,8 +99,4 @@ export function deactivate() {
 	if (cfConfigFilePath) {
 		fsextra.unwatchFile(cfConfigFilePath);
 	}
-}
-
-export function getExtensionName(): string {
-	return extensionName;
 }

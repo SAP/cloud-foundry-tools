@@ -5,7 +5,19 @@ defaults: &defaults
   docker:
     - image: circleci/node:10.17.0
 
-jobs: # a collection of steps 
+jobs: # a collection of steps
+  compliance:
+    docker:
+      - image: circleci/python:3.6.4
+    working_directory: ~/workdir
+    steps:
+      - checkout
+      - run:
+          name: compliance check
+          command: |
+            pip3 install --user reuse
+            ~/.local/bin/reuse lint
+
   build-and-test:
     <<: *defaults  
     steps:
@@ -20,8 +32,13 @@ jobs: # a collection of steps
           name: test
           command: npm run test
       - run:
-          name: create .vsix
-          command: npx vsce package .
+          command: cat ./reports/coverage/lcov.info | ./node_modules/.bin/coveralls
+          environment:
+            COVERALLS_SERVICE_NAME: circle-ci
+            COVERALLS_GIT_BRANCH: ${CIRCLE_BRANCH}
+      - run:
+          name: package
+          command: npm pack
       - save_cache:
           paths:
             - node_modules
@@ -48,6 +65,7 @@ workflows:
   version: 2
   test-deploy:
     jobs:
+      - compliance
       - build-and-test:
           filters:
             tags:

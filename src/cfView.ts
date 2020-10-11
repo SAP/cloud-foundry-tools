@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as vscode from "vscode"; // NOSONAR
+import * as vscode from "vscode";
 import * as path from "path";
 import * as _ from "lodash";
 import { cfGetTargets, CFTarget } from "@sap/cf-tools";
@@ -19,10 +19,7 @@ export class CFTargetTI extends vscode.TreeItem {
 		public readonly target: CFTarget
 	) {
 		super(target.label, target.isCurrent ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
-	}
-
-	get tooltip(): string {
-		return this.target.label;
+		this.tooltip = target.label;
 	}
 
 	get description(): string {
@@ -67,14 +64,8 @@ export class CFFolder extends vscode.TreeItem {
 	constructor(public readonly label: string, public readonly parent: CFTargetTI) {
 		super(label, vscode.TreeItemCollapsibleState.Collapsed);
 		this.contextValue = label;
-	}
-
-	get tooltip(): string {
-		return "CF services";
-	}
-
-	get description(): string {
-		return "";
+		this.tooltip = "CF services";
+		this.description = "";
 	}
 }
 
