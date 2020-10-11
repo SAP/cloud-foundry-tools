@@ -1,8 +1,8 @@
 {
 	"name": "vscode-wing-cf-tools",
-	"displayName": "vscode-wing-cf-tools",
-	"description": "vscode Wing Cloud Foundry tools",
-	"version": "5.0.2",
+	"displayName": "Cloud Foundry Tools",
+	"description": "Vscode extension of Cloud Foundry tools",
+	"version": "5.5.5",
 	"author": "SAP SE",
 	"publisher": "SAP",
 	"license": "Apache 2.0",
@@ -15,22 +15,13 @@
 	},
 	"icon": "",
 	"engines": {
-		"vscode": "^1.36.0"
+		"vscode": "^1.43.0"
 	},
 	"categories": [
 		"Other"
 	],
 	"activationEvents": [
-		"*",
-		"onView:cfView",
-		"onCommand:cf.login",
-		"onCommand:cf.services.bind.local",
-		"onCommand:cf.services.unbind",
-		"onCommand:cf.services.bind",
-		"onCommand:cf.services.binding.state",
-		"onCommand:cf.services.create",
-		"onCommand:cf.select.space",
-		"onCommand:cf.deploy-service.api"
+		"*"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -76,6 +67,10 @@
 				{
 					"when": "false",
 					"command": "cf.services.binding.state"
+				},
+				{
+					"when": "false",
+					"command": "cf.services.get-space-services"
 				}
 			],
 			"view/title": [
@@ -167,8 +162,16 @@
 				"icon": "resources/common/login.svg"
 			},
 			{
+				"command": "cf.ups.create",
+				"title": "CF: Create a user provided service instance"
+			},
+			{
 				"command": "cf.deploy-service.api",
 				"title": "CF: Make a rest API call to the Deploy Service"
+			},
+			{
+				"command": "cf.services.get-space-services",
+				"title": "CF: Fetch available services (and ups) from particular space"
 			}
 		],
 		"problemMatchers": [
@@ -188,7 +191,34 @@
 					"endsPattern": "^.+client: Connected.+"
 				}
 			}
-		]
+		],
+		"configuration": {
+			"type": "object",
+			"title": "CloudFoundryTools",
+			"properties": {
+				"CloudFoundryTools.loggingLevel": {
+					"type": "string",
+					"enum": [
+						"off",
+						"fatal",
+						"error",
+						"warn",
+						"info",
+						"debug",
+						"trace"
+					],
+					"default": "error",
+					"description": "The verbosity of logging. The Order is None < fatal < error < warn < info < debug < trace.",
+					"scope": "resource"
+				},
+				"CloudFoundryTools.sourceLocationTracking": {
+					"type": "boolean",
+					"default": false,
+					"description": "Should Source Code Location Info be added to log entries, DANGER - May be very slow, only use in debugging scenarios",
+					"scope": "resource"
+				}
+			}
+		}
 	},
 	"extensionDependencies": [
 		"sap.vscode-wing-run-config"
@@ -209,12 +239,12 @@
 		"@types/chai": "^4.1.7",
 		"@types/comment-json": "1.1.1",
 		"@types/fs-extra": "^5.0.5",
-		"@types/lodash": "^4.14.158",
+		"@types/lodash": "^4.14.161",
 		"@types/mocha": "^7.0.2",
 		"@types/node": "^10.12.21",
 		"@types/properties-reader": "0.0.1",
 		"@types/sinon": "^7.0.13",
-		"@types/vscode": "1.36.0",
+		"@types/vscode": "^1.43.0",
 		"@typescript-eslint/parser": "^2.30.0",
 		"@typescript-eslint/eslint-plugin": "^2.30.0",
 		"eslint": "^6.8.0",
@@ -240,12 +270,14 @@
 		"clean-webpack-plugin": "^3.0.0"
 	},
 	"dependencies": {
-		"@sap/wing-run-config-types": "4.0.0",
-		"@sap/cf-tools": "0.4.3",
+		"@sap/cf-tools": "0.6.5",
+		"@sap/wing-run-config-types": "4.1.3",
+		"@vscode-logging/logger": "1.2.0",
 		"comment-json": "2.1.0",
 		"fs-extra": "7.0.1",
-		"lodash": "4.17.19",
+		"lodash": "4.17.20",
 		"properties-reader": "0.3.1",
+		"update": "^0.7.4",
 		"url": "0.11.0"
 	}
 }

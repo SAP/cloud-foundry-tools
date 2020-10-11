@@ -5,7 +5,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as vscode from "vscode"; // NOSONAR
+import * as vscode from "vscode";
 import { dataContentAsObject } from "@sap/cf-tools";
 import * as _ from "lodash";
 import { parse } from "comment-json";
