@@ -86,7 +86,7 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 	}
 
 	public refresh() {
-		this.privateonDidChangeTreeData.fire();
+		this.privateonDidChangeTreeData.fire(undefined);
 	}
 
 	public getTreeItem(element: vscode.TreeItem): Promise<vscode.TreeItem> {
