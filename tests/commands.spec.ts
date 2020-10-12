@@ -617,7 +617,7 @@ describe("commands unit tests", () => {
             const service = {
                 name: 'myService', plan: 'plan1', tag: '', prompt: '',
                 allowCreate: {
-                    params: '{ "some": { "data" : "value" } }'
+                    getParams: () => Promise.resolve({ "some": { "data" : "value" } })
                 }
             };
             await commands.cmdCreateService(service);

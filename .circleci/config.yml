@@ -23,8 +23,8 @@ jobs: # a collection of steps
     steps:
       - checkout
       
-#      - restore_cache:
-#          key: dependency-cache-{{ checksum "package.json" }}
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: install
           command: npm install
@@ -54,12 +54,12 @@ jobs: # a collection of steps
       - image: circleci/golang:1.13
     steps:
       - attach_workspace:
-          at: ./dist
+          at: ./dest
       - run:
           name: "Publish Release on GitHub"
           command: |
             go get github.com/tcnksm/ghr
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ./dist/ 
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ./dest/ 
 
 workflows:
   version: 2
@@ -68,8 +68,8 @@ workflows:
       - compliance
       - build-and-test:
           filters:
-          tags:
-            only: /.*/
+            tags:
+              only: /.*/
       - deploy:
           requires:
             - build-and-test

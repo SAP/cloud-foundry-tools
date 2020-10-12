@@ -342,7 +342,7 @@ async function createServiceInstance(name: string, info?: ServiceTypeInfo): Prom
                         : await vscode.window.showQuickPick<PlanInfo>(plansInfo, { placeHolder: messages.select_service_plan });
 
                     if (planInfo) {
-                        const params = (info?.allowCreate?.params) ? stringify(info.allowCreate.params) : await ask4ArbitraryParams(serviceInfo, planInfo);
+                        const params = (info?.allowCreate?.getParams) ? stringify(await info.allowCreate.getParams()) : await ask4ArbitraryParams(serviceInfo, planInfo);
                         if (params) {
                             return vscode.window.withProgress({
                                 location: vscode.ProgressLocation.Notification,
