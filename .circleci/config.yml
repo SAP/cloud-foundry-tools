@@ -66,10 +66,7 @@ workflows:
   test-deploy:
     jobs:
       - compliance
-      - build-and-test:
-          filters:
-            tags:
-              only: /.*/
+      - build-and-test
       - deploy:
           requires:
             - build-and-test
