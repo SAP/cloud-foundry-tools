@@ -27,9 +27,9 @@ This VSCode extension provides tools for easy application development with Cloud
 
 
 ## Dependencies
-* cf-cli 
-* cf-cli extension `targets`[see here](https://github.com/guidowb/cf-targets-plugin)
-* cf-cli extension called cf-service-info (from here)[http://nexus.wdf.sap.corp:8081/nexus/content/groups/build.releases/com/sap/golang/com/sap/devx/wing/cfserviceinfo/]
+* cf-cli tool [v6.53.0](https://github.com/cloudfoundry/cli/releases/tag/v6.53.0)
+* cf-cli `targets` [see here](https://github.com/guidowb/cf-targets-plugin)
+* cf-cli called `cf-service-info` (go plugin for cf-cli tool that provides resource binding functionality)
 
 [back to top](#table-of-contents)
 
@@ -39,6 +39,7 @@ This VSCode extension provides tools for easy application development with Cloud
 * clone the repo
 * open it in a vscode
 * run the launch config 'Run Extension'
+* see available commands via `Command palette` (with prefix `CF`)
 
 [back to top](#table-of-contents)
 
@@ -60,3 +61,8 @@ This VSCode extension provides tools for easy application development with Cloud
 
 ---
 
+
+## Contributing
+Contributing information can be found in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+
+[back to top](#table-of-contents)
