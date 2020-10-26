@@ -2,7 +2,7 @@
 	"name": "vscode-wing-cf-tools",
 	"displayName": "Cloud Foundry Tools",
 	"description": "Vscode extension of Cloud Foundry tools",
-	"version": "5.5.6",
+	"version": "5.6.0",
 	"author": "SAP SE",
 	"publisher": "SAP",
 	"license": "Apache 2.0",

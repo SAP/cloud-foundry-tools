@@ -14,7 +14,7 @@ import {
 } from "./commands";
 import { cmdDeployServiceAPI, cmdSetCurrentTarget, cmdDeleteTarget, cmdBindLocal, cmdReloadTargets, cmdGetSpaceServices } from "./cfViewCommands";
 
-import { cfGetConfigFilePath, cfGetConfigFileField } from "@sap/cf-tools";
+import { cfGetConfigFilePath, cfGetConfigFileField, ITarget, cfGetTarget } from "@sap/cf-tools";
 import * as fsextra from "fs-extra";
 import { DependencyHandler } from "./run-configuration";
 import { IRunConfigRegistry } from "@sap/wing-run-config-types";
@@ -25,21 +25,36 @@ let cfStatusBarItem: vscode.StatusBarItem;
 const runConfigExtName = "sap.vscode-wing-run-config";
 let treeDataProvider: CFView;
 
-async function updateStatusBar() {
+const targetChangedEventEmitter = new vscode.EventEmitter<ITarget | undefined>();
+const onDidChangeTarget = targetChangedEventEmitter.event;
+
+async function updateStatusBar(): Promise<boolean | undefined> {
+	let isUpdated;
+	const beforeText = _.get(cfStatusBarItem, 'text');
 	const results = await Promise.all([cfGetConfigFileField("OrganizationFields"), cfGetConfigFileField("SpaceFields")]);
 	const orgField = _.get(results, "[0].Name");
 	const spaceField = _.get(results, "[1].Name");
-	const updatedText = `$(home) ${ _.isEmpty(orgField) && _.isEmpty(spaceField) ? messages.not_targeted : messages.targeting(orgField, spaceField)}`;
+	const isNoTarget = _.isEmpty(orgField) && _.isEmpty(spaceField);
+	const updatedText = `$(home) ${isNoTarget ? messages.not_targeted : messages.targeting(orgField, spaceField)}`;
 
-	if (_.get(cfStatusBarItem, 'text') !== updatedText) {
+	if (beforeText !== updatedText) {
 		_.set(cfStatusBarItem, "text", updatedText);
+		if (beforeText) { // eliminate firing event on initialization
+			const target = async () => { try { return await cfGetTarget(); } catch (e) { return undefined; } };
+			targetChangedEventEmitter.fire(isNoTarget ? undefined : await target());
+			isUpdated = true;
+		}
 	}
+	return isUpdated;
 }
 
-export function onCFConfigFileChange() {
-	getModuleLogger(LOGGER_MODULE).debug("onCFConfigFileChange: the Cloud Foundry 'config' file has changed. The status bar will be updated");
-	updateStatusBar();
-	treeDataProvider.refresh();
+export function onCFConfigFileChange(): void {
+	updateStatusBar().then(isUpdated => {
+		if (isUpdated) {
+			getModuleLogger(LOGGER_MODULE).debug("onCFConfigFileChange: the Cloud Foundry 'config' file has changed. The status bar will be updated");
+			treeDataProvider.refresh();
+		}
+	});
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -92,6 +107,10 @@ export function activate(context: vscode.ExtensionContext) {
 	else {
 		getModuleLogger(LOGGER_MODULE).error("activate: the <%s> extension has not been set", runConfigExtName);
 	}
+	return {
+		// allows to external extensions to listen onDidChangeTarget event 
+		onDidChangeTarget
+	};
 }
 
 export function deactivate() {
