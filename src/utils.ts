@@ -173,8 +173,6 @@ function validateXsuaaName(value: string) {
 
 function validateParamsXsuaa(value: string): TypeValidationResult {
 	let result;
-	// validation based on rules defined there: 
-	// https://github.wdf.sap.corp/CPSecurity/Knowledge-Base/blob/master/03_ApplicationSecurity/Syntax%20and%20Semantics%20of%20xs-security.json.md
 	try {
 		const data = parse(_.trim(value));
 		validateXsuaaName(_.get(data, "xsappname"));
