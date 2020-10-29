@@ -19,10 +19,12 @@ import { DependencyHandler } from "../src/run-configuration";
 import * as utils from "../src/utils";
 import { IBindContext, ConfigurationTarget, ConfigMetadata, BindState } from "@sap/wing-run-config-types";
 import { messages } from "../src/messages";
+import * as usageTracker from "../src/usage/usageTracker";
 
 describe("run-configuration tests package", () => {
     let sandbox: any;
     let vscodeWindowMock: any;
+    let usageMock: any;
 
     before(() => {
         sandbox = sinon.createSandbox();
@@ -30,10 +32,12 @@ describe("run-configuration tests package", () => {
 
     beforeEach(() => {
         vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
+        usageMock = sandbox.mock(usageTracker);
     });
 
     afterEach(() => {
         vscodeWindowMock.verify();
+        usageMock.verify();
         sandbox.restore();
     });
 
@@ -59,6 +63,7 @@ describe("run-configuration tests package", () => {
                 }
             }
         };
+        
 
         it("constructor", () => {
             const id = 'test.Handler.id';
@@ -101,6 +106,7 @@ describe("run-configuration tests package", () => {
         it("bind", async () => {
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(['testInstance']);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
+            usageMock.expects("trackChiselTask").never();
             expect(await new DependencyHandler("test.Handler.id").bind(bindContext)).to.be.deep.equal({ configData: bindContext.configData, resource: { name: "testInstance", type: "resourceType" } });
         });
 
@@ -115,6 +121,7 @@ describe("run-configuration tests package", () => {
             }];
             sandbox.stub(cfViewCommands, "bindLocalService").withArgs(serviceType).resolves(['testInstance']);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
+            usageMock.expects("trackChiselTask").never();
             expect(await new DependencyHandler("test.Handler.id").bind(bindContext)).to.be.deep.equal({ configData: bindContext.configData, resource: { name: "testInstance", type: "resourceType" } });
         });
 
@@ -129,6 +136,7 @@ describe("run-configuration tests package", () => {
             copyContext.depContext.data = {};
             sandbox.stub(cfViewCommands, "bindLocalService").withArgs(serviceType).resolves(['testInstance']);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
+            usageMock.expects("trackChiselTask").never();
             expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
         });
 
@@ -136,6 +144,7 @@ describe("run-configuration tests package", () => {
             sandbox.stub(chisel, "checkAndCreateChiselTask").withArgs(bindContext.envPath.fsPath, instances.join('&')).resolves({});
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
+            usageMock.expects("trackChiselTask").withExactArgs("Chisel Task", ["CF tools"]).resolves();
             const copyContext = _.cloneDeep(bindContext);
             copyContext.depContext.data = { isCreateChiselTask: true };
             expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
@@ -150,6 +159,7 @@ describe("run-configuration tests package", () => {
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
             const copyContext = _.cloneDeep(bindContext);
             copyContext.depContext.data = { isCreateChiselTask: true };
+            usageMock.expects("trackChiselTask").withExactArgs("Chisel Task", ["CF tools"]).resolves();
             copyContext.configData.dependentTasks = undefined;
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselLabel}'`).resolves();
             expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
@@ -168,6 +178,7 @@ describe("run-configuration tests package", () => {
             copyContext.configData.config.data.envFile = undefined;
             copyContext.configData.dependentTasks = [tsk];
             copyContext.depContext.data = { isCreateChiselTask: true };
+            usageMock.expects("trackChiselTask").withExactArgs("Chisel Task", ["CF tools"]).resolves();
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselLabel}'`).resolves();
             expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
             assert.deepEqual(copyContext.configData.dependentTasks, [tsk, chiselJson]);

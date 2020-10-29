@@ -13,6 +13,7 @@ import * as vscode from 'vscode';
 import * as cfLocal from '@sap/cf-tools';
 import { messages } from './messages';
 import { getModuleLogger } from './logger/logger-wrapper';
+import { trackChiselTask } from "./usage/usageTracker";
 
 export class DependencyHandler implements types.IDependencyHandler {
   private readonly id: string;
@@ -49,6 +50,7 @@ export class DependencyHandler implements types.IDependencyHandler {
       if (_.size(instanceNames)) {
         // Create chisel task if neccessary
         if (_.get(bindContext, "depContext.data.isCreateChiselTask")) {
+          trackChiselTask("Chisel Task", ["CF tools"]);
 
           // Create it in dependent task
           const chiselTaskNameSuffix = instanceNames.join("&");
