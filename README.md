@@ -2,7 +2,7 @@
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/SAP/cloud-foundry-tools)
 [![CircleCI](https://circleci.com/gh/SAP/cloud-foundry-tools.svg?style=svg)](https://circleci.com/gh/SAP/cloud-foundry-tools)
 [![Coverage Status](https://coveralls.io/repos/github/SAP/cloud-foundry-tools/badge.svg?branch=master)](https://coveralls.io/github/SAP/cloud-foundry-tools?branch=master)
-
+[![dependentbot](https://api.dependabot.com/badges/status?host=github&repo=SAP/cloud-foundry-tools)](https://dependabot.com/)
 
 # cloud-foundry-tools
 This VSCode extension provides tools for easy application development with Cloud Foundry. Its' tools contains such functionality as "Login to Cloud Foundry", "Create service", "Bind service", "Unbind service", etc. 
