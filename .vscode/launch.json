@@ -13,7 +13,7 @@
               "--extensionDevelopmentPath=${workspaceFolder}"
             ],
             "outFiles": [
-              "${workspaceFolder}/wing-vsix/dist/**/*.js"
+              "${workspaceFolder}/dist/**/*.js"
             ]
           },
           {

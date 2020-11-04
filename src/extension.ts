@@ -19,6 +19,7 @@ import * as fsextra from "fs-extra";
 import { DependencyHandler } from "./run-configuration";
 import { IRunConfigRegistry } from "@sap/wing-run-config-types";
 import { createLoggerAndSubscribeToLogSettingsChanges, getModuleLogger } from "./logger/logger-wrapper";
+import { toText } from "./utils";
 
 const LOGGER_MODULE = "extension";
 let cfStatusBarItem: vscode.StatusBarItem;
@@ -57,7 +58,7 @@ export function onCFConfigFileChange(): void {
 	});
 }
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 	createLoggerAndSubscribeToLogSettingsChanges(context);
 
 	const cfConfigFilePath: string = cfGetConfigFilePath();
@@ -96,13 +97,23 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand("cf.deploy-service.api", cmdDeployServiceAPI));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.services.get-space-services", cmdGetSpaceServices));
 
-	const platformExtension: vscode.Extension<IRunConfigRegistry> = vscode.extensions.getExtension<IRunConfigRegistry>(runConfigExtName);
+	let platformExtension: vscode.Extension<IRunConfigRegistry> = vscode.extensions.getExtension<IRunConfigRegistry>(runConfigExtName);
 	if (platformExtension) {
-		const genericDependencyHandler = new DependencyHandler("cf-tools-rsource-dependency");
-		platformExtension.exports.registerDependency(genericDependencyHandler);
-		context.subscriptions.push(vscode.commands.registerCommand("cf.services.bind", genericDependencyHandler.bind));
-		context.subscriptions.push(vscode.commands.registerCommand("cf.services.unbind", genericDependencyHandler.unbind));
-		context.subscriptions.push(vscode.commands.registerCommand("cf.services.binding.state", genericDependencyHandler.getBindState));
+		if (!platformExtension.isActive) {
+			try {
+				await platformExtension.activate();
+			} catch (e) {
+				platformExtension = undefined;
+				getModuleLogger(LOGGER_MODULE).error("activate <%s> extension fails", runConfigExtName, {message: toText(e)});
+			}
+		}
+		if (platformExtension) {
+			const genericDependencyHandler = new DependencyHandler("cf-tools-rsource-dependency");
+			platformExtension.exports.registerDependency(genericDependencyHandler);
+			context.subscriptions.push(vscode.commands.registerCommand("cf.services.bind", genericDependencyHandler.bind));
+			context.subscriptions.push(vscode.commands.registerCommand("cf.services.unbind", genericDependencyHandler.unbind));
+			context.subscriptions.push(vscode.commands.registerCommand("cf.services.binding.state", genericDependencyHandler.getBindState));
+		}
 	}
 	else {
 		getModuleLogger(LOGGER_MODULE).error("activate: the <%s> extension has not been set", runConfigExtName);

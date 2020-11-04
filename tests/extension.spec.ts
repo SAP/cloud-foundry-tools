@@ -144,6 +144,7 @@ describe('Extension unit test', () => {
             mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").atLeast(1).resolves({ Name: "testName2" });
             mockCfLocal.expects("cfGetConfigFilePath").returns("");
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns({
+                isActive: true,
                 exports: {
                     registerDependency: () => ""
                 }
@@ -152,6 +153,48 @@ describe('Extension unit test', () => {
             commandsMock.expects("registerCommand").withExactArgs("cf.services.bind", commandsMap["cf.services.bind"]);
             commandsMock.expects("registerCommand").withExactArgs("cf.services.binding.state", commandsMap["cf.services.binding.state"]);
             extension.activate(testContext);
+        });
+
+        it("platform extension defined but not activated", () => {
+            const extRun = {
+                isActive: false,
+                activate: () => Promise.resolve(),
+                exports: {
+                    registerDependency: () => ""
+                }
+            };
+            const mockExt = sandbox.mock(extRun);
+            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").atLeast(1).resolves({ Name: "testName1" });
+            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").atLeast(1).resolves({ Name: "testName2" });
+            mockCfLocal.expects("cfGetConfigFilePath").returns("");
+            mockExt.expects("activate").resolves();
+            extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(extRun);
+            commandsMock.expects("registerCommand").withExactArgs("cf.services.unbind", commandsMap["cf.services.unbind"]);
+            commandsMock.expects("registerCommand").withExactArgs("cf.services.bind", commandsMap["cf.services.bind"]);
+            commandsMock.expects("registerCommand").withExactArgs("cf.services.binding.state", commandsMap["cf.services.binding.state"]);
+            extension.activate(testContext);
+            mockExt.verify();
+        });
+
+        it("platform extension defined but can not be not activated", () => {
+            const extRun = {
+                isActive: false,
+                activate: () => Promise.resolve(),
+                exports: {
+                    registerDependency: () => ""
+                }
+            };
+            const mockExt = sandbox.mock(extRun);
+            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").atLeast(1).resolves({ Name: "testName1" });
+            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").atLeast(1).resolves({ Name: "testName2" });
+            mockCfLocal.expects("cfGetConfigFilePath").returns("");
+            mockExt.expects("activate").rejects(new Error("my error"));
+            extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(extRun);
+            commandsMock.expects("registerCommand").withExactArgs("cf.services.unbind", commandsMap["cf.services.unbind"]).never();
+            commandsMock.expects("registerCommand").withExactArgs("cf.services.bind", commandsMap["cf.services.bind"]).never();
+            commandsMock.expects("registerCommand").withExactArgs("cf.services.binding.state", commandsMap["cf.services.binding.state"]).never();
+            extension.activate(testContext);
+            mockExt.verify();
         });
 
         it("onCFConfigFileChange", (done) => {
