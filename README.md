@@ -2,6 +2,7 @@
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/SAP/cloud-foundry-tools)
 [![CircleCI](https://circleci.com/gh/SAP/cloud-foundry-tools.svg?style=svg)](https://circleci.com/gh/SAP/cloud-foundry-tools)
 [![Coverage Status](https://coveralls.io/repos/github/SAP/cloud-foundry-tools/badge.svg?branch=master)](https://coveralls.io/github/SAP/cloud-foundry-tools?branch=master)
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![dependentbot](https://api.dependabot.com/badges/status?host=github&repo=SAP/cloud-foundry-tools)](https://dependabot.com/)
 
 # cloud-foundry-tools
