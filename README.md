@@ -61,6 +61,10 @@ This VSCode extension provides tools for easy application development with Cloud
 
 ---
 
+## Enable usage analytics reporting from VS Code
+The tool collects non-personally identifiable information about your usage of the tool to improve its services. If you do not want the tool to collect your usage data, you can set the "Enable Sap Web Analytics" setting to "false". Go to File > Preferences > Settings (macOS: Code > Preferences > Settings) > Extensions > <Tool Name>, and deselect the "Enable Sap Web Analytics" checkbox.
+
+---
 
 ## Contributing
 Contributing information can be found in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
