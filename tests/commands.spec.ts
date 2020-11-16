@@ -779,6 +779,46 @@ describe("commands unit tests", () => {
         });
     });
 
+    describe("getServiceInstances", () => {
+
+        it("on success", async () => {
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.loading_services, cancellable: true }).resolves([{}]);
+            const result = await commands.getServiceInstances();
+            expect(result).to.have.lengthOf(1);
+        });
+
+        it("on any error", async () => {
+            const errorMessage = "test error";
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.loading_services, cancellable: true }).rejects(new Error(errorMessage));
+            try {
+                await commands.getServiceInstances();
+                fail("test should fail here");
+            } catch (e) {
+                expect(e.message).to.be.equal(errorMessage);
+            }
+        });
+    });
+
+    describe("getUserProvidedServiceInstances", () => {
+
+        it("on success", async () => {
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.loading_ups_services, cancellable: true }).resolves([{}]);
+            const result = await commands.getUserProvidedServiceInstances();
+            expect(result).to.have.lengthOf(1);
+        });
+
+        it("on any error", async () => {
+            const errorMessage = "test error";
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.loading_ups_services, cancellable: true }).rejects(new Error(errorMessage));
+            try {
+                await commands.getUserProvidedServiceInstances();
+                fail("test should fail here");
+            } catch (e) {
+                expect(e.message).to.be.equal(errorMessage);
+            }
+        });
+    });
+
     describe("updateInstanceNameAndTags", () => {
         it("availableServices is empty", async () => {
             vscodeWindowMock.expects("showQuickPick").never();

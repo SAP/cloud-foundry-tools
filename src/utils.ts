@@ -23,6 +23,25 @@ type TypeValidationResult = string | undefined | null;
 
 const LOGGER_MODULE = "utils";
 
+export interface DisplayServices {
+	query?: IServiceQuery;
+	ups?: ServiceTypeInfo['ups'];
+}
+
+export interface BaseServiceQueryOptions {
+    tag?: string;  // service tags 
+    credentials?: {
+        tag?: string;
+    };
+}
+
+export type UpsServiceQueryOprions = BaseServiceQueryOptions;
+
+export interface ServiceQueryOptions extends BaseServiceQueryOptions {
+    name?: string; //service type name 
+    plan?: string; //Service plan 
+}
+
 function spotRedirectUri() {
 	// expected host pattern is 'DOMAIN.PLATFORM.REG...APPNAME.cloud.sap'
 	const host = new URL(_.get(process, 'env.WS_BASE_URL') || 'https://wingtestsubacc-workspaces-ws-gwzd6.staging-01.dev10.int.webide.cloud.sap').hostname;
@@ -198,11 +217,6 @@ export function validateParams(serviceLabel: string, plan?: string): (value: str
 	return ('xsuaa' === serviceLabel && 'application' === plan) ? validateParamsXsuaa : validateParamsJson;
 }
 
-export interface DisplayServices {
-	query?: IServiceQuery;
-	ups?: ServiceTypeInfo['ups'];
-}
-
 export function isRegexExpression(statement: string): boolean {
 	return /^\/\S+\/$/g.test(statement);
 }
@@ -211,18 +225,27 @@ export function composeFilterPattern(value: string): string {
 	return value ? (isRegexExpression(value) ? _.trim(value, '/') : `^${value}$`) : value;
 }
 
+async function doGetUpsServiceInstances(query?: IServiceQuery, filterCredTag?: string): Promise<ServiceInstanceInfo[]> {
+	const upsServices = await cfGetUpsInstances(query);
+	const pattern = (_.size(upsServices) && filterCredTag) ? composeFilterPattern(filterCredTag) : undefined;
+	const ups2Show  = pattern ? upsServices.filter(service => {
+	  return _.find(service.credentials?.tags, (tag) => new RegExp(pattern).test(tag));
+	}) : upsServices;
+	return ups2Show;
+}
+			
+export async function getUpsServiceInstances(options?: UpsServiceQueryOprions): Promise<ServiceInstanceInfo[]> {
+	return doGetUpsServiceInstances(undefined, options?.credentials?.tag);
+}
+
 export async function getAllServiceInstances(opts?: DisplayServices): Promise<ServiceInstanceInfo[]> {
 	let ups2Show: ServiceInstanceInfo[] = [];
 	if (opts?.ups?.isShow || opts?.ups?.tag) {
 		const copyQuery = _.cloneDeep(opts.query);
 		_.remove(copyQuery?.filters, (item) => {
 			return !_.includes([eFilters.name, eFilters.space_guid, eFilters.organization_guid], item.key);
-		});
-		const upsServices = await cfGetUpsInstances(copyQuery);
-		const pattern = (_.size(upsServices) && opts.ups?.tag) ? composeFilterPattern(opts.ups.tag) : undefined;
-		ups2Show = pattern ? upsServices.filter(service => {
-			return _.find(service.credentials?.tags, (tag) => new RegExp(pattern).test(tag));
-		}) : upsServices;
+		});		
+		ups2Show = await doGetUpsServiceInstances(copyQuery, opts.ups.tag);
 	}
 	return _.concat(await cfGetServiceInstances(opts?.query), ups2Show);
 }

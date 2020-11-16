@@ -24,7 +24,7 @@ import * as cfView from "../src/cfView";
 import * as https from 'https';
 import { messages } from "../src/messages";
 import { fail } from "assert";
-import { DisplayServices } from "../src/utils";
+import { DisplayServices, ServiceQueryOptions } from "../src/utils";
 
 describe("cfViewCommands tests", () => {
     let sandbox: any;
@@ -311,6 +311,27 @@ describe("cfViewCommands tests", () => {
         const arg: any = { query: undefined, ups: { isShow: true } };
         commandsMock.expects("getAvailableServices").withExactArgs(arg, title).resolves();
         await cfViewCommands.cmdGetSpaceServices(undefined, title);
+    });
+
+    it("cmdGetServiceInstances - retrieve all services", async () => {
+        const expServices: ServiceInstanceInfo[] = [{ label: 's1', serviceName: 'hana' }, { label: 's2', serviceName: 'hana' }];
+        const title = "progress title - retrieve all services";
+        const query: ServiceQueryOptions = undefined;
+        commandsMock.expects("getServiceInstances").withExactArgs(query, title).resolves(expServices);
+        const actualServices =  await cfViewCommands.cmdGetServiceInstances(query, title);
+        assert.deepEqual(actualServices, expServices);
+    });
+
+    it("cmdGetServiceInstances - retrieve hana services", async () => {
+        const expServices: ServiceInstanceInfo[] = [{ label: 's1', serviceName: 'hana' }, { label: 's2', serviceName: 'hana' }];
+        const title = "progress title - retrieve hana services";
+        const plans: PlanInfo[] = [{ label: "hdi-shared", guid: "ABCD", description: "" }, { label: "hana", guid: "EFGH", description: "" }];
+        commandsMock.expects("fetchServicePlanList").resolves(plans);       
+        const serviceInstanceQuery =  { filters: [{ key: eFilters.service_plan_guid, value: "ABCD", op: eOperation.IN }] };
+        const serviceQuertOptions: ServiceQueryOptions = {plan: "hdi-shared"};
+        commandsMock.expects("getServiceInstances").withExactArgs(serviceInstanceQuery, title).resolves(expServices);
+        const actualServices =  await cfViewCommands.cmdGetServiceInstances(serviceQuertOptions, title);
+        assert.deepEqual(actualServices, expServices);
     });
 
     describe("cmdBindLocal scope", () => {

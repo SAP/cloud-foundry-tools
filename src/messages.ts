@@ -27,6 +27,7 @@ export const messages = {
   cf_setting_not_set: "Could not find the Cloud Foundry settings. Make sure you have assigned an org and space in Cloud Foundry.",
   enter_service_name: "Enter a name for the service instance",
   loading_services: "Loading Cloud Foundry services...",
+  loading_ups_services: "Loading Cloud Foundry user provided services...",
   loading_service_plan_list: "Loading Cloud Foundry service plans...",
   binding_service_to_file: "Binding the service instance to a local '.env' file...",
   select_service: "Select a Cloud Foundry service instance",

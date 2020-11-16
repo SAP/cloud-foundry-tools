@@ -12,7 +12,8 @@ import {
 	cmdLogin, cmdCreateService, cmdCreateTarget,
 	cmdCFSetOrgSpace, cmdSelectSpace, cmdCreateUps
 } from "./commands";
-import { cmdDeployServiceAPI, cmdSetCurrentTarget, cmdDeleteTarget, cmdBindLocal, cmdReloadTargets, cmdGetSpaceServices } from "./cfViewCommands";
+import { cmdDeployServiceAPI, cmdSetCurrentTarget, cmdDeleteTarget, cmdBindLocal, cmdReloadTargets, 
+cmdGetSpaceServices, cmdGetUpsServiceInstances, cmdGetServiceInstances } from "./cfViewCommands";
 
 import { cfGetConfigFilePath, cfGetConfigFileField, ITarget, cfGetTarget } from "@sap/cf-tools";
 import * as fsextra from "fs-extra";
@@ -96,6 +97,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand("cf.select.space", cmdSelectSpace));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.deploy-service.api", cmdDeployServiceAPI));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.services.get-space-services", cmdGetSpaceServices));
+	context.subscriptions.push(vscode.commands.registerCommand("cf.services.get-ups-services", cmdGetUpsServiceInstances));
+	context.subscriptions.push(vscode.commands.registerCommand("cf.services.get-services", cmdGetServiceInstances));
 
 	let platformExtension: vscode.Extension<IRunConfigRegistry> = vscode.extensions.getExtension<IRunConfigRegistry>(runConfigExtName);
 	if (platformExtension) {

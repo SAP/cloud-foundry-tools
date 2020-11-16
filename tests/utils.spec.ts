@@ -363,6 +363,24 @@ describe('utils unit tests', () => {
         });
     });
 
+    describe("getUpsServiceInstances", () => {
+        const ups = [{ label: 'ups1', serviceName: 'user-provided-service', credentials: { tags: ['monodb', 'hana'] } }, 
+                     { label: 'ups2', serviceName: 'user-provided-service', credentials: { tags: ['david'] } }];
+
+        it("Get all user provides services", async () => {
+            //const options = {credentials: {tag: "hana"}}; 
+            sandbox.stub(cfLocal, 'cfGetUpsInstances').resolves(ups);
+            assert.deepEqual(await utils.getUpsServiceInstances(), ups);
+        });
+
+        it("Get all user provides services filtered by credential tag", async () => {
+            const options = {credentials: {tag: "hana"}}; 
+            sandbox.stub(cfLocal, 'cfGetUpsInstances').resolves(ups);
+            assert.deepEqual(await utils.getUpsServiceInstances(options), [ups[0]]);
+        });
+
+    });
+
     const UTF8 = "utf8";
     const EOL = require('os').EOL;
     const GITIGNORE = ".gitignore";

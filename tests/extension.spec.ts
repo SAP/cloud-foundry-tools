@@ -53,6 +53,8 @@ describe('Extension unit test', () => {
         "cf.deploy-service.api": cfViewCommands.cmdDeployServiceAPI,
         "cf.services.binding.state" : dependencyHandler.getBindState,
         "cf.services.get-space-services": cfViewCommands.cmdGetSpaceServices,
+        "cf.services.get-ups-services": cfViewCommands.cmdGetUpsServiceInstances,
+        "cf.services.get-services": cfViewCommands.cmdGetServiceInstances,
         "cf.ups.create": commands.cmdCreateUps
     };
 

@@ -10,14 +10,14 @@ import { CFView, CFService } from "./cfView";
 import { messages } from "./messages";
 import * as https from 'https';
 import * as url from "url";
-import { updateGitIgnoreList, isWindows, toText } from "./utils";
+import { updateGitIgnoreList, isWindows, toText, UpsServiceQueryOprions, ServiceQueryOptions } from "./utils";
 import {
     CFTarget, DEFAULT_TARGET, ServiceInstanceInfo, IServiceQuery, eFilters, eOperation, Cli, cfGetConfigFileField,
     cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, cfGetServices, cfGetServicePlans, PlanInfo} from "@sap/cf-tools";
 import * as _ from "lodash";
 import {
     getAvailableServices, updateServicesOnCFPageSize, isServiceTypeInfoInArray, updateInstanceNameAndTags, getInstanceName, fetchServicePlanList,
-    CMD_CREATE_SERVICE, USER_PROVIDED_SERVICE, verifyLoginRetry
+    CMD_CREATE_SERVICE, USER_PROVIDED_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances 
 } from "./commands";
 import { stringify } from "comment-json";
 import { getModuleLogger } from "./logger/logger-wrapper";
@@ -363,4 +363,18 @@ export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath:
         vscode.window.showErrorMessage(toText(e));
         getModuleLogger(LOGGER_MODULE).error(`bindLocalService exception thrown`, { message: toText(e) }, { serviceInfos: serviceInfos }, { envPath: EnvPathHelper.getPath(envPath) });
     }
+}
+
+export async function cmdGetUpsServiceInstances(options?: UpsServiceQueryOprions, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
+    return getUserProvidedServiceInstances(options, progressTitle);
+}
+
+export async function cmdGetServiceInstances(serviceQueryOptions?: ServiceQueryOptions, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
+    let query: IServiceQuery;
+    if (serviceQueryOptions) {
+        const serviceInfo = { name: serviceQueryOptions.name, plan: serviceQueryOptions.plan, tag: serviceQueryOptions.tag, prompt: ""};
+        const plans = await composePlansGuidListForQuery([serviceInfo], await fetchServicePlanList());
+        query = _.merge({}, { 'filters': [{ key: eFilters.service_plan_guid, value: _.join(plans), op: eOperation.IN }] });
+    }
+    return getServiceInstances(query, progressTitle);
 }

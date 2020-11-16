@@ -6,13 +6,16 @@
 
 import * as vscode from "vscode";
 import {
-    ServiceInfo, PlanInfo, ServiceInstanceInfo, cfLogin, cfGetAvailableOrgs, cfGetAvailableSpaces, cfSetOrgSpace, CF_PAGE_SIZE,
-    Cli, CliResult, cfGetServicePlans, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance
+    ServiceInfo, PlanInfo, ServiceInstanceInfo, cfLogin, cfGetAvailableOrgs, cfGetAvailableSpaces, cfSetOrgSpace, CF_PAGE_SIZE, IServiceQuery,
+    Cli, CliResult, cfGetServicePlans, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance, cfGetServiceInstances
 } from "@sap/cf-tools";
 import { messages } from "./messages";
 import { cmdReloadTargets } from "./cfViewCommands";
 import * as _ from "lodash";
-import { validateParams, generateParams4Service, getAllServiceInstances, DisplayServices, isRegexExpression, composeFilterPattern, toText } from "./utils";
+import { validateParams, generateParams4Service, getAllServiceInstances, 
+          DisplayServices, isRegexExpression, composeFilterPattern, toText,
+          UpsServiceQueryOprions, getUpsServiceInstances   
+        } from "./utils";
 import { stringify, parse } from "comment-json";
 import { getModuleLogger } from "./logger/logger-wrapper";
 
@@ -398,6 +401,14 @@ export async function fetchServicePlanList(): Promise<PlanInfo[]> {
 
 export async function getAvailableServices(opts?: DisplayServices, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
     return runWithProgressAndLoginRetry(true, progressTitle || messages.loading_services, getAllServiceInstances, opts);
+}
+
+export async function getServiceInstances(query?: IServiceQuery, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
+    return runWithProgressAndLoginRetry(true, progressTitle || messages.loading_services, cfGetServiceInstances, query);
+}
+
+export async function getUserProvidedServiceInstances(options?: UpsServiceQueryOprions, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
+    return runWithProgressAndLoginRetry(true, progressTitle || messages.loading_ups_services, getUpsServiceInstances, options);
 }
 
 async function askUserForServiceInstanceName(availableServices: ServiceInstanceInfo[], serviceType?: ServiceTypeInfo): Promise<string | undefined> {
