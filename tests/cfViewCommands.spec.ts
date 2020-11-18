@@ -24,7 +24,7 @@ import * as cfView from "../src/cfView";
 import * as https from 'https';
 import { messages } from "../src/messages";
 import { fail } from "assert";
-import { DisplayServices, ServiceQueryOptions } from "../src/utils";
+import { DisplayServices, ServiceQueryOptions, UpsServiceQueryOprions } from "../src/utils";
 
 describe("cfViewCommands tests", () => {
     let sandbox: any;
@@ -318,7 +318,7 @@ describe("cfViewCommands tests", () => {
         const title = "progress title - retrieve all services";
         const query: ServiceQueryOptions = undefined;
         commandsMock.expects("getServiceInstances").withExactArgs(query, title).resolves(expServices);
-        const actualServices =  await cfViewCommands.cmdGetServiceInstances(query, title);
+        const actualServices = await cfViewCommands.cmdGetServiceInstances(query, title);
         assert.deepEqual(actualServices, expServices);
     });
 
@@ -326,12 +326,19 @@ describe("cfViewCommands tests", () => {
         const expServices: ServiceInstanceInfo[] = [{ label: 's1', serviceName: 'hana' }, { label: 's2', serviceName: 'hana' }];
         const title = "progress title - retrieve hana services";
         const plans: PlanInfo[] = [{ label: "hdi-shared", guid: "ABCD", description: "" }, { label: "hana", guid: "EFGH", description: "" }];
-        commandsMock.expects("fetchServicePlanList").resolves(plans);       
-        const serviceInstanceQuery =  { filters: [{ key: eFilters.service_plan_guid, value: "ABCD", op: eOperation.IN }] };
-        const serviceQuertOptions: ServiceQueryOptions = {plan: "hdi-shared"};
+        commandsMock.expects("fetchServicePlanList").resolves(plans);
+        const serviceInstanceQuery = { filters: [{ key: eFilters.service_plan_guid, value: "ABCD", op: eOperation.IN }] };
+        const serviceQuertOptions: ServiceQueryOptions = { plan: "hdi-shared" };
         commandsMock.expects("getServiceInstances").withExactArgs(serviceInstanceQuery, title).resolves(expServices);
-        const actualServices =  await cfViewCommands.cmdGetServiceInstances(serviceQuertOptions, title);
+        const actualServices = await cfViewCommands.cmdGetServiceInstances(serviceQuertOptions, title);
         assert.deepEqual(actualServices, expServices);
+    });
+
+    it("cmdGetUpsServiceInstances", async () => {
+        const title = "progress title - retrieve all services";
+        const options: UpsServiceQueryOprions = { tag: "tags", credentials: { tag: "hana" } };
+        commandsMock.expects("getUserProvidedServiceInstances").withExactArgs(options, title).resolves();
+        await cfViewCommands.cmdGetUpsServiceInstances(options, title);
     });
 
     describe("cmdBindLocal scope", () => {
@@ -391,8 +398,18 @@ describe("cfViewCommands tests", () => {
         it("cmdBindLocal - path selected, service is ServiceTYpeInfo type, no ups, no services found", async () => {
             commandsMock.expects("fetchServicePlanList").resolves(plans);
             opts.query.filters[0].value = plans[0].guid;
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.no_services_instances_found).resolves();
             commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves([]);
             expect(await cfViewCommands.cmdBindLocal(service, { path, ignore: true })).to.be.equal("");
+        });
+
+        it("cmdBindLocal - path selected, service is ServiceTYpeInfo type, no ups, no services found, creation allowed", async () => {
+            const cloneService = _.merge(_.cloneDeep(service[0]), {"allowCreate": true});
+            commandsMock.expects("fetchServicePlanList").resolves(plans);
+            opts.query.filters[0].value = plans[0].guid;
+            commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves([]);
+            commandsMock.expects("updateInstanceNameAndTags").withExactArgs([{label:'+ Create a new service instance', serviceName:''}], cloneService, [], []).resolves(undefined);
+            expect(await cfViewCommands.cmdBindLocal([cloneService], { path, ignore: true })).to.be.equal("");
         });
 
         it("cmdBindLocal - path selected, service is ServiceTYpeInfo type, no ups, services found, canceled", async () => {
@@ -579,8 +596,8 @@ describe("cfViewCommands tests", () => {
         });
 
         it("bindLocalService - serviceInfo is array, service name required, no services found", async () => {
-            const serviceTypes = [{label: 'hana', service_plans_url: 'service_1_plans_url'}];
-            service[0].plan='';
+            const serviceTypes = [{ label: 'hana', service_plans_url: 'service_1_plans_url' }];
+            service[0].plan = '';
             service[0].name = "hana";
             commandsMock.expects("fetchServicePlanList").resolves(plans);
             cfLocalMock.expects("cfGetServices").withExactArgs({ 'filters': [{ key: eFilters.label, value: encodeURIComponent(service[0].name) }] }).resolves(serviceTypes);
