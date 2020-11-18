@@ -255,7 +255,7 @@
 		"@types/lodash": "^4.14.161",
 		"@types/mocha": "^7.0.2",
 		"@types/node": "^14.14.6",
-		"@types/properties-reader": "0.0.1",
+		"@types/properties-reader": "2.1.0",
 		"@types/sinon": "^7.0.13",
 		"@types/vscode": "^1.43.0",
 		"@typescript-eslint/parser": "^2.30.0",
