@@ -1,8 +1,4 @@
-/*
- * SPDX-FileCopyrightText: 2020 AG <ag@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+//@ts-check
 
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 

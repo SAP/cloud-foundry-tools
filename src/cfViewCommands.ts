@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import * as vscode from "vscode";
 import * as path from "path";
 import { CFView, CFService } from "./cfView";
@@ -119,7 +113,7 @@ export async function cfDeployServiceAPI(urlPath: string): Promise<string> {
         // https://api.cf.<cf domain>
         const deployServiceUrl = cfApi.replace("api.cf", "deploy-service.cfapps");
 
-        const accessToken = (await cfGetAuthToken()).replace("\n", "").replace("\n", "");
+        const accessToken = (await cfGetAuthToken()).replace("\n", "").replace("\n", ""); // lgtm [js/incomplete-sanitization]
 
         const urlObj = url.parse(deployServiceUrl);
 
