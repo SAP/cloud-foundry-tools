@@ -1,9 +1,8 @@
 //@ts-check
 
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-
 'use strict';
 
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const path = require('path');
 
 /**@type {import('webpack').Configuration}*/
