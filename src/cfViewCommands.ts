@@ -11,7 +11,7 @@ import {
 import * as _ from "lodash";
 import {
     getAvailableServices, updateServicesOnCFPageSize, isServiceTypeInfoInArray, updateInstanceNameAndTags, getInstanceName, fetchServicePlanList,
-    CMD_CREATE_SERVICE, USER_PROVIDED_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances 
+    CMD_CREATE_SERVICE, USER_PROVIDED_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances, filterArrayByAttribute 
 } from "./commands";
 import { stringify } from "comment-json";
 import { getModuleLogger } from "./logger/logger-wrapper";
@@ -369,9 +369,21 @@ export async function cmdGetUpsServiceInstances(options?: UpsServiceQueryOprions
 export async function cmdGetServiceInstances(serviceQueryOptions?: ServiceQueryOptions, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
     let query: IServiceQuery;
     if (serviceQueryOptions) {
+        //prepare a query to filter the service list by service plan (e.g.: hdi-shared)
+        let servicePlans;
+        if (serviceQueryOptions.plan) {
+            servicePlans = await fetchServicePlanList();
+        }
         const serviceInfo = { name: serviceQueryOptions.name, plan: serviceQueryOptions.plan, tag: serviceQueryOptions.tag, prompt: ""};
-        const plans = await composePlansGuidListForQuery([serviceInfo], await fetchServicePlanList());
-        query = _.merge({}, { 'filters': [{ key: eFilters.service_plan_guid, value: _.join(plans), op: eOperation.IN }] });
+        const plans = await composePlansGuidListForQuery([serviceInfo], servicePlans);        
+        if (Array.isArray(plans) && plans.length) {
+          query = _.merge({}, { 'filters': [{ key: eFilters.service_plan_guid, value: _.join(plans), op: eOperation.IN }] });
+        }
     }
-    return getServiceInstances(query, progressTitle);
+    let services = await getServiceInstances(query, progressTitle);
+    if (serviceQueryOptions?.name) {
+      //filter the list by service type name (e.g.: hana, hanatrial)
+      services = filterArrayByAttribute(services, serviceQueryOptions.name, 'serviceName' ) as ServiceInstanceInfo[];
+    }
+    return services;
 }

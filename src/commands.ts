@@ -275,7 +275,7 @@ async function onGetServicePlansFromCF(url: string, isCancelable = false, title?
     return runWithProgressAndLoginRetry(isCancelable, title || messages.loading_service_plan_list, cfGetServicePlans as () => Promise<unknown>, url);
 }
 
-function filterArrayByAttribute(collection: unknown[], filterKey: string, byAttribute: string, filterConds?: (data: unknown) => boolean): unknown[] {
+export function filterArrayByAttribute(collection: unknown[], filterKey: string, byAttribute: string, filterConds?: (data: unknown) => boolean): unknown[] {
     if (collection) {
         const pattern = composeFilterPattern(filterKey);
         return pattern ? collection.filter(item => new RegExp(pattern).test(_.get(item, byAttribute)) || (filterConds ? filterConds(item) : false)) : collection;

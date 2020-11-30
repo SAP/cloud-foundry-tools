@@ -322,14 +322,33 @@ describe("cfViewCommands tests", () => {
         assert.deepEqual(actualServices, expServices);
     });
 
-    it("cmdGetServiceInstances - retrieve hana services", async () => {
+
+    it("cmdGetServiceInstances - retrieve all services", async () => {
+        const expServices: ServiceInstanceInfo[] = [{ label: 's1', serviceName: 'hana' }, { label: 's2', serviceName: 'hana' }, { label: 's2', serviceName: 'hanatrial' }];
+        const title = "progress title - retrieve hana services";
+        commandsMock.expects("getServiceInstances").withExactArgs(undefined, title).resolves(expServices);
+        const actualServices = await cfViewCommands.cmdGetServiceInstances(undefined, title);
+        assert.deepEqual(actualServices, expServices);
+    });
+
+    it("cmdGetServiceInstances - retrieve hana services types with hdi-shared plan", async () => {
+        const rspServices: ServiceInstanceInfo[] = [{ label: 's1', serviceName: 'hana' }, { label: 's2', serviceName: 'hana' }, { label: 's2', serviceName: 'hanatrial' }];
         const expServices: ServiceInstanceInfo[] = [{ label: 's1', serviceName: 'hana' }, { label: 's2', serviceName: 'hana' }];
         const title = "progress title - retrieve hana services";
         const plans: PlanInfo[] = [{ label: "hdi-shared", guid: "ABCD", description: "" }, { label: "hana", guid: "EFGH", description: "" }];
         commandsMock.expects("fetchServicePlanList").resolves(plans);
         const serviceInstanceQuery = { filters: [{ key: eFilters.service_plan_guid, value: "ABCD", op: eOperation.IN }] };
-        const serviceQuertOptions: ServiceQueryOptions = { plan: "hdi-shared" };
-        commandsMock.expects("getServiceInstances").withExactArgs(serviceInstanceQuery, title).resolves(expServices);
+        const serviceQuertOptions: ServiceQueryOptions = { name: "hana", plan: "hdi-shared" };
+        commandsMock.expects("getServiceInstances").withExactArgs(serviceInstanceQuery, title).resolves(rspServices);
+        const actualServices = await cfViewCommands.cmdGetServiceInstances(serviceQuertOptions, title);
+        assert.deepEqual(actualServices, expServices);
+    });
+
+    it("cmdGetServiceInstances - retrieve all services when service types and plan is missing", async () => {
+        const expServices: ServiceInstanceInfo[] = [{ label: 's1', serviceName: 'hana' }, { label: 's2', serviceName: 'hana' }];
+        const title = "progress title - retrieve hana services";
+        const serviceQuertOptions: ServiceQueryOptions = {};
+        commandsMock.expects("getServiceInstances").withExactArgs(undefined, title).resolves(expServices);
         const actualServices = await cfViewCommands.cmdGetServiceInstances(serviceQuertOptions, title);
         assert.deepEqual(actualServices, expServices);
     });
