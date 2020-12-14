@@ -12,7 +12,13 @@ import * as _ from "lodash";
 import * as fsextra from "fs-extra";
 import { parse } from "comment-json";
 import { SWATracker } from "@sap/swa-for-sapbas-vsx";
+
+import * as nsVsMock from "../ext/mockVscode";
+import { mockVscode } from "../ext/mockUtil";
+mockVscode(nsVsMock.testVscode, "../../usage/usageTracker.ts");
+
 import * as usageTracker from "../../src/usage/usageTracker";
+
 
 describe("usageTracker unit tests", () => {
     let sandbox: any;

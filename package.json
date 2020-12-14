@@ -1,46 +1,134 @@
 {
 	"name": "vscode-wing-cf-tools",
 	"displayName": "Cloud Foundry Tools",
-	"description": "Vscode extension of Cloud Foundry tools",
 	"version": "5.7.2",
-	"author": "SAP SE",
-	"publisher": "SAP",
-	"license": "Apache 2.0",
+	"description": "Vscode extension of Cloud Foundry tools",
+	"categories": [
+		"Other"
+	],
+	"bugs": {
+		"url": "https://github.com/sap-staging/cloud-foundry-tools.git/issues"
+	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sap-staging/cloud-foundry-tools.git"
 	},
-	"bugs": {
-		"url": "https://github.com/sap-staging/cloud-foundry-tools.git/issues"
-	},
-	"icon": "",
-	"engines": {
-		"vscode": "^1.43.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"*"
-	],
+	"license": "Apache 2.0",
+	"author": "SAP SE",
+	"publisher": "SAP",
 	"main": "./dist/extension.js",
+	"scripts": {
+		"build": "npm run compile && webpack --mode production && vsce package",
+		"compile": "tsc -p ./",
+		"lint": "eslint . --ext .ts,.tsx --cache",
+		"lint:fix": "eslint . --ext .ts,.tsx --cache --fix",
+		"pretest": "npm run compile & npm run lint",
+		"test": "nyc mocha -p tsconfig.json --config ./.mocharc.yaml --no-parallel",
+		"vscode:prepublish": "npm run compile && webpack --mode production",
+		"watch": "tsc -watch -p ./",
+		"webpack": "webpack --mode development",
+		"webpack-dev": "webpack --mode development --watch"
+	},
 	"contributes": {
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "cf-view",
-					"title": "Cloud Foundry",
-					"icon": "resources/common/cf.svg"
+		"commands": [
+			{
+				"command": "cf.login",
+				"title": "CF: Login to cloud foundry",
+				"icon": "resources/common/login.svg"
+			},
+			{
+				"command": "cf.set.orgspace",
+				"title": "CF: Set Org and Space"
+			},
+			{
+				"command": "cf.select.space",
+				"title": "CF: Select a space from your allowed spaces"
+			},
+			{
+				"command": "cf.targets.create",
+				"title": "CF: Create new target Cloud Foundry",
+				"icon": "resources/common/login.svg"
+			},
+			{
+				"command": "cf.targets.reload",
+				"title": "CF: Reload targets tree"
+			},
+			{
+				"command": "cf.target.set",
+				"title": "CF: Set Current target Cloud Foundry"
+			},
+			{
+				"command": "cf.target.delete",
+				"title": "CF: Delete target Cloud Foundry"
+			},
+			{
+				"command": "cf.services.bind.local",
+				"title": "CF: Bind a service to a locally run application"
+			},
+			{
+				"command": "cf.services.unbind",
+				"title": "CF: Unbind a service from a locally run application - (Hidden from command palette)"
+			},
+			{
+				"command": "cf.services.bind",
+				"title": "Bind a service to a locally run application - (Hidden from command palette)"
+			},
+			{
+				"command": "cf.services.binding.state",
+				"title": "Get bind state to a service - (Hidden from command palette)"
+			},
+			{
+				"command": "cf.services.create",
+				"title": "CF: Create a new service instance",
+				"icon": "resources/common/login.svg"
+			},
+			{
+				"command": "cf.ups.create",
+				"title": "CF: Create a user provided service instance"
+			},
+			{
+				"command": "cf.deploy-service.api",
+				"title": "CF: Make a rest API call to the Deploy Service"
+			},
+			{
+				"command": "cf.services.get-space-services",
+				"title": "CF: Fetch available services (and ups) from particular space"
+			},
+			{
+				"command": "cf.services.get-ups-services",
+				"title": "CF: Fetch available User Provided services from particular space"
+			},
+			{
+				"command": "cf.services.get-services",
+				"title": "CF: Fetch available services from particular space"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "CloudFoundryTools",
+			"properties": {
+				"CloudFoundryTools.loggingLevel": {
+					"type": "string",
+					"enum": [
+						"off",
+						"fatal",
+						"error",
+						"warn",
+						"info",
+						"debug",
+						"trace"
+					],
+					"default": "error",
+					"description": "The verbosity of logging. The Order is None < fatal < error < warn < info < debug < trace.",
+					"scope": "resource"
+				},
+				"CloudFoundryTools.sourceLocationTracking": {
+					"type": "boolean",
+					"default": false,
+					"description": "Should Source Code Location Info be added to log entries, DANGER - May be very slow, only use in debugging scenarios",
+					"scope": "resource"
 				}
-			]
-		},
-		"views": {
-			"cf-view": [
-				{
-					"id": "cfView",
-					"name": "Targets"
-				}
-			]
+			}
 		},
 		"menus": {
 			"commandPalette": [
@@ -117,79 +205,6 @@
 				}
 			]
 		},
-		"commands": [
-			{
-				"command": "cf.login",
-				"title": "CF: Login to cloud foundry",
-				"icon": "resources/common/login.svg"
-			},
-			{
-				"command": "cf.set.orgspace",
-				"title": "CF: Set Org and Space"
-			},
-			{
-				"command": "cf.select.space",
-				"title": "CF: Select a space from your allowed spaces"
-			},
-			{
-				"command": "cf.targets.create",
-				"title": "CF: Create new target Cloud Foundry",
-				"icon": "resources/common/login.svg"
-			},
-			{
-				"command": "cf.targets.reload",
-				"title": "CF: Reload targets tree"
-			},
-			{
-				"command": "cf.target.set",
-				"title": "CF: Set Current target Cloud Foundry"
-			},
-			{
-				"command": "cf.target.delete",
-				"title": "CF: Delete target Cloud Foundry"
-			},
-			{
-				"command": "cf.services.bind.local",
-				"title": "CF: Bind a service to a locally run application"
-			},
-			{
-				"command": "cf.services.unbind",
-				"title": "CF: Unbind a service from a locally run application - (Hidden from command palette)"
-			},
-			{
-				"command": "cf.services.bind",
-				"title": "Bind a service to a locally run application - (Hidden from command palette)"
-			},
-			{
-				"command": "cf.services.binding.state",
-				"title": "Get bind state to a service - (Hidden from command palette)"
-			},
-			{
-				"command": "cf.services.create",
-				"title": "CF: Create a new service instance",
-				"icon": "resources/common/login.svg"
-			},
-			{
-				"command": "cf.ups.create",
-				"title": "CF: Create a user provided service instance"
-			},
-			{
-				"command": "cf.deploy-service.api",
-				"title": "CF: Make a rest API call to the Deploy Service"
-			},
-			{
-				"command": "cf.services.get-space-services",
-				"title": "CF: Fetch available services (and ups) from particular space"
-			},
-			{
-				"command": "cf.services.get-ups-services",
-				"title": "CF: Fetch available User Provided services from particular space"
-			},
-			{
-				"command": "cf.services.get-services",
-				"title": "CF: Fetch available services from particular space"
-			}
-		],
 		"problemMatchers": [
 			{
 				"name": "chisel-client",
@@ -208,47 +223,57 @@
 				}
 			}
 		],
-		"configuration": {
-			"type": "object",
-			"title": "CloudFoundryTools",
-			"properties": {
-				"CloudFoundryTools.loggingLevel": {
-					"type": "string",
-					"enum": [
-						"off",
-						"fatal",
-						"error",
-						"warn",
-						"info",
-						"debug",
-						"trace"
-					],
-					"default": "error",
-					"description": "The verbosity of logging. The Order is None < fatal < error < warn < info < debug < trace.",
-					"scope": "resource"
-				},
-				"CloudFoundryTools.sourceLocationTracking": {
-					"type": "boolean",
-					"default": false,
-					"description": "Should Source Code Location Info be added to log entries, DANGER - May be very slow, only use in debugging scenarios",
-					"scope": "resource"
+		"views": {
+			"cf-view": [
+				{
+					"id": "cfView",
+					"name": "Targets"
 				}
-			}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "cf-view",
+					"title": "Cloud Foundry",
+					"icon": "resources/common/cf.svg"
+				}
+			]
 		}
 	},
-	"scripts": {
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"lint": "eslint . --ext .ts,.tsx --cache",
-		"lint:fix": "eslint . --ext .ts,.tsx --cache --fix",
-		"build": "npm run compile && webpack --mode production && vsce package",
-		"pretest": "npm run compile & npm run lint",
-		"test": "nyc mocha -p tsconfig.json --config ./.mocharc.yaml",
-		"webpack": "webpack --mode development",
-		"webpack-dev": "webpack --mode development --watch",
-		"vscode:prepublish": "npm run compile && webpack --mode production"
+	"activationEvents": [
+		"*"
+	],
+	"husky": {
+		"hooks": {
+			"commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+		}
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	},
+	"config": {
+		"commitizen": {
+			"path": "cz-conventional-changelog"
+		}
+	},
+	"dependencies": {
+		"@sap/cf-tools": "^0.6.8",
+		"@sap/swa-for-sapbas-vsx": "1.1.3",
+		"@sap/wing-run-config-types": "4.1.3",
+		"@vscode-logging/logger": "1.2.0",
+		"comment-json": "4.1.0",
+		"fs-extra": "9.0.1",
+		"lodash": "4.17.20",
+		"properties-reader": "2.1.1",
+		"update": "^0.7.4",
+		"url": "0.11.0"
 	},
 	"devDependencies": {
+		"@commitlint/cli": "11.0.0",
+		"@commitlint/config-conventional": "11.0.0",
 		"@types/chai": "^4.1.7",
 		"@types/comment-json": "2.4.2",
 		"@types/fs-extra": "^9.0.3",
@@ -258,13 +283,14 @@
 		"@types/properties-reader": "2.1.0",
 		"@types/sinon": "^9.0.8",
 		"@types/vscode": "^1.43.0",
-		"@typescript-eslint/parser": "^2.30.0",
 		"@typescript-eslint/eslint-plugin": "^2.30.0",
+		"@typescript-eslint/parser": "^2.30.0",
+		"chai": "^4.2.0",
+		"clean-webpack-plugin": "^3.0.0",
+		"coveralls": "^3.1.0",
+		"cz-conventional-changelog": "3.3.0",
 		"eslint": "^6.8.0",
 		"eslint-config-prettier": "^6.11.0",
-		"prettier": "^2.0.5",
-		"typescript": "^3.9.7",
-		"chai": "^4.2.0",
 		"grunt": "^1.0.4",
 		"grunt-contrib-clean": "^2.0.0",
 		"grunt-contrib-copy": "^1.0.0",
@@ -272,46 +298,20 @@
 		"grunt-move": "^1.0.1",
 		"grunt-run": "^0.8.0",
 		"grunt-text-replace": "^0.4.0",
-		"mocha": "^7.2.0",
+		"husky": "4.3.0",
+		"mocha": "^8.2.1",
 		"nyc": "^15.1.0",
+		"prettier": "^2.0.5",
 		"sinon": "^9.2.1",
-		"ts-loader": "^8.0.9",
-		"ts-node": "^9.0.0",
+		"ts-loader": "^8.0.12",
+		"ts-node": "^9.1.1",
+		"typescript": "^3.9.7",
 		"vsce": "^1.61.0",
 		"webpack": "^5.5.0",
-		"webpack-cli": "^4.2.0",
-		"clean-webpack-plugin": "^3.0.0",
-		"coveralls": "^3.1.0",
-		"cz-conventional-changelog": "3.3.0",
-		"@commitlint/cli": "11.0.0",
-		"@commitlint/config-conventional": "11.0.0",
-		"husky": "4.3.5"
+		"webpack-cli": "^4.2.0"
 	},
-	"dependencies": {
-		"@sap/cf-tools": "^0.6.8",
-		"@sap/wing-run-config-types": "4.1.3",
-		"@sap/swa-for-sapbas-vsx": "1.1.5",
-		"@vscode-logging/logger": "1.2.1",
-		"comment-json": "4.1.0",
-		"fs-extra": "9.0.1",
-		"lodash": "4.17.20",
-		"properties-reader": "2.1.1",
-		"update": "^0.7.4",
-		"url": "0.11.0"
+	"engines": {
+		"vscode": "^1.43.0"
 	},
-	"husky": {
-		"hooks": {
-			"commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-		}
-	},
-	"config": {
-		"commitizen": {
-			"path": "cz-conventional-changelog"
-		}
-	},
-	"commitlint": {
-		"extends": [
-			"@commitlint/config-conventional"
-		]
-	}
+	"icon": ""
 }
