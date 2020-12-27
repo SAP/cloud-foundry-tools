@@ -29,17 +29,17 @@ export interface DisplayServices {
 }
 
 export interface BaseServiceQueryOptions {
-    tag?: string;  // service tags 
-    credentials?: {
-        tag?: string;
-    };
+	tag?: string;  // service tags 
+	credentials?: {
+		tag?: string;
+	};
 }
 
 export type UpsServiceQueryOprions = BaseServiceQueryOptions;
 
 export interface ServiceQueryOptions extends BaseServiceQueryOptions {
-    name?: string; //service type name 
-    plan?: string; //Service plan 
+	name?: string; //service type name 
+	plan?: string; //Service plan 
 }
 
 function spotRedirectUri() {
@@ -228,12 +228,12 @@ export function composeFilterPattern(value: string): string {
 async function doGetUpsServiceInstances(query?: IServiceQuery, filterCredTag?: string): Promise<ServiceInstanceInfo[]> {
 	const upsServices = await cfGetUpsInstances(query);
 	const pattern = (_.size(upsServices) && filterCredTag) ? composeFilterPattern(filterCredTag) : undefined;
-	const ups2Show  = pattern ? upsServices.filter(service => {
-	  return _.find(service.credentials?.tags, (tag) => new RegExp(pattern).test(tag));
+	const ups2Show = pattern ? upsServices.filter(service => {
+		return _.find(service.credentials?.tags, (tag) => new RegExp(pattern).test(tag));
 	}) : upsServices;
 	return ups2Show;
 }
-			
+
 export async function getUpsServiceInstances(options?: UpsServiceQueryOprions): Promise<ServiceInstanceInfo[]> {
 	return doGetUpsServiceInstances(undefined, options?.credentials?.tag);
 }
@@ -244,7 +244,7 @@ export async function getAllServiceInstances(opts?: DisplayServices): Promise<Se
 		const copyQuery = _.cloneDeep(opts.query);
 		_.remove(copyQuery?.filters, (item) => {
 			return !_.includes([eFilters.name, eFilters.space_guid, eFilters.organization_guid], item.key);
-		});		
+		});
 		ups2Show = await doGetUpsServiceInstances(copyQuery, opts.ups.tag);
 	}
 	return _.concat(await cfGetServiceInstances(opts?.query), ups2Show);

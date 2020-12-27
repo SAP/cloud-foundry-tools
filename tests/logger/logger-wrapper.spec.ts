@@ -154,7 +154,7 @@ describe('logger-wrapper unit tests', () => {
                     return section === "CloudFoundryTools.loggingLevel";
                 }
             };
-            testContext['logUri'] = {fsPath: logPath};
+            testContext['logUri'] = { fsPath: logPath };
             delete testContext.logPath;
 
             const level = "debug";

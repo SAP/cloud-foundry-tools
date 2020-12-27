@@ -35,7 +35,7 @@ export function getLogger(): IVSCodeExtLogger {
 }
 
 export function getModuleLogger(moduleName: string): IChildLogger {
-	return getLogger().getChildLogger({label:moduleName});
+    return getLogger().getChildLogger({ label: moduleName });
 }
 
 function logLoggerDetails(logPath: string, configLogLevel: LogLevel): void {

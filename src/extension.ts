@@ -12,8 +12,10 @@ import {
 	cmdLogin, cmdCreateService, cmdCreateTarget,
 	cmdCFSetOrgSpace, cmdSelectSpace, cmdCreateUps
 } from "./commands";
-import { cmdDeployServiceAPI, cmdSetCurrentTarget, cmdDeleteTarget, cmdBindLocal, cmdReloadTargets, 
-cmdGetSpaceServices, cmdGetUpsServiceInstances, cmdGetServiceInstances } from "./cfViewCommands";
+import {
+	cmdDeployServiceAPI, cmdSetCurrentTarget, cmdDeleteTarget, cmdBindLocal, cmdReloadTargets,
+	cmdGetSpaceServices, cmdGetUpsServiceInstances, cmdGetServiceInstances
+} from "./cfViewCommands";
 
 import { cfGetConfigFilePath, cfGetConfigFileField, ITarget, cfGetTarget } from "@sap/cf-tools";
 import * as fsextra from "fs-extra";
@@ -107,7 +109,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				await platformExtension.activate();
 			} catch (e) {
 				platformExtension = undefined;
-				getModuleLogger(LOGGER_MODULE).error("activate <%s> extension fails", runConfigExtName, {message: toText(e)});
+				getModuleLogger(LOGGER_MODULE).error("activate <%s> extension fails", runConfigExtName, { message: toText(e) });
 			}
 		}
 		if (platformExtension) {

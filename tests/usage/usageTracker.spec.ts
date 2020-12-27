@@ -54,7 +54,7 @@ describe("usageTracker unit tests", () => {
             usageTrackerMock.expects("track").withExactArgs("Chisel Task", ["CF tools"]).returns();
             await usageTracker.trackChiselTask("Chisel Task", ["CF tools"]);
         });
-    
+
         it("trackChiselTask - exception thrown", async () => {
             const errorText = "Tracking Error";
             usageTrackerMock.expects("track").throws(new Error(errorText));

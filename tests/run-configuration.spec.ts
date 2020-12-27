@@ -63,7 +63,7 @@ describe("run-configuration tests package", () => {
                 }
             }
         };
-        
+
 
         it("constructor", () => {
             const id = 'test.Handler.id';

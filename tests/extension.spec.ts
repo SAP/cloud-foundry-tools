@@ -51,7 +51,7 @@ describe('Extension unit test', () => {
         "cf.targets.reload": cfViewCommands.cmdReloadTargets,
         "cf.select.space": commands.cmdSelectSpace,
         "cf.deploy-service.api": cfViewCommands.cmdDeployServiceAPI,
-        "cf.services.binding.state" : dependencyHandler.getBindState,
+        "cf.services.binding.state": dependencyHandler.getBindState,
         "cf.services.get-space-services": cfViewCommands.cmdGetSpaceServices,
         "cf.services.get-ups-services": cfViewCommands.cmdGetUpsServiceInstances,
         "cf.services.get-services": cfViewCommands.cmdGetServiceInstances,
@@ -112,7 +112,7 @@ describe('Extension unit test', () => {
 
         beforeEach(() => {
             windowMock.expects("registerTreeDataProvider").withArgs("cfView");
-            testContext = { "subscriptions": [], logUri: {fsPath: path.resolve(__dirname)} };
+            testContext = { "subscriptions": [], logUri: { fsPath: path.resolve(__dirname) } };
             loggerWrapperMock.expects("createLoggerAndSubscribeToLogSettingsChanges").withExactArgs(testContext).resolves();
 
             _.forEach(commandsMap, (command, commandName) => {
@@ -235,7 +235,7 @@ describe('Extension unit test', () => {
             }, 2000);
 
         });
-    
+
         it("onCFConfigFileChange - not targeted", () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
             mockCfLocal.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
@@ -264,7 +264,7 @@ describe('Extension unit test', () => {
                 done();
             }, 1000);
         });
-    
+
     });
 
     it("No service found message composed", () => {

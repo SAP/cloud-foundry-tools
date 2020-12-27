@@ -5,7 +5,7 @@
  */
 
 import * as vscode from "vscode";
-import * as path from "path"; 
+import * as path from "path";
 
 import {
     IRunnable, IRunConfigContext, IDependencyContext, ConfigurationTarget,

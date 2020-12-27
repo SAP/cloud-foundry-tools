@@ -12,10 +12,11 @@ import {
 import { messages } from "./messages";
 import { cmdReloadTargets } from "./cfViewCommands";
 import * as _ from "lodash";
-import { validateParams, generateParams4Service, getAllServiceInstances, 
-          DisplayServices, isRegexExpression, composeFilterPattern, toText,
-          UpsServiceQueryOprions, getUpsServiceInstances   
-        } from "./utils";
+import {
+    validateParams, generateParams4Service, getAllServiceInstances,
+    DisplayServices, isRegexExpression, composeFilterPattern, toText,
+    UpsServiceQueryOprions, getUpsServiceInstances
+} from "./utils";
 import { stringify, parse } from "comment-json";
 import { getModuleLogger } from "./logger/logger-wrapper";
 

@@ -7,11 +7,12 @@ import * as url from "url";
 import { updateGitIgnoreList, isWindows, toText, UpsServiceQueryOprions, ServiceQueryOptions } from "./utils";
 import {
     CFTarget, DEFAULT_TARGET, ServiceInstanceInfo, IServiceQuery, eFilters, eOperation, Cli, cfGetConfigFileField,
-    cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, cfGetServices, cfGetServicePlans, PlanInfo} from "@sap/cf-tools";
+    cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, cfGetServices, cfGetServicePlans, PlanInfo
+} from "@sap/cf-tools";
 import * as _ from "lodash";
 import {
     getAvailableServices, updateServicesOnCFPageSize, isServiceTypeInfoInArray, updateInstanceNameAndTags, getInstanceName, fetchServicePlanList,
-    CMD_CREATE_SERVICE, USER_PROVIDED_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances, filterArrayByAttribute 
+    CMD_CREATE_SERVICE, USER_PROVIDED_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances, filterArrayByAttribute
 } from "./commands";
 import { stringify } from "comment-json";
 import { getModuleLogger } from "./logger/logger-wrapper";
@@ -73,11 +74,11 @@ type TEnvPath = {
 };
 
 async function getServicePlansGuidList(serviceName: string): Promise<string[]> {
-	return _.map(_.flatten(await Promise.all(
-		_.map(await cfGetServices({ 'filters': [{ key: eFilters.label, value: encodeURIComponent(serviceName) }] }), service => {
-			return cfGetServicePlans(service.service_plans_url);
-		})
-	)), 'guid');
+    return _.map(_.flatten(await Promise.all(
+        _.map(await cfGetServices({ 'filters': [{ key: eFilters.label, value: encodeURIComponent(serviceName) }] }), service => {
+            return cfGetServicePlans(service.service_plans_url);
+        })
+    )), 'guid');
 }
 
 async function doBind(instances: ServiceInstanceInfo[], envPath: TEnvPath, tags?: string[], serviceKeyNames?: string[], serviceKeyParams?: unknown[]) {
@@ -203,7 +204,7 @@ export async function cmdGetSpaceServices(query?: IServiceQuery, progressTitle?:
 
 async function composePlansGuidListForQuery(serviceInfos: ServiceTypeInfo[], planList: PlanInfo[]): Promise<string[]> {
     let plans: string[] = [];
-    if(_.get(serviceInfos, ['0', 'plan'])) {
+    if (_.get(serviceInfos, ['0', 'plan'])) {
         plans = _.map(_.filter(planList, ['label', serviceInfos[0].plan]), 'guid');
     }
     if (!_.size(plans) && _.get(serviceInfos, '[0].name')) {
@@ -227,7 +228,7 @@ async function collectBindDetails(service: CFService | ServiceTypeInfo[], requst
         let availableServices = await getAvailableServices({ query, ups: _.get(service, ['0', 'ups']) });
         if (_.isEmpty(availableServices)) {
             getModuleLogger(LOGGER_MODULE).debug(`No services found for plan ${_.get(service, '[0].plan')} {${_.size(plans)}}`);
-            if(!_.find(service as ServiceTypeInfo[], 'allowCreate')) {
+            if (!_.find(service as ServiceTypeInfo[], 'allowCreate')) {
                 vscode.window.showInformationMessage(messages.no_services_instances_found);
                 return details;
             }
@@ -374,16 +375,16 @@ export async function cmdGetServiceInstances(serviceQueryOptions?: ServiceQueryO
         if (serviceQueryOptions.plan) {
             servicePlans = await fetchServicePlanList();
         }
-        const serviceInfo = { name: serviceQueryOptions.name, plan: serviceQueryOptions.plan, tag: serviceQueryOptions.tag, prompt: ""};
-        const plans = await composePlansGuidListForQuery([serviceInfo], servicePlans);        
+        const serviceInfo = { name: serviceQueryOptions.name, plan: serviceQueryOptions.plan, tag: serviceQueryOptions.tag, prompt: "" };
+        const plans = await composePlansGuidListForQuery([serviceInfo], servicePlans);
         if (Array.isArray(plans) && plans.length) {
-          query = _.merge({}, { 'filters': [{ key: eFilters.service_plan_guid, value: _.join(plans), op: eOperation.IN }] });
+            query = _.merge({}, { 'filters': [{ key: eFilters.service_plan_guid, value: _.join(plans), op: eOperation.IN }] });
         }
     }
     let services = await getServiceInstances(query, progressTitle);
     if (serviceQueryOptions?.name) {
-      //filter the list by service type name (e.g.: hana, hanatrial)
-      services = filterArrayByAttribute(services, serviceQueryOptions.name, 'serviceName' ) as ServiceInstanceInfo[];
+        //filter the list by service type name (e.g.: hana, hanatrial)
+        services = filterArrayByAttribute(services, serviceQueryOptions.name, 'serviceName') as ServiceInstanceInfo[];
     }
     return services;
 }
