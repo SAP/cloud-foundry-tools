@@ -227,7 +227,7 @@ async function collectBindDetails(service: CFService | ServiceTypeInfo[], requst
         let availableServices = await getAvailableServices({ query, ups: _.get(service, ['0', 'ups']) });
         if (_.isEmpty(availableServices)) {
             getModuleLogger(LOGGER_MODULE).debug(`No services found for plan ${_.get(service, '[0].plan')} {${_.size(plans)}}`);
-            if(!_.find(service as ServiceTypeInfo[], ['allowCreate', true])) {
+            if(!_.find(service as ServiceTypeInfo[], 'allowCreate')) {
                 vscode.window.showInformationMessage(messages.no_services_instances_found);
                 return details;
             }
