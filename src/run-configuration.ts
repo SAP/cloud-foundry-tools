@@ -55,7 +55,7 @@ export class DependencyHandler implements types.IDependencyHandler {
           // Create it in dependent task
           const chiselTaskNameSuffix = instanceNames.join("&");
           const chiselTask = await checkAndCreateChiselTask(bindContext.envPath?.fsPath, chiselTaskNameSuffix);
-          if (!_.isEmpty(chiselTask.label)) {
+          if (chiselTask) {
             vscode.window.showInformationMessage(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`);
             getModuleLogger(DependencyHandler.MODULE_NAME).info("bind: <%s> task for opening the VPN tunnel to the Cloud Foundry space has been created", chiselTask.label);
 

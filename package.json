@@ -1,7 +1,7 @@
 {
 	"name": "vscode-wing-cf-tools",
 	"displayName": "Cloud Foundry Tools",
-	"version": "5.7.5",
+	"version": "5.7.6",
 	"description": "Vscode extension of Cloud Foundry tools",
 	"categories": [
 		"Other"
@@ -281,6 +281,7 @@
 		"@types/mocha": "^8.2.0",
 		"@types/node": "^14.14.6",
 		"@types/properties-reader": "2.1.0",
+		"@types/rimraf": "^2.0.2",
 		"@types/sinon": "^9.0.8",
 		"@types/vscode": "^1.43.0",
 		"@typescript-eslint/eslint-plugin": "^2.30.0",
@@ -302,7 +303,9 @@
 		"mocha": "^8.2.1",
 		"nyc": "^15.1.0",
 		"prettier": "^2.0.5",
+		"rimraf": "^2.6.3",
 		"sinon": "^9.2.1",
+		"temp-dir": "2.0.0",
 		"ts-loader": "^8.0.12",
 		"ts-node": "^9.1.1",
 		"typescript": "^3.9.7",

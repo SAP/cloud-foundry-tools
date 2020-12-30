@@ -16,6 +16,7 @@ import {
 } from "./commands";
 import { stringify } from "comment-json";
 import { getModuleLogger } from "./logger/logger-wrapper";
+import { checkAndCreateChiselTask, deleteChiselParamsFromFile } from "./chisel";
 
 const YES = "Yes";
 const NO = "No";
@@ -27,6 +28,12 @@ interface BindDetails {
     tags?: string[];
     keyNames?: string[];
     serviceKeyParams?: unknown[];
+}
+
+interface BindLocalData {
+    instanceName: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chiselTask?: any;
 }
 
 export function cmdReloadTargets(): Promise<void> {
@@ -293,14 +300,14 @@ class EnvPathHelper {
     }
 }
 
-export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath, instanceName?: string): Promise<string | undefined> {
+export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath, instanceName?: string): Promise<BindLocalData | undefined> {
     // Handle .env path
     let filePath = EnvPathHelper.getPath(envPath);
     if (EnvPathHelper.isPathEmpty(filePath)) {
         const uriArray = await askUserForPath();
-        if (_.size(uriArray) <= 0) {
+        if (_.size(uriArray) === 0) {
             // aborted
-            return "";
+            return undefined;
         }
         filePath = vscode.Uri.file(path.join(uriArray[0].fsPath, ".env"));
     }
@@ -308,7 +315,14 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
         const bindDetails = await collectBindDetails(service, instanceName);
         if (bindDetails) {
             await doBind(bindDetails.instances, { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, bindDetails.tags, bindDetails.keyNames, bindDetails.serviceKeyParams);
-            return _.get(_.head(bindDetails.instances), 'label');
+            const instanceName = _.get(_.head(bindDetails.instances), 'label');
+            if (instanceName) {
+                const chiselTask = await checkAndCreateChiselTask(filePath.fsPath, instanceName);
+                if (chiselTask) {
+                    await deleteChiselParamsFromFile(filePath.fsPath);
+                }
+                return chiselTask ? { instanceName, chiselTask } : { instanceName };
+            }
         }
     } catch (e) {
         if (e) { // login to cf canceled by user
@@ -316,7 +330,7 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
             getModuleLogger(LOGGER_MODULE).error(`cmdBindLocal exception thrown`, { message: toText(e) }, { service: service }, { envPath: filePath }, { instanceName: instanceName });
         }
     }
-    return "";
+    return undefined;
 }
 
 export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath): Promise<string[]> {

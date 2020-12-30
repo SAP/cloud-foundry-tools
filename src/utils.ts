@@ -293,3 +293,14 @@ export async function updateGitIgnoreList(envPath: string) {
 		}
 	}
 }
+
+export async function writeProperties(filePath: string, properties: Record<string, string>): Promise<void> {
+    let text = "";
+    Object.keys(properties).forEach(key => {
+       const value = properties[key];
+        if (value) {
+          text += `${key}=${value.trim()}\n`;
+        }
+    });
+    await fsextra.outputFile(filePath, text);  
+}

@@ -140,8 +140,8 @@ describe("run-configuration tests package", () => {
             expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
         });
 
-        it("bind - create chisel task - empty label", async () => {
-            sandbox.stub(chisel, "checkAndCreateChiselTask").withArgs(bindContext.envPath.fsPath, instances.join('&')).resolves({});
+        it("bind - create chisel task - return undefined", async () => {
+            sandbox.stub(chisel, "checkAndCreateChiselTask").withArgs(bindContext.envPath.fsPath, instances.join('&')).resolves(undefined);
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
             usageMock.expects("trackChiselTask").withExactArgs("Chisel Task", ["CF tools"]).resolves();
