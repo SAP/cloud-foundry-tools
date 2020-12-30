@@ -588,7 +588,7 @@ describe("commands unit tests", () => {
             }).resolves([]);
             await commands.cmdCreateService(info);
         });
-
+        
         it("with service metadata info - quiet params", async () => {
             vscodeWindowMock.expects("showQuickPick").never();
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
@@ -636,6 +636,72 @@ describe("commands unit tests", () => {
             expect(result).to.be.undefined;
         });
 
+        async function testAllowCreateParams(expectedInstanceName: string, expectedServiceName: string, expectedPlanName: string, info: ServiceTypeInfo, plans: { label: string }[]) {
+            vscodeWindowMock.expects("showQuickPick").never();
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves(expectedInstanceName);
+            vscodeWindowMock.expects("withProgress").withArgs({
+                location: nsVsMock.testVscode.ProgressLocation.Notification,
+                title: messages.loading_services,
+                cancellable: true
+            }).resolves([{ 'label': expectedServiceName }]);
+            vscodeWindowMock.expects("withProgress").withArgs({
+                location: nsVsMock.testVscode.ProgressLocation.Notification,
+                title: messages.loading_service_plan_list,
+                cancellable: false
+            }).resolves(plans);
+            vscodeWindowMock.expects("showInputBox").withArgs({
+                ignoreFocusOut: true,
+                placeHolder: messages.create_service_enter_params,
+                valueSelection: undefined,
+                validateInput: validateParams('testServiceInfoLabel')
+            }).never();
+            vscodeWindowMock.expects("withProgress").withArgs({
+                location: nsVsMock.testVscode.ProgressLocation.Notification,
+                title: messages.creating_service(expectedInstanceName, expectedServiceName, expectedPlanName),
+                cancellable: true
+            }).resolves(expectedServiceName);
+            const serviceName = await commands.cmdCreateService(info);
+            expect(serviceName).to.equal(expectedServiceName);
+        }
+
+        it("use the info params because serviceName, plan and tag are not defined in allowCreate", async () => {
+            const expectedServiceName = "nameA";
+            const expectedPlanName =  "planA";
+            const expectedInstanceName =  "instanceName";
+            const info: ServiceTypeInfo = {
+                name: expectedServiceName,
+                plan: expectedPlanName,
+                prompt: "promptA",
+                tag: "tagA",
+                allowCreate: {                    
+                    getParams: () => Promise.resolve({ "some": { "data": "value" } })
+                }
+            };
+            const plans = [{ label: 'plan1' }, { label: expectedPlanName }];
+
+            await testAllowCreateParams(expectedInstanceName, expectedServiceName, expectedPlanName, info, plans);
+        });
+
+        it("use allowCreate serviceName, plan and tag because they are defined in allowCreate ", async () => {
+            const expectedServiceName = "nameB";
+            const expectedPlanName =  "planB";
+            const expectedInstanceName =  "instanceName";
+            const info: ServiceTypeInfo = {
+                name: "nameA",
+                plan: "planA",
+                prompt: "promptA",
+                tag: "tagA",
+                allowCreate: {
+                    serviceName: expectedServiceName,
+                    plan: expectedPlanName,
+                    tag: "tagB",
+                    getParams: () => Promise.resolve({ "some": { "data": "value" } })
+                }
+            };
+            const plans = [{ label: 'planA' }, { label: expectedPlanName }];
+
+            await testAllowCreateParams(expectedInstanceName, expectedServiceName, expectedPlanName, info, plans);
+        });        
     });
 
     describe("onCreateService - continue", () => {
@@ -1142,3 +1208,4 @@ describe("commands unit tests", () => {
     });
 
 });
+

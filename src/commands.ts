@@ -325,12 +325,17 @@ async function createUpsInstance(name: string, info?: ServiceTypeInfo): Promise<
 }
 
 async function createServiceInstance(name: string, info?: ServiceTypeInfo): Promise<string | undefined> {
+    const serviceName = info?.allowCreate?.serviceName || info?.name;
+    const servicePlan = info?.allowCreate?.plan || info?.plan;
+    const serviceTag = info?.allowCreate?.tag || info?.tag;
+
     let servicesInfo: ServiceInfo[] = await runWithProgressAndLoginRetry(true, messages.loading_services, cfGetServices);
-    if (info?.name) {
-        servicesInfo = filterArrayByAttribute(servicesInfo, info.name, 'label') as ServiceInfo[];
+    if (serviceName) {
+        servicesInfo = filterArrayByAttribute(servicesInfo, serviceName, 'label') as ServiceInfo[];
     }
+    
     if (_.size(servicesInfo)) {
-        const serviceInfo = (_.size(servicesInfo) === 1 && info?.name)
+        const serviceInfo = (_.size(servicesInfo) === 1 && serviceName)
             ? servicesInfo[0]
             : await vscode.window.showQuickPick<ServiceInfo>(servicesInfo, { placeHolder: messages.select_services });
 
@@ -338,10 +343,10 @@ async function createServiceInstance(name: string, info?: ServiceTypeInfo): Prom
             let plansInfo: PlanInfo[] = await onGetServicePlansFromCF(serviceInfo.service_plans_url);
             if (_.size(plansInfo)) {
 
-                plansInfo = info?.plan ? filterArrayByAttribute(plansInfo, info.plan, 'label') as PlanInfo[] : plansInfo;
+                plansInfo = servicePlan ? filterArrayByAttribute(plansInfo, servicePlan, 'label') as PlanInfo[] : plansInfo;
 
                 if (_.size(plansInfo)) {
-                    const planInfo: PlanInfo = (_.size(plansInfo) === 1 && info?.plan)
+                    const planInfo: PlanInfo = (_.size(plansInfo) === 1 && servicePlan)
                         ? plansInfo[0]
                         : await vscode.window.showQuickPick<PlanInfo>(plansInfo, { placeHolder: messages.select_service_plan });
 
@@ -352,18 +357,18 @@ async function createServiceInstance(name: string, info?: ServiceTypeInfo): Prom
                                 location: vscode.ProgressLocation.Notification,
                                 title: messages.creating_service(name, serviceInfo.label, planInfo.label),
                                 cancellable: true
-                            }, (progress, cancelToken) => onCreateService(planInfo, name, parse(params), info?.tag ? [info.tag] : undefined, progress, cancelToken));
+                            }, (progress, cancelToken) => onCreateService(planInfo, name, parse(params), serviceTag ? [serviceTag] : undefined, progress, cancelToken));
                         }
                     }
                 } else {
-                    throw new Error(messages.no_service_plan_info_found(info.plan, serviceInfo.label));
+                    throw new Error(messages.no_service_plan_info_found(servicePlan, serviceInfo.label));
                 }
             } else {
                 throw new Error(messages.no_service_plans_found(serviceInfo.label));
             }
         }
     } else {
-        throw new Error(info?.name && !isRegexExpression(info.name) ? messages.no_services_instances_found_for_type(info.name) : messages.no_services_instances_found);
+        throw new Error(serviceName && !isRegexExpression(serviceName) ? messages.no_services_instances_found_for_type(serviceName) : messages.no_services_instances_found);
     }
 }
 
@@ -373,6 +378,7 @@ async function createService(isUps: boolean, info?: ServiceTypeInfo): Promise<st
         { prompt: info?.allowCreate?.namePrompt ? `${info.allowCreate.namePrompt}` : messages.enter_service_name },
         info?.allowCreate?.name ? { value: `${info.allowCreate.name}` } : {}
     );
+    // Show instance name input box
     const instanceName = await vscode.window.showInputBox(options);
     if (instanceName) {
         try {
