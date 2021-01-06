@@ -133,6 +133,7 @@ export async function cmdCFSetOrgSpace(weak = false): Promise<string | undefined
                             result = space; // undefined -> canceled        
                         }
                     } else {
+                        result = undefined; // forced exit
                         warningMessage = messages.no_available_spaces;
                         getModuleLogger(LOGGER_MODULE).warn("cmdCFSetOrgSpace: No available spaces found in <%s> organization", _.get(org, "label"), { weak: weak });
                     }
@@ -140,6 +141,7 @@ export async function cmdCFSetOrgSpace(weak = false): Promise<string | undefined
                     result = org; // undefined -> canceled
                 }
             } else {
+                result = undefined; // forced exit
                 warningMessage = messages.no_available_orgs;
                 getModuleLogger(LOGGER_MODULE).warn("cmdCFSetOrgSpace: No available organization found", { weak: weak });
             }
@@ -227,6 +229,7 @@ export async function cmdSelectSpace(): Promise<string | undefined> {
                 result = space;
             }
         } else {
+            result = undefined; // forced exit
             warningMessage = messages.no_available_spaces;
             getModuleLogger(LOGGER_MODULE).warn("cmdSelectSpace: no available spaces found");
         }

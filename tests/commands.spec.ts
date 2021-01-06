@@ -200,7 +200,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).resolves();
             bindSpy = sandbox.spy(cfLocal.cfGetAvailableOrgs, "bind");
             vscodeWindowMock.expects("showWarningMessage").withExactArgs(messages.no_available_orgs).resolves();
-            await commands.cmdCFSetOrgSpace();
+            expect(await commands.cmdCFSetOrgSpace()).to.be.undefined;
             expect(bindSpy.args[0]).to.have.lengthOf(1);
             expect(bindSpy.args[0][0]).to.be.equal(undefined);
         });
@@ -210,7 +210,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).resolves(orgs);
             vscodeWindowMock.expects("showQuickPick").withExactArgs(orgs, { placeHolder: messages.select_org, canPickMany: false, matchOnDetail: true, ignoreFocusOut: true }).resolves();
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_spaces }).never();
-            await commands.cmdCFSetOrgSpace();
+            expect(await commands.cmdCFSetOrgSpace()).to.be.undefined;
         });
 
         it("org is selected, no available spaces", async () => {
@@ -220,7 +220,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_spaces }).resolves();
             vscodeWindowMock.expects("showWarningMessage").withExactArgs(messages.no_available_spaces).resolves();
             bindSpy = sandbox.spy(cfLocal.cfGetAvailableSpaces, "bind");
-            await commands.cmdCFSetOrgSpace();
+            expect(await commands.cmdCFSetOrgSpace()).to.be.undefined;
             expect(bindSpy.args[0]).to.have.lengthOf(2);
             expect(bindSpy.args[0][0]).to.be.equal(undefined);
             expect(bindSpy.args[0][1]).to.be.equal(orgs[1].guid);
@@ -233,7 +233,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_spaces }).resolves(spaces);
             vscodeWindowMock.expects("showQuickPick").withExactArgs(spaces, { placeHolder: messages.select_space, canPickMany: false, matchOnDetail: true, ignoreFocusOut: true }).resolves();
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.success_set_org_space).never();
-            await commands.cmdCFSetOrgSpace();
+            expect(await commands.cmdCFSetOrgSpace()).to.be.undefined;
         });
 
         it("cmdCFSetOrgSpace - exception thrown", async () => {
@@ -275,7 +275,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.getting_spaces, cancellable: false }).resolves(testSpaces);
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.set_org_space }).resolves(orgs);
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.success_set_org_space).resolves();
-            await commands.cmdSelectSpace();
+            expect(await commands.cmdSelectSpace()).to.be.equal(OK);
         });
 
         it("cmdSelectSpace - exception", async () => {
@@ -285,7 +285,7 @@ describe("commands unit tests", () => {
             const error = new Error('my');
             sandbox.stub(cfLocal, 'cfGetAvailableOrgs').rejects(error);
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message).resolves();
-            await commands.cmdSelectSpace();
+            expect(await commands.cmdSelectSpace()).to.be.empty;
         });
 
         it("cmdSelectSpace - no space", async () => {
@@ -294,13 +294,13 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("showQuickPick").withExactArgs(testSpaces, { canPickMany: false, matchOnDetail: true, ignoreFocusOut: true }).resolves(null);
             vscodeWindowMock.expects("withProgress").never();
             vscodeWindowMock.expects("showInformationMessage").never();
-            await commands.cmdSelectSpace();
+            expect(await commands.cmdSelectSpace()).to.be.null;
         });
 
         it("cmdSelectSpace - no available spaces", async () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.getting_spaces, cancellable: false }).resolves([]);
             vscodeWindowMock.expects("showWarningMessage").withExactArgs(messages.no_available_spaces).resolves();
-            await commands.cmdSelectSpace();
+            expect(await commands.cmdSelectSpace()).to.be.undefined;
         });
 
         it("cmdSelectSpace - no organization", async () => {
@@ -311,7 +311,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("withProgress").never();
             vscodeWindowMock.expects("showInformationMessage").never();
             vscodeWindowMock.expects("showWarningMessage").withExactArgs(messages.no_available_orgs);
-            await commands.cmdSelectSpace();
+            expect(await commands.cmdSelectSpace()).to.be.undefined;
         });
     });
 
