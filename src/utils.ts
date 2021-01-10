@@ -229,7 +229,9 @@ async function doGetUpsServiceInstances(query?: IServiceQuery, filterCredTag?: s
 	const upsServices = await cfGetUpsInstances(query);
 	const pattern = (_.size(upsServices) && filterCredTag) ? composeFilterPattern(filterCredTag) : undefined;
 	const ups2Show = pattern ? upsServices.filter(service => {
-		return _.find(service.credentials?.tags, (tag) => new RegExp(pattern).test(tag));
+		// cretentials.tags can be 'string', 'string array' or 'array of objects' only
+		const tags = _.isString(service.credentials?.tags) ? [service.credentials.tags] : service.credentials?.tags;
+		return _.find(tags, (tag) => new RegExp(pattern).test(tag));
 	}) : upsServices;
 	return ups2Show;
 }
@@ -295,12 +297,12 @@ export async function updateGitIgnoreList(envPath: string) {
 }
 
 export async function writeProperties(filePath: string, properties: Record<string, string>): Promise<void> {
-    let text = "";
-    Object.keys(properties).forEach(key => {
-       const value = properties[key];
-        if (value) {
-          text += `${key}=${value.trim()}\n`;
-        }
-    });
-    await fsextra.outputFile(filePath, text);  
+	let text = "";
+	Object.keys(properties).forEach(key => {
+		const value = properties[key];
+		if (value) {
+			text += `${key}=${value.trim()}\n`;
+		}
+	});
+	await fsextra.outputFile(filePath, text);
 }

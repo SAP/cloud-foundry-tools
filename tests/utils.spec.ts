@@ -364,11 +364,16 @@ describe('utils unit tests', () => {
     });
 
     describe("getUpsServiceInstances", () => {
-        const ups = [{ label: 'ups1', serviceName: 'user-provided-service', credentials: { tags: ['monodb', 'hana'] } },
-        { label: 'ups2', serviceName: 'user-provided-service', credentials: { tags: ['david'] } }];
+        const ups = [
+            { label: 'ups1', serviceName: 'user-provided-service', credentials: { tags: ['monodb', 'hana'] }}, 
+            { label: 'ups2', serviceName: 'user-provided-service', credentials: { tags: ['david'] } }, 
+            { label: 'ups3', serviceName: 'user-provided-service', credentials: { tags: 'hana' } }, 
+            { label: 'wrong-credential-tags', serviceName: 'user-provided-service', credentials: { tags: 2 } },
+            { label: 'wrong-credential-tags2', serviceName: 'user-provided-service', credentials: { tags: [2, { data: 'hana'}] } },
+            { label: 'wrong-credential', serviceName: 'user-provided-service'}
+        ];
 
         it("Get all user provides services", async () => {
-            //const options = {credentials: {tag: "hana"}}; 
             sandbox.stub(cfLocal, 'cfGetUpsInstances').resolves(ups);
             assert.deepEqual(await utils.getUpsServiceInstances(), ups);
         });
@@ -376,7 +381,7 @@ describe('utils unit tests', () => {
         it("Get all user provides services filtered by credential tag", async () => {
             const options = { credentials: { tag: "hana" } };
             sandbox.stub(cfLocal, 'cfGetUpsInstances').resolves(ups);
-            assert.deepEqual(await utils.getUpsServiceInstances(options), [ups[0]]);
+            assert.deepEqual(await utils.getUpsServiceInstances(options), [ups[0], ups[2]]);
         });
 
     });
