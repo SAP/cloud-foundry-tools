@@ -1,23 +1,22 @@
 version: 2.1 # use CircleCI 2.1
 
+default-build: &default-build
+  working_directory: ~/repo    
+  steps:
+    - checkout      
+    - run: npm install            
+    - run: npm run test
+
 jobs: # a collection of steps
   build-and-test-node10:
     docker:
       - image: circleci/node:10.23 # Current BAS node version
-    working_directory: ~/repo    
-    steps:
-      - checkout      
-      - run: npm install            
-      - run: npm run test
+    <<: *default-build
 
   build-and-test-node12:
     docker:
       - image: circleci/node:12 # Future BAS node version
-    working_directory: ~/repo    
-    steps:
-      - checkout      
-      - run: npm install            
-      - run: npm run test      
+    <<: *default-build
 
   compliance:
     docker:
