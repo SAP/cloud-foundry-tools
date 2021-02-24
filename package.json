@@ -266,7 +266,7 @@
 		"@vscode-logging/logger": "1.2.2",
 		"comment-json": "4.1.0",
 		"fs-extra": "9.1.0",
-		"lodash": "4.17.20",
+		"lodash": "4.17.21",
 		"properties-reader": "2.2.0",
 		"update": "^0.7.4",
 		"url": "0.11.0"
