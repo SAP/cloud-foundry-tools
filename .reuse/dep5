@@ -4,5 +4,5 @@ Upstream-Contact: Alexander Gilin <alexander.gilin@sap.com>
 Source: https://github.com/SAP/cloud-foundry-tools-api
 
 Files: *
-Copyright: 2019-2020 SAP SE or an SAP affiliate company and yeoman-ui contributors
+Copyright: 2021 SAP SE or an SAP affiliate company and yeoman-ui contributors
 License: Apache-2.0 
