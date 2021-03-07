@@ -4,19 +4,19 @@ import { CFView, CFService } from "./cfView";
 import { messages } from "./messages";
 import * as https from 'https';
 import * as url from "url";
-import { updateGitIgnoreList, isWindows, toText, UpsServiceQueryOprions, ServiceQueryOptions } from "./utils";
+import { updateGitIgnoreList, isWindows, toText, UpsServiceQueryOprions, ServiceQueryOptions, resolveFilterValue } from "./utils";
 import {
-    CFTarget, DEFAULT_TARGET, ServiceInstanceInfo, IServiceQuery, eFilters, eOperation, Cli, cfGetConfigFileField,
-    cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, cfGetServices, cfGetServicePlans, PlanInfo
+    CFTarget, DEFAULT_TARGET, ServiceInstanceInfo, IServiceQuery, eFilters, Cli, cfGetConfigFileField,
+    cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, padQuery, eServiceTypes
 } from "@sap/cf-tools";
 import * as _ from "lodash";
 import {
     getAvailableServices, updateServicesOnCFPageSize, isServiceTypeInfoInArray, updateInstanceNameAndTags, getInstanceName, fetchServicePlanList,
-    CMD_CREATE_SERVICE, USER_PROVIDED_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances, filterArrayByAttribute
+    CMD_CREATE_SERVICE, USER_PROVIDED_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances
 } from "./commands";
 import { stringify } from "comment-json";
-import { getModuleLogger } from "./logger/logger-wrapper";
 import { checkAndCreateChiselTask, deleteChiselParamsFromFile } from "./chisel";
+import { getModuleLogger } from "./logger/logger-wrapper";
 
 const YES = "Yes";
 const NO = "No";
@@ -53,7 +53,7 @@ async function execHttp(options: https.RequestOptions): Promise<string> {
                 resolve(data);
             });
         }).on("error", (err) => {
-            getModuleLogger(LOGGER_MODULE).error("execHttp: get failed", { message: err.message }, { host: options.host });
+            getModuleLogger(LOGGER_MODULE).error("execHttp: get failed", { error: toText(err) }, { host: options.host });
             reject(err.message);
         });
     });
@@ -80,14 +80,6 @@ type TEnvPath = {
     ignore?: boolean;
 };
 
-async function getServicePlansGuidList(serviceName: string): Promise<string[]> {
-    return _.map(_.flatten(await Promise.all(
-        _.map(await cfGetServices({ 'filters': [{ key: eFilters.label, value: encodeURIComponent(serviceName) }] }), service => {
-            return cfGetServicePlans(service.service_plans_url);
-        })
-    )), 'guid');
-}
-
 async function doBind(instances: ServiceInstanceInfo[], envPath: TEnvPath, tags?: string[], serviceKeyNames?: string[], serviceKeyParams?: unknown[]) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async function runWithProgress(fnc: (filePath: string, instanceNames: string[], tags?: string[], serviceKeyNames?: string[]) => Promise<void>, args: any[]) {
@@ -112,7 +104,7 @@ async function doBind(instances: ServiceInstanceInfo[], envPath: TEnvPath, tags?
 
 async function getServiceInstanceInfo(instanceName: string): Promise<ServiceInstanceInfo> {
     const data = await cfGetInstanceMetadata(instanceName);
-    return { label: _.get(data, 'serviceName'), serviceName: _.get(data, 'service'), plan_guid: _.get(data, 'plan_guid') };
+    return { label: _.get(data, 'serviceName'), serviceName: _.get(data, 'service'), plan_guid: _.get(data, 'plan_guid'), plan: _.get(data, 'plan') };
 }
 
 export async function cfDeployServiceAPI(urlPath: string): Promise<string> {
@@ -175,14 +167,14 @@ export async function cmdSetCurrentTarget(newTarget: CFTarget): Promise<unknown 
             return Cli.execute(["set-target", "-f", newTarget.label]).then(async (response: { exitCode: number; stdout: string }) => {
                 if (response.exitCode !== 0) {
                     vscode.window.showErrorMessage(response.stdout);
-                    getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand:: run 'set-target -f' with lable ${newTarget.label} failed`, { message: response.stdout });
+                    getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand:: run 'set-target -f' with lable ${newTarget.label} failed`, { output: response.stdout });
                 } else {
                     await cmdReloadTargets();
                 }
             });
         } catch (e) {
             vscode.window.showErrorMessage(toText(e));
-            getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand with new target ${stringify(newTarget)} exception thrown`, { message: toText(e) });
+            getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand with new target ${stringify(newTarget)} exception thrown`, { error: toText(e) });
         }
     }
 }
@@ -200,7 +192,7 @@ export async function cmdDeleteTarget(item: unknown): Promise<void> {
         getModuleLogger(LOGGER_MODULE).debug(`cmdDeleteTarget:: command "delete-target" of ${targetLabel} succeeded.`);
     } else {
         vscode.window.showErrorMessage(cliResult.stdout);
-        getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand:: run 'delete-target of ${targetLabel} failed`, { message: cliResult.stdout });
+        getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand:: run 'delete-target of ${targetLabel} failed`, { output: cliResult.stdout });
     }
 }
 
@@ -209,32 +201,32 @@ export async function cmdGetSpaceServices(query?: IServiceQuery, progressTitle?:
     return getAvailableServices({ query, ups: { isShow: true } }, progressTitle);
 }
 
-async function composePlansGuidListForQuery(serviceInfos: ServiceTypeInfo[], planList: PlanInfo[]): Promise<string[]> {
-    let plans: string[] = [];
+async function composeQueryToObtainInstances(serviceInfos: ServiceTypeInfo[]): Promise<IServiceQuery> {
+    let query;
     if (_.get(serviceInfos, ['0', 'plan'])) {
-        plans = _.map(_.filter(planList, ['label', serviceInfos[0].plan]), 'guid');
+        query = padQuery(query, [{ key: eFilters.service_plan_names, value: resolveFilterValue(serviceInfos[0].plan) }]);
     }
-    if (!_.size(plans) && _.get(serviceInfos, '[0].name')) {
-        plans = await getServicePlansGuidList(_.get(serviceInfos, '[0].name'));
+    if (/*!_.size(plans) &&*/ _.get(serviceInfos, '[0].name')) {
+        if (eServiceTypes.user_provided === serviceInfos[0].name) {
+            query = padQuery(query, [{ key: eFilters.service_plan_names, value: 'nothing-to-show' }]); // tricky - to show the only user-provided instances
+        } else {
+            const guids = _.map(await fetchServicePlanList({ filters: [{ key: eFilters.service_offering_names, value: resolveFilterValue(serviceInfos[0].name) }] }), 'guid');
+            query = padQuery(query, [{ key: eFilters.service_plan_guids, value: _.join(guids) }]);
+        }
     }
-    return plans;
+    return query;
 }
 
 async function collectBindDetails(service: CFService | ServiceTypeInfo[], requstedInstance?: string): Promise<BindDetails> {
     let details: BindDetails;
 
     if (_.get(service, "contextValue") === "cf-service" && _.get(service, "label")) {
-        details = { instances: [{ label: (service as CFService).label, serviceName: "unknown" }] };
+        details = { instances: [{ label: (service as CFService).label, serviceName: (service as CFService).type || "unknown" }] };
     } else { // service is ServiceTypeInfo
-        let servicePlans;
-        if (_.get(service, '[0].plan')) {
-            servicePlans = await fetchServicePlanList();
-        }
-        const plans = await composePlansGuidListForQuery(service as ServiceTypeInfo[], servicePlans);
-        const query: IServiceQuery = _.merge({}, { 'filters': [{ key: eFilters.service_plan_guid, value: _.join(plans), op: eOperation.IN }] });
+        const query = await composeQueryToObtainInstances(service as ServiceTypeInfo[]);
         let availableServices = await getAvailableServices({ query, ups: _.get(service, ['0', 'ups']) });
         if (_.isEmpty(availableServices)) {
-            getModuleLogger(LOGGER_MODULE).debug(`No services found for plan ${_.get(service, '[0].plan')} {${_.size(plans)}}`);
+            getModuleLogger(LOGGER_MODULE).debug(`No services found for plan ${_.get(service, '[0].plan')}`);
             if (!_.find(service as ServiceTypeInfo[], 'allowCreate')) {
                 vscode.window.showInformationMessage(messages.no_services_instances_found);
                 return details;
@@ -249,7 +241,6 @@ async function collectBindDetails(service: CFService | ServiceTypeInfo[], requst
             const serviceTypeInfos = service as ServiceTypeInfo[];
             if (!requstedInstance) {
                 for (const serviceTypeInfo of serviceTypeInfos) {
-                    _.set(serviceTypeInfo, 'plans', servicePlans);
                     if (serviceTypeInfo.allowCreate) {  // add 'create service' menu item
                         availableServices = _.concat([{ "label": CMD_CREATE_SERVICE, serviceName: "" }], availableServices);
                     }
@@ -307,7 +298,7 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
         const uriArray = await askUserForPath();
         if (_.size(uriArray) === 0) {
             // aborted
-            return undefined;
+            return;
         }
         filePath = vscode.Uri.file(path.join(uriArray[0].fsPath, ".env"));
     }
@@ -327,10 +318,10 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
     } catch (e) {
         if (e) { // login to cf canceled by user
             vscode.window.showErrorMessage(toText(e));
-            getModuleLogger(LOGGER_MODULE).error(`cmdBindLocal exception thrown`, { message: toText(e) }, { service: service }, { envPath: filePath }, { instanceName: instanceName });
+            getModuleLogger(LOGGER_MODULE).error(`cmdBindLocal exception thrown`, { error: toText(e) }, { service: service }, { envPath: filePath }, { instanceName: instanceName });
         }
     }
-    return undefined;
+    return;
 }
 
 export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath): Promise<string[]> {
@@ -339,13 +330,14 @@ export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath:
         if (EnvPathHelper.isPathEmpty(filePath)) {
             return [];
         }
-        _.set(serviceInfos, ['0', 'plans'], await fetchServicePlanList());
-        const plans = await composePlansGuidListForQuery(serviceInfos, serviceInfos[0].plans);
-        const query: IServiceQuery = _.merge({}, { 'filters': [{ key: eFilters.service_plan_guid, value: _.join(plans), op: eOperation.IN }] });
+        const query = await composeQueryToObtainInstances(serviceInfos);
         const availableServices: ServiceInstanceInfo[] = await getAvailableServices({ query });
         if (_.isEmpty(availableServices)) {
             if (!_.isEmpty(_.get(serviceInfos, ['0', 'plan']))) {
-                getModuleLogger(LOGGER_MODULE).debug(`No service found for the plan ${serviceInfos[0].plan} {${_.size(plans)}}`);
+                getModuleLogger(LOGGER_MODULE).debug(`No service found for the plan ${serviceInfos[0].plan}`);
+            }
+            if (!_.find(serviceInfos, 'allowCreate')) {
+                vscode.window.showInformationMessage(messages.no_services_instances_found);
             }
             return [];
         }
@@ -373,7 +365,7 @@ export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath:
         }
     } catch (e) {
         vscode.window.showErrorMessage(toText(e));
-        getModuleLogger(LOGGER_MODULE).error(`bindLocalService exception thrown`, { message: toText(e) }, { serviceInfos: serviceInfos }, { envPath: EnvPathHelper.getPath(envPath) });
+        getModuleLogger(LOGGER_MODULE).error(`bindLocalService exception thrown`, { error: toText(e) }, { serviceInfos: serviceInfos }, { envPath: EnvPathHelper.getPath(envPath) });
     }
 }
 
@@ -384,21 +376,10 @@ export async function cmdGetUpsServiceInstances(options?: UpsServiceQueryOprions
 export async function cmdGetServiceInstances(serviceQueryOptions?: ServiceQueryOptions, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
     let query: IServiceQuery;
     if (serviceQueryOptions) {
-        //prepare a query to filter the service list by service plan (e.g.: hdi-shared)
-        let servicePlans;
-        if (serviceQueryOptions.plan) {
-            servicePlans = await fetchServicePlanList();
-        }
+        // prepare a query to filter the service list by service plan (e.g.: hdi-shared)
+        // filter the list by service type name (e.g.: hana, hanatrial)
         const serviceInfo = { name: serviceQueryOptions.name, plan: serviceQueryOptions.plan, tag: serviceQueryOptions.tag, prompt: "" };
-        const plans = await composePlansGuidListForQuery([serviceInfo], servicePlans);
-        if (Array.isArray(plans) && plans.length) {
-            query = _.merge({}, { 'filters': [{ key: eFilters.service_plan_guid, value: _.join(plans), op: eOperation.IN }] });
-        }
+        query = await composeQueryToObtainInstances([serviceInfo]);
     }
-    let services = await getServiceInstances(query, progressTitle);
-    if (serviceQueryOptions?.name) {
-        //filter the list by service type name (e.g.: hana, hanatrial)
-        services = filterArrayByAttribute(services, serviceQueryOptions.name, 'serviceName') as ServiceInstanceInfo[];
-    }
-    return services;
+    return getServiceInstances(query, progressTitle);
 }

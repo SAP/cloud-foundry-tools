@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import * as types from '@sap/wing-run-config-types';
 import * as cfViewCommands from './cfViewCommands';
 import { getEnvResources, removeResourceFromEnv, toText } from './utils';
@@ -32,7 +26,7 @@ export class DependencyHandler implements types.IDependencyHandler {
       }
     } catch (e) {
       vscode.window.showErrorMessage(toText(e));
-      getModuleLogger(DependencyHandler.MODULE_NAME).error("getBindState: processing failed", { message: toText(e) });
+      getModuleLogger(DependencyHandler.MODULE_NAME).error("getBindState: processing failed", { exception: toText(e) });
     }
     return bindState;
   }
@@ -75,7 +69,7 @@ export class DependencyHandler implements types.IDependencyHandler {
       }
     } catch (e) {
       vscode.window.showErrorMessage(toText(e));
-      getModuleLogger(DependencyHandler.MODULE_NAME).error("bind: processing failed", { message: toText(e) });
+      getModuleLogger(DependencyHandler.MODULE_NAME).error("bind: processing failed", { exception: toText(e) });
     }
   }
 
@@ -99,7 +93,7 @@ export class DependencyHandler implements types.IDependencyHandler {
       });
     } catch (e) {
       vscode.window.showErrorMessage(toText(e));
-      getModuleLogger(DependencyHandler.MODULE_NAME).error("unbind: processing failed", { message: toText(e) });
+      getModuleLogger(DependencyHandler.MODULE_NAME).error("unbind: processing failed", { exception: toText(e) });
     }
   }
 

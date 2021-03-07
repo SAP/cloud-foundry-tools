@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import * as vscode from "vscode";
 import * as _ from "lodash";
 import { CFView } from "./cfView";
@@ -21,8 +15,8 @@ import { cfGetConfigFilePath, cfGetConfigFileField, ITarget, cfGetTarget } from 
 import * as fsextra from "fs-extra";
 import { DependencyHandler } from "./run-configuration";
 import { IRunConfigRegistry } from "@sap/wing-run-config-types";
-import { createLoggerAndSubscribeToLogSettingsChanges, getModuleLogger } from "./logger/logger-wrapper";
 import { toText } from "./utils";
+import { getModuleLogger, initLogger } from "./logger/logger-wrapper";
 
 const LOGGER_MODULE = "extension";
 let cfStatusBarItem: vscode.StatusBarItem;
@@ -44,7 +38,7 @@ async function updateStatusBar(): Promise<boolean | undefined> {
 	if (beforeText !== updatedText) {
 		_.set(cfStatusBarItem, "text", updatedText);
 		if (beforeText) { // eliminate firing event on initialization
-			const target = async () => { try { return await cfGetTarget(); } catch (e) { return undefined; } };
+			const target = async () => { try { return await cfGetTarget(); } catch (e) { return; } };
 			targetChangedEventEmitter.fire(isNoTarget ? undefined : await target());
 			isUpdated = true;
 		}
@@ -62,7 +56,7 @@ export function onCFConfigFileChange(): void {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-	createLoggerAndSubscribeToLogSettingsChanges(context);
+	await initLogger(context);
 
 	const cfConfigFilePath: string = cfGetConfigFilePath();
 	treeDataProvider = new CFView(context, cfConfigFilePath);
@@ -109,7 +103,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				await platformExtension.activate();
 			} catch (e) {
 				platformExtension = undefined;
-				getModuleLogger(LOGGER_MODULE).error("activate <%s> extension fails", runConfigExtName, { message: toText(e) });
+				getModuleLogger(LOGGER_MODULE).error("activate <%s> extension fails", runConfigExtName, { exception: toText(e) });
 			}
 		}
 		if (platformExtension) {

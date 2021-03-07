@@ -1,7 +1,7 @@
 {
 	"name": "vscode-wing-cf-tools",
 	"displayName": "Cloud Foundry Tools",
-	"version": "5.7.12",
+	"version": "6.0.0",
 	"description": "Vscode extension of Cloud Foundry tools",
 	"categories": [
 		"Other"
@@ -260,10 +260,10 @@
 		}
 	},
 	"dependencies": {
-		"@sap/cf-tools": "^0.8.0",
+		"@sap/cf-tools": "^1.0.2",
 		"@sap/swa-for-sapbas-vsx": "1.1.13",
 		"@sap/wing-run-config-types": "4.1.5",
-		"@vscode-logging/logger": "1.2.2",
+		"@vscode-logging/wrapper": "1.0.0",
 		"comment-json": "4.1.0",
 		"fs-extra": "9.1.0",
 		"lodash": "4.17.21",
@@ -286,6 +286,7 @@
 		"@types/vscode": "^1.43.0",
 		"@typescript-eslint/eslint-plugin": "^2.30.0",
 		"@typescript-eslint/parser": "^2.30.0",
+		"@vscode-logging/types": "0.1.3",
 		"chai": "^4.2.0",
 		"clean-webpack-plugin": "^3.0.0",
 		"coveralls": "^3.1.0",

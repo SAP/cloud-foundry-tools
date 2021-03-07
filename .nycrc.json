@@ -1,7 +1,7 @@
 {
     "require": ["ts-node/register/transpile-only"],
     "include": ["src/**/*.ts"],
-    "exclude": ["src/run-configuration-*", "src/cfView.ts", "src/sql-tools.ts"],
+    "exclude": ["src/run-configuration-*", "src/cfView.ts", "src/sql-tools.ts", "src/logger/logger-wrapper.ts"],
     "reporter": ["lcov", "text"],
     "extension": [".ts"],
     "all": true,
@@ -10,6 +10,6 @@
     "check-coverage": true,
     "branches": 94,
     "lines": 98,
-    "functions": 92,
+    "functions": 91,
     "statements": 97
   }

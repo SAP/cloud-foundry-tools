@@ -1,11 +1,6 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import { SWATracker } from "@sap/swa-for-sapbas-vsx";
 import { getModuleLogger } from "../logger/logger-wrapper";
+import { toText } from "../utils";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const jsonPackage = require("./../../package.json");
 const LOGGER_MODULE = "usageTracker";
@@ -32,7 +27,7 @@ export async function trackChiselTask(eventType: string, custom_events?: string[
         try {
             getInstance().track(eventType, custom_events);
         } catch (e) {
-            getModuleLogger(LOGGER_MODULE).error("trackRun: track failed", { error: e });
+            getModuleLogger(LOGGER_MODULE).error("trackRun: track failed", { exception: toText(e) });
         }
     });
 }

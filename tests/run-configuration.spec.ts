@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect, assert } from "chai";
 import * as _ from "lodash";
@@ -65,52 +59,52 @@ describe("run-configuration tests package", () => {
         };
 
 
-        it("constructor", () => {
+        it("ok:: constructor", () => {
             const id = 'test.Handler.id';
             expect(new DependencyHandler(id).getId()).to.be.equal(id);
         });
 
-        it("getBindState - cloud", async () => {
+        it("ok:: 'getBindState' - cloud type", async () => {
             sandbox.stub(utils, "getEnvResources").withArgs(bindContext.envPath.fsPath).resolves({
                 "hdi_type": BindState.cloud
             });
             expect(await new DependencyHandler("test.Handler.id").getBindState(bindContext)).to.be.equal(BindState.cloud);
         });
 
-        it("getBindState - not defined", async () => {
+        it("ok:: 'getBindState' - not defined", async () => {
             sandbox.stub(utils, "getEnvResources").withArgs(bindContext.envPath.fsPath).resolves({
                 "type": BindState.cloud
             });
             expect(await new DependencyHandler("test.Handler.id").getBindState(bindContext)).to.be.equal(BindState.notbound);
         });
 
-        it("getBindState - exception error", async () => {
+        it("ok:: 'getBindState' - exception error, resolved to not bound", async () => {
             const error = new Error('some error');
             sandbox.stub(utils, "getEnvResources").withArgs(bindContext.envPath.fsPath).throws(error);
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message).resolves();
             expect(await new DependencyHandler("test.Handler.id").getBindState(bindContext)).to.be.equal(BindState.notbound);
         });
 
-        it("bind - no instance", async () => {
+        it("ok:: 'bind' - no instance", async () => {
             sandbox.stub(cfViewCommands, "bindLocalService").resolves([]);
             expect(await new DependencyHandler("test.Handler.id").bind(bindContext)).to.be.equal(undefined);
         });
 
-        it("bind - exception", async () => {
+        it("ok:: 'bind' - exception", async () => {
             const error = new Error("my error");
             sandbox.stub(cfViewCommands, "bindLocalService").rejects(error);
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message).resolves();
             expect(await new DependencyHandler("test.Handler.id").bind(bindContext)).to.be.equal(undefined);
         });
 
-        it("bind", async () => {
+        it("ok:: 'bind' succeedded", async () => {
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(['testInstance']);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
             usageMock.expects("trackChiselTask").never();
             expect(await new DependencyHandler("test.Handler.id").bind(bindContext)).to.be.deep.equal({ configData: bindContext.configData, resource: { name: "testInstance", type: "resourceType" } });
         });
 
-        it("bind - with tag", async () => {
+        it("ok:: 'bind' - with tag", async () => {
             const resourceTag: string = _.get(bindContext, "depContext.data.resourceTag");
             const resourceName: string = _.get(bindContext, "depContext.data.resourceName");
             const serviceType = [{
@@ -125,7 +119,7 @@ describe("run-configuration tests package", () => {
             expect(await new DependencyHandler("test.Handler.id").bind(bindContext)).to.be.deep.equal({ configData: bindContext.configData, resource: { name: "testInstance", type: "resourceType" } });
         });
 
-        it("bind - no tag", async () => {
+        it("ok:: 'bind' - no tag", async () => {
             const serviceType = [{
                 name: bindContext.depContext.type,
                 plan: _.get(bindContext.depContext, ['data', 'plan'], ''),
@@ -140,7 +134,7 @@ describe("run-configuration tests package", () => {
             expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
         });
 
-        it("bind - create chisel task - return undefined", async () => {
+        it("ok:: 'bind' - create chisel task - return undefined", async () => {
             sandbox.stub(chisel, "checkAndCreateChiselTask").withArgs(bindContext.envPath.fsPath, instances.join('&')).resolves(undefined);
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
@@ -150,7 +144,7 @@ describe("run-configuration tests package", () => {
             expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
         });
 
-        it("bind - create chisel task - no depended tasks", async () => {
+        it("ok:: 'bind' - create chisel task - no depended tasks", async () => {
             const chiselLabel = "chiselLabel";
             sandbox.stub(chisel, "checkAndCreateChiselTask")
                 .withArgs(_.get(bindContext, "envPath.fsPath"), instances.join('&'))
@@ -165,7 +159,7 @@ describe("run-configuration tests package", () => {
             expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
         });
 
-        it("bind - create chisel task - depended tasks", async () => {
+        it("ok:: 'bind' - create chisel task - depended tasks", async () => {
             const chiselLabel = "chiselLabel";
             const tsk = { name: 'task' };
             const chiselJson = { label: chiselLabel, data: { context: "some" } };
@@ -184,7 +178,7 @@ describe("run-configuration tests package", () => {
             assert.deepEqual(copyContext.configData.dependentTasks, [tsk, chiselJson]);
         });
 
-        it("unbind", async () => {
+        it("ok:: 'unbind' succeddeed", async () => {
             const configurationData = { config: { data: {}, type: ConfigurationTarget.launch }, dependentTasks: [{}] };
             configurationData.dependentTasks = [];
             const property = { resourceName: 'propName', envPath: "env Path", resourceData: { label: "resource-type" } };
@@ -193,7 +187,7 @@ describe("run-configuration tests package", () => {
             assert.deepEqual(await new DependencyHandler("test.Handler.id").unbind(bindContext), { configData: configurationData, resource: { name: "propName", type: "resource-type", data: { label: "resource-type" } } });
         });
 
-        it("unbind - empty property", async () => {
+        it("ok:: 'unbind' - empty property", async () => {
             const configurationData = { config: { data: {}, type: ConfigurationTarget.launch }, dependentTasks: [{}] };
             configurationData.dependentTasks = [];
             const property = {};
@@ -202,7 +196,7 @@ describe("run-configuration tests package", () => {
             assert.deepEqual(await new DependencyHandler("test.Handler.id").unbind(bindContext), { configData: configurationData, resource: { name: "", type: "", data: {} } });
         });
 
-        it("unbind - exception", async () => {
+        it("ok:: 'unbind' - exception", async () => {
             const error = new Error("my error");
             sandbox.stub(utils, "removeResourceFromEnv").rejects(error);
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message).resolves();

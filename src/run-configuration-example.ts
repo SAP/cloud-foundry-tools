@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import * as vscode from "vscode";
 import * as path from "path";
 
@@ -84,9 +78,3 @@ export class RunConfigHandler implements IRunConfigHandler {
         return "cf_run_id_" + this.id;
     }
 }
-
-// export async function cfbind(envPath: string, type: ServiceInfo): Promise<ServiceInstanceInfo> {
-//   return commands.getAvailableServices().then((instances)=>{
-//     vscode.window.showQuickPick(instances)
-//   });
-// }

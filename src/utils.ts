@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fsextra from "fs-extra";
@@ -15,7 +9,7 @@ import * as PropertiesReader from "properties-reader";
 import { parse } from "comment-json";
 import { URL } from "url";
 import { EOL, platform } from "os";
-import { IServiceQuery, ServiceInstanceInfo, cfGetServiceInstances, cfGetUpsInstances, eFilters, ServiceTypeInfo } from "@sap/cf-tools";
+import { IServiceQuery, ServiceInstanceInfo, cfGetUpsInstances, eFilters, ServiceTypeInfo, cfGetManagedServiceInstances } from "@sap/cf-tools";
 import { getModuleLogger } from "./logger/logger-wrapper";
 
 export const isWindows = platform().includes("win");
@@ -72,7 +66,7 @@ export function getEnvResources(envFilePath: string): Promise<any> {
 			return Promise.resolve(null);
 		}
 	} catch (error) {
-		getModuleLogger(LOGGER_MODULE).error("getEnvResources: could not get the '.env' file resources", { message: toText(error) }, { filePath: envFilePath });
+		getModuleLogger(LOGGER_MODULE).error("getEnvResources: could not get the '.env' file resources", { exception: toText(error) }, { filePath: envFilePath });
 		throw error;
 	}
 }
@@ -245,11 +239,12 @@ export async function getAllServiceInstances(opts?: DisplayServices): Promise<Se
 	if (opts?.ups?.isShow || opts?.ups?.tag) {
 		const copyQuery = _.cloneDeep(opts.query);
 		_.remove(copyQuery?.filters, (item) => {
-			return !_.includes([eFilters.name, eFilters.space_guid, eFilters.organization_guid], item.key);
+			return !_.includes([eFilters.names, eFilters.space_guids, eFilters.organization_guids, eFilters.oder_by, 
+				eFilters.page, eFilters.per_page, eFilters.updated_ats, eFilters.created_ats], item.key);
 		});
 		ups2Show = await doGetUpsServiceInstances(copyQuery, opts.ups.tag);
 	}
-	return _.concat(await cfGetServiceInstances(opts?.query), ups2Show);
+	return _.concat(await cfGetManagedServiceInstances(opts?.query), ups2Show);
 }
 
 const UTF8 = "utf8";
@@ -276,7 +271,7 @@ export async function updateGitIgnoreList(envPath: string) {
 				fsextra.createFileSync(filePath);
 				ignoreFiles.push(vscode.Uri.file(filePath));
 			} catch (e) {
-				getModuleLogger(LOGGER_MODULE).error("updateGitIgnoreList: creation .gitignore file failed", { message: toText(e) });
+				getModuleLogger(LOGGER_MODULE).error("updateGitIgnoreList: creation .gitignore file failed", { exception: toText(e) });
 			}
 		}
 		for (const file of ignoreFiles) {
@@ -290,7 +285,7 @@ export async function updateGitIgnoreList(envPath: string) {
 					);
 				}
 			} catch (e) {
-				getModuleLogger(LOGGER_MODULE).error("updateGitIgnoreList: update .gitignore file failed", { message: toText(e) }, { filePath: file });
+				getModuleLogger(LOGGER_MODULE).error("updateGitIgnoreList: update .gitignore file failed", { exception: toText(e) }, { filePath: file });
 			}
 		}
 	}
@@ -305,4 +300,9 @@ export async function writeProperties(filePath: string, properties: Record<strin
 		}
 	});
 	await fsextra.outputFile(filePath, text);
+}
+
+export function resolveFilterValue(value: string): string {
+	// allowed patterns: 'hana'|' "hana ", " xsuaa"'|'["xsuaa", "hana"]'
+	return _.join(_.map(_.isString(value) ? _.split(value, ',') : value, _.trim));
 }

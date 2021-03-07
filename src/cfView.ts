@@ -1,14 +1,7 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import * as vscode from "vscode";
 import * as path from "path";
 import * as _ from "lodash";
-import { cfGetTargets, CFTarget } from "@sap/cf-tools";
-import { getAllServiceInstances } from "./utils";
+import { cfGetServiceInstancesList, cfGetTargets, CFTarget } from "@sap/cf-tools";
 let cfView: CFView;
 
 export class CFTargetTI extends vscode.TreeItem {
@@ -90,6 +83,11 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 	}
 
 	public getTreeItem(element: vscode.TreeItem): Promise<vscode.TreeItem> {
+		if (element.contextValue === 'cf-service') {
+			const item = _.cloneDeep(element);
+			item.label = `${element.label} (${(element as CFService).type})`;
+			return Promise.resolve(item);
+		}
 		return Promise.resolve(element);
 	}
 
@@ -99,7 +97,7 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 				return [new CFFolder("Services", parent), new CFFolder("Applications", parent)];
 			} else if (parent instanceof CFFolder && parent.label === "Services") {
 				if (_.get(parent, "parent.target.isCurrent", false)) {
-					return getAllServiceInstances({ ups: { isShow: true } }).then((servicesInfo) => {
+					return cfGetServiceInstancesList().then((servicesInfo) => {
 						return _.map(servicesInfo, si => new CFService(si.label, si.serviceName)); // success
 					}, () => [new CFLoginNode()]); // failure
 				}
@@ -135,7 +133,7 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 	}
 
 	// keep temporary as a reference for future usage
-	// private async subscribeOnFileEventsAndRefresh(context: vscode.ExtensionContext, configFilePath: string) {
+	// private subscribeOnFileEventsAndRefresh(context: vscode.ExtensionContext, configFilePath: string) {
 	// 	if (_.size(configFilePath) > 0) {
 	// 		const fsw = vscode.workspace.createFileSystemWatcher(configFilePath);
 	// 		context.subscriptions.push(fsw.onDidChange(() => this.refresh()));

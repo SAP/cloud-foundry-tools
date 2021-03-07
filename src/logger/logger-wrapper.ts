@@ -1,83 +1,49 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import * as vscode from "vscode";
-import * as _ from "lodash";
-import { getExtensionLogger, IChildLogger, IVSCodeExtLogger, LogLevel } from "@vscode-logging/logger";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const jsonPackage = require("./../../package.json");
+import { ExtensionContext, window } from "vscode";
+import { readFile as readFileCallback } from "fs";
+import { resolve } from "path";
+import { configureLogger, NOOP_LOGGER } from "@vscode-logging/wrapper";
+import { IChildLogger, IVSCodeExtLogger } from "@vscode-logging/types";
+import { promisify } from "util";
 /**
  * Note that the values of these configuration properties must match those defined in the package.json
  */
 const LOGGING_LEVEL_CONFIG_PROP = "CloudFoundryTools.loggingLevel";
 const SOURCE_TRACKING_CONFIG_PROP = "CloudFoundryTools.sourceLocationTracking";
 
-export const dummyLogger = {
-    fatal: () => '', error: () => '', warn: () => '', info: () => '', debug: () => '', trace: () => '',
-    changeSourceLocationTracking: () => '', changeLevel: () => '', getChildLogger: () => dummyLogger
-};
+const readFile = promisify(readFileCallback);
+// On file load we initialize our logger to `NOOP_LOGGER`
+// this is done because the "real" logger cannot be initialized during file load.
+// only once the `activate` function has been called in extension.ts
+// as the `ExtensionContext` argument to `activate` contains the required `logPath`
+let loggerImpel: IVSCodeExtLogger = NOOP_LOGGER;
 
-/**
- * @type {IVSCodeExtLogger}
- */
-let logger: IVSCodeExtLogger = dummyLogger;
-/**
- * Note the use of a getter function so the value would be lazy resolved on each use.
- * This enables concise and simple consumption of the Logger throughout our Extension.
- *
- * @returns { IVSCodeExtLogger }
- */
-export function getLogger(): IVSCodeExtLogger {
-    return logger;
+export function getLogger(): IChildLogger {
+  return loggerImpel;
 }
 
-export function getModuleLogger(moduleName: string): IChildLogger {
-    return getLogger().getChildLogger({ label: moduleName });
+function setLogger(newLogger: IVSCodeExtLogger): void {
+  loggerImpel = newLogger;
 }
 
-function logLoggerDetails(logPath: string, configLogLevel: LogLevel): void {
-    getLogger().info(`Start Logging in Log Level: <${configLogLevel}>`);
-    getLogger().info(`Full Logs can be found in the <${logPath}> folder`);
+export function getModuleLogger(name: string) {
+    return getLogger().getChildLogger({ label: name});
 }
 
-// export annotation for testing purpose only !!!
-export function callbackOnDidChangeConfiguration(e: vscode.ConfigurationChangeEvent, context: vscode.ExtensionContext) {
-    if (e.affectsConfiguration(LOGGING_LEVEL_CONFIG_PROP)) {
-        // on our `loggingLevelConfigProp` configuration setting.
-        const logLevel: LogLevel = vscode.workspace.getConfiguration().get(LOGGING_LEVEL_CONFIG_PROP);
-        getLogger().changeLevel(logLevel);
-        logLoggerDetails(_.get(context, ['logUri', 'fsPath']) || context.logPath, logLevel);
-    } else if (e.affectsConfiguration(SOURCE_TRACKING_CONFIG_PROP)) {
-        // Enable responding to changes in the sourceLocationTracking setting
-        getLogger().changeSourceLocationTracking(vscode.workspace.getConfiguration().get(SOURCE_TRACKING_CONFIG_PROP));
-    }
-}
+export async function initLogger(context: ExtensionContext): Promise<void> {
+  const meta = JSON.parse(
+    await readFile(resolve(context.extensionPath, "package.json"), "utf8")
+  ) as { displayName: string };
 
-function listenToLogSettingsChanges(context: vscode.ExtensionContext) {
-    // To enable dynamic logging level we must listen to VSCode configuration changes
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => callbackOnDidChangeConfiguration(e, context)));
-}
+  const extLogger = configureLogger({
+    extName: meta.displayName,
+    logPath: context.logPath,
+    logOutputChannel: window.createOutputChannel(meta.displayName),
+    // set to `true` if you also want your VSCode extension to log to the console.
+    logConsole: false,
+    loggingLevelProp: LOGGING_LEVEL_CONFIG_PROP,
+    sourceLocationProp: SOURCE_TRACKING_CONFIG_PROP,
+    subscriptions: context.subscriptions,
+  });
 
-function initLogger(context: vscode.ExtensionContext) {
-    const logLevelSetting: LogLevel = vscode.workspace.getConfiguration().get(LOGGING_LEVEL_CONFIG_PROP);
-    const logPath = _.get(context, ['logUri', 'fsPath']) || context.logPath;
-    // The Logger must first be initialized before any logging commands may be invoked.
-    logger = getExtensionLogger({
-        extName: jsonPackage.displayName,
-        level: logLevelSetting,
-        logPath: logPath,
-        logOutputChannel: vscode.window.createOutputChannel(jsonPackage.displayName),
-        sourceLocationTracking: vscode.workspace.getConfiguration().get(SOURCE_TRACKING_CONFIG_PROP),
-        logConsole: true
-    });
-    logLoggerDetails(logPath, logLevelSetting);
-}
-
-export function createLoggerAndSubscribeToLogSettingsChanges(context: vscode.ExtensionContext) {
-    initLogger(context);
-    // Subscribe to Logger settings changes.
-    listenToLogSettingsChanges(context);
+  setLogger(extLogger);
 }

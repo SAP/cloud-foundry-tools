@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import * as _ from "lodash";
 import { getModuleLogger } from "./logger/logger-wrapper";
 import { toText, writeProperties } from "./utils";
@@ -23,7 +17,7 @@ function initReader(filePath: string): PropertiesReader.Reader {
     try {
         return PropertiesReader(filePath);
     } catch (e) {
-        getModuleLogger(LOGGER_MODULE).error("checkAndCreateChiselTask: propertiesReader : environment file is broken or not exists", { filePath: filePath }, { message: toText(e) });
+        getModuleLogger(LOGGER_MODULE).error("checkAndCreateChiselTask: propertiesReader : environment file is broken or not exists", { filePath: filePath }, { exception: toText(e) });
         return undefined;
     }
 }
@@ -84,7 +78,7 @@ export async function deleteChiselParamsFromFile(filePath: string): Promise<bool
         getModuleLogger(LOGGER_MODULE).debug(`deleteChiselParamsFromFile: override the paramters to ${filePath} file without chisel parameters`);
         return true;
     } catch (err) {
-        getModuleLogger(LOGGER_MODULE).error(`deleteChiselParamsFromFile: failed to override the paramters to ${filePath} file without chisel parameters`, { message: toText(err) });
+        getModuleLogger(LOGGER_MODULE).error(`deleteChiselParamsFromFile: failed to override the paramters to ${filePath} file without chisel parameters`, { exception: toText(err) });
         return false;
     }
 }

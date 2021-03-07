@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2020 SAP SE or an SAP affiliate company <alexander.gilin@sap.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as sinon from "sinon";
 import * as _ from "lodash";
@@ -19,20 +13,20 @@ mockVscode(nsVsMock.testVscode, "src/cfView.ts");
 mockVscode(nsVsMock.testVscode, "src/utils.ts");
 import * as extension from "../src/extension";
 import * as cflocal from "@sap/cf-tools/out/src/cf-local";
-import { messages } from "../src/messages";
+import * as cflocalUnits from "@sap/cf-tools/out/src/utils";
 import * as commands from "../src/commands";
 import * as cfViewCommands from "../src/cfViewCommands";
 import { DependencyHandler } from "../src/run-configuration";
 import * as loggerWrapper from "../src/logger/logger-wrapper";
-import { expect } from "chai";
-import { ITarget } from "@sap/cf-tools";
+import { cfGetConfigFilePath, ITarget } from "@sap/cf-tools";
 
-describe('Extension unit test', () => {
+describe('extension unit test', () => {
     let sandbox: any;
     let commandsMock: any;
     let windowMock: any;
     let fsExtraMock: any;
     let mockCfLocal: any;
+    let mockCfLocalUnits: any;
     let mockStatusBarItem: any;
     let extensionsMock: any;
     let loggerWrapperMock: any;
@@ -71,6 +65,7 @@ describe('Extension unit test', () => {
         windowMock = sandbox.mock(nsVsMock.testVscode.window);
         fsExtraMock = sandbox.mock(fsextra);
         mockCfLocal = sandbox.mock(cflocal);
+        mockCfLocalUnits = sandbox.mock(cflocalUnits);
         mockStatusBarItem = sandbox.mock(statusBarItem);
         extensionsMock = sandbox.mock(nsVsMock.testVscode.extensions);
         loggerWrapperMock = sandbox.mock(loggerWrapper);
@@ -81,6 +76,7 @@ describe('Extension unit test', () => {
         windowMock.verify();
         fsExtraMock.verify();
         mockCfLocal.verify();
+        mockCfLocalUnits.verify();
         mockStatusBarItem.verify();
         extensionsMock.verify();
         loggerWrapperMock.verify();
@@ -88,12 +84,12 @@ describe('Extension unit test', () => {
 
     describe("deactivate", () => {
         it("unwatchFile called", () => {
-            fsExtraMock.expects("unwatchFile").withArgs(cflocal.cfGetConfigFilePath());
+            fsExtraMock.expects("unwatchFile").withArgs(cfGetConfigFilePath());
             extension.deactivate();
         });
 
         it("unwatchFile not called", () => {
-            mockCfLocal.expects("cfGetConfigFilePath").returns("");
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             fsExtraMock.expects("unwatchFile").never();
             extension.deactivate();
         });
@@ -102,18 +98,11 @@ describe('Extension unit test', () => {
     describe("activate", () => {
         let testContext: any;
         const runConfigExtName = "sap.vscode-wing-run-config";
-        const target: ITarget = {
-            "api endpoint": "endpoint",
-            "api version": "3.2.1",
-            user: "test",
-            org: "org",
-            space: "space"
-        };
 
         beforeEach(() => {
             windowMock.expects("registerTreeDataProvider").withArgs("cfView");
             testContext = { "subscriptions": [], logUri: { fsPath: path.resolve(__dirname) } };
-            loggerWrapperMock.expects("createLoggerAndSubscribeToLogSettingsChanges").withExactArgs(testContext).resolves();
+            loggerWrapperMock.expects("initLogger").withExactArgs(testContext).resolves();
 
             _.forEach(commandsMap, (command, commandName) => {
                 if (commandName === "cf.login.weak") {
@@ -127,24 +116,24 @@ describe('Extension unit test', () => {
             windowMock.expects("createStatusBarItem").returns(statusBarItem).withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100);
         });
 
-        it("cfConfigFilePath does not exist", () => {
+        it("ok:: cfConfigFilePath does not exist", async () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
-            mockCfLocal.expects("cfGetConfigFilePath").returns("");
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             fsExtraMock.expects("watchFile").never();
-            extension.activate(testContext);
+            await extension.activate(testContext);
         });
 
-        it("cfConfigFilePath exists", () => {
+        it("ok:: cfConfigFilePath exists", async () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
-            mockCfLocal.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
             fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
-            extension.activate(testContext);
+            await extension.activate(testContext);
         });
 
-        it("platform extension defined", () => {
-            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").atLeast(1).resolves({ Name: "testName1" });
-            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").atLeast(1).resolves({ Name: "testName2" });
-            mockCfLocal.expects("cfGetConfigFilePath").returns("");
+        it("ok:: depended platform extension is defined and activated", async () => {
+            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").atLeast(1).resolves({ Name: "testName1" });
+            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").atLeast(1).resolves({ Name: "testName2" });
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns({
                 isActive: true,
                 exports: {
@@ -154,10 +143,10 @@ describe('Extension unit test', () => {
             commandsMock.expects("registerCommand").withExactArgs("cf.services.unbind", commandsMap["cf.services.unbind"]);
             commandsMock.expects("registerCommand").withExactArgs("cf.services.bind", commandsMap["cf.services.bind"]);
             commandsMock.expects("registerCommand").withExactArgs("cf.services.binding.state", commandsMap["cf.services.binding.state"]);
-            extension.activate(testContext);
+            await extension.activate(testContext);
         });
 
-        it("platform extension defined but not activated", () => {
+        it("ok:: depended platform extension is defined but not activated", async () => {
             const extRun = {
                 isActive: false,
                 activate: () => Promise.resolve(),
@@ -166,19 +155,19 @@ describe('Extension unit test', () => {
                 }
             };
             const mockExt = sandbox.mock(extRun);
-            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").atLeast(1).resolves({ Name: "testName1" });
-            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").atLeast(1).resolves({ Name: "testName2" });
-            mockCfLocal.expects("cfGetConfigFilePath").returns("");
+            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").atLeast(1).resolves({ Name: "testName1" });
+            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").atLeast(1).resolves({ Name: "testName2" });
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             mockExt.expects("activate").resolves();
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(extRun);
             commandsMock.expects("registerCommand").withExactArgs("cf.services.unbind", commandsMap["cf.services.unbind"]);
             commandsMock.expects("registerCommand").withExactArgs("cf.services.bind", commandsMap["cf.services.bind"]);
             commandsMock.expects("registerCommand").withExactArgs("cf.services.binding.state", commandsMap["cf.services.binding.state"]);
-            extension.activate(testContext);
+            await extension.activate(testContext);
             mockExt.verify();
         });
 
-        it("platform extension defined but can not be not activated", () => {
+        it("ok:: depended platform extension is defined but can not be not activated", async () => {
             const extRun = {
                 isActive: false,
                 activate: () => Promise.resolve(),
@@ -187,93 +176,112 @@ describe('Extension unit test', () => {
                 }
             };
             const mockExt = sandbox.mock(extRun);
-            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").atLeast(1).resolves({ Name: "testName1" });
-            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").atLeast(1).resolves({ Name: "testName2" });
-            mockCfLocal.expects("cfGetConfigFilePath").returns("");
+            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").atLeast(1).resolves({ Name: "testName1" });
+            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").atLeast(1).resolves({ Name: "testName2" });
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             mockExt.expects("activate").rejects(new Error("my error"));
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(extRun);
             commandsMock.expects("registerCommand").withExactArgs("cf.services.unbind", commandsMap["cf.services.unbind"]).never();
             commandsMock.expects("registerCommand").withExactArgs("cf.services.bind", commandsMap["cf.services.bind"]).never();
             commandsMock.expects("registerCommand").withExactArgs("cf.services.binding.state", commandsMap["cf.services.binding.state"]).never();
-            extension.activate(testContext);
+            await extension.activate(testContext);
             mockExt.verify();
         });
+    });
 
-        it("onCFConfigFileChange", (done) => {
+    describe("onCFConfigFileChange", () => {
+        let testContext: any;
+        const runConfigExtName = "sap.vscode-wing-run-config";
+        const target: ITarget = {
+            "api endpoint": "endpoint",
+            "api version": "3.2.1",
+            user: "test",
+            org: "org",
+            space: "space"
+        };
+
+        beforeEach(() => {
+            windowMock.expects("registerTreeDataProvider").withArgs("cfView");
+            testContext = { "subscriptions": [], logUri: { fsPath: path.resolve(__dirname) } };
+            loggerWrapperMock.expects("initLogger").withExactArgs(testContext).resolves();
+
+            _.forEach(commandsMap, (command, commandName) => {
+                if (commandName === "cf.login.weak") {
+                    commandsMock.expects("registerCommand").withArgs(commandName);
+                } else if (commandName !== "cf.services.unbind" && commandName !== "cf.services.bind" && commandName !== "cf.services.binding.state") {
+                    commandsMock.expects("registerCommand").withExactArgs(commandName, command);
+                }
+            });
+
+            mockStatusBarItem.expects("show");
+            windowMock.expects("createStatusBarItem").returns(statusBarItem).withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100);
+        });
+
+        it("ok:: verify callback trigger, target updated", async () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
-            mockCfLocal.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
             fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
-            extension.activate(testContext);
-
+            await extension.activate(testContext);
             setTimeout(() => {
-                mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
-                mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName2" });
+                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
+                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName2" });
                 mockCfLocal.expects("cfGetTarget").resolves(target);
                 extension.onCFConfigFileChange();
-                done();
-            }, 1000);
+            }, 100);
+            await new Promise(resolve => setTimeout(resolve, 200));
         });
 
-        it("onCFConfigFileChange - nothing updated", (done) => {
+        it("ok:: nothing updated", async () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
-            mockCfLocal.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
             fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
-            extension.activate(testContext);
+            await extension.activate(testContext);
 
             setTimeout(() => {
-                mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
-                mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName2" });
+                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
+                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName2" });
                 mockCfLocal.expects("cfGetTarget").resolves(target);
                 extension.onCFConfigFileChange();
-            }, 1000);
+            }, 100);
 
             setTimeout(() => {
-                mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
-                mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName2" });
+                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
+                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName2" });
                 extension.onCFConfigFileChange();
-                done();
-            }, 2000);
-
+            }, 300);
+            await new Promise(resolve => setTimeout(resolve, 500));
         });
 
-        it("onCFConfigFileChange - not targeted", () => {
+        it("ok:: not targeted", async () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
-            mockCfLocal.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
             fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
-            extension.activate(testContext);
-
-            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "" });
-            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "" });
-            mockCfLocal.expects("cfGetTarget").never();
-            extension.onCFConfigFileChange();
-        });
-
-        it("onCFConfigFileChange - not logged in", (done) => {
-            extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
-            mockCfLocal.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
-            fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
-            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
-            mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName3" });
-            extension.activate(testContext);
+            await extension.activate(testContext);
 
             setTimeout(() => {
-                mockCfLocal.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
-                mockCfLocal.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "" });
+                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "" });
+                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "" });
+                mockCfLocal.expects("cfGetTarget").never();
+                extension.onCFConfigFileChange();
+            }, 100);
+            await new Promise(resolve => setTimeout(resolve, 300));
+        });
+
+        it("ok:: not logged in", async () => {
+            extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
+            fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
+            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
+            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName3" });
+            await extension.activate(testContext);
+
+            setTimeout(() => {
+                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
+                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "" });
                 mockCfLocal.expects("cfGetTarget").rejects(undefined);
                 extension.onCFConfigFileChange();
-                done();
-            }, 1000);
+            }, 100);
+            await new Promise(resolve => setTimeout(resolve, 300));
         });
-
     });
-
-    it("No service found message composed", () => {
-        const planName = "my-plan {1}";
-        expect(_.size(messages.no_services_found(planName))).to.be.gt(1);
-    });
-
-    it("Service bound successful", () => {
-        expect(_.size(messages.service_bound_successful('planName'))).to.be.gt(1);
-    });
-
 });

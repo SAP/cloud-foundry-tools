@@ -4,16 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { expect } from "chai";
-import { deleteChiselParamsFromFile, checkAndCreateChiselTask }  from "../src/chisel";
 import { join } from "path";
 import * as tmpTestDir from "temp-dir";
 import * as rimraf  from "rimraf";
 import * as PropertiesReader from "properties-reader";
 import { outputFile } from "fs-extra";
 import * as sinon from "sinon";
-import * as utils from "../src/utils";
 
-describe("commands unit tests", () => {
+import * as nsVsMock from "./ext/mockVscode";
+import { mockVscode } from "./ext/mockUtil";
+mockVscode(nsVsMock.testVscode, "src/chisel.ts");
+
+import * as utils from "../src/utils";
+import { deleteChiselParamsFromFile, checkAndCreateChiselTask }  from "../src/chisel";
+
+describe("chisel unit tests", () => {
    const serviceName = "chisel-service-name";
     let envFilePath: string;
 
@@ -55,26 +60,26 @@ describe("commands unit tests", () => {
                 "2020:127.0.0.1:2020"
             ]
         }; 
-        it("return chisel task", async () => {
+        it("ok:: verify created chisel task structure", async () => {
             await utils.writeProperties(envFilePath, envWithChisel);
             expect(await checkAndCreateChiselTask(envFilePath, serviceName)).deep.equal(expectedChiselTask);
         });
 
-        it("return undefined when chisel params not appear in the environment file", async () => {
+        it("ok:: create 'undefined' when chisel params not appear in the environment file", async () => {
             await utils.writeProperties(envFilePath, {});
             expect(await checkAndCreateChiselTask(envFilePath, serviceName)).to.be.undefined;
         });
 
-        it("return undefined when chisel URL is empty", async () => {
+        it("ok:: create 'undefined' chisel URL is empty", async () => {
             await utils.writeProperties(envFilePath, { "CHISEL_URL": ""});
             expect(await checkAndCreateChiselTask(envFilePath, serviceName)).to.be.undefined;
         });
 
-        it("return undefined when .env file does not exists", async () => {
+        it("ok:: create 'undefined' when .env file does not exists", async () => {
             expect(await checkAndCreateChiselTask(envFilePath, serviceName)).to.be.undefined;
         });
 
-        it("return chisel task and ignore from invalid format text in the .env file", async () => {
+        it("ok:: create chisel task and ignore from invalid format text in the .env file", async () => {
             const text = 'invalid format text that ignore by the reader\n' +
                 'TUNNEL_PARAM= 2020:127.0.0.1:2020\n' + 
                 'CHISEL_URL= https://chise-server.cfapps.test.hana.ondemand.com\n' +
@@ -91,7 +96,7 @@ describe("commands unit tests", () => {
         const expectedProperties = {
             "VCAP_SERVICES": VCAP_SERVICE_WITH_ALL_CHARS
         };
-        it("return true when delete chisel params from the .env file", async () => {
+        it("ok:: return true when delete chisel params from the .env file", async () => {
             await utils.writeProperties(envFilePath, envWithChisel);
             expect(await deleteChiselParamsFromFile(envFilePath)).to.be.true;
             const actualProperties = PropertiesReader(envFilePath);
@@ -99,7 +104,7 @@ describe("commands unit tests", () => {
           
         });
 
-        it("return true and ignored from empty properties when override the .env file", async () => {
+        it("ok:: return true and ignored from empty properties when override the .env file", async () => {
             const text = 
                 'TUNNEL_PARAM=2020:127.0.0.1:2020\n' + 
                 'CHISEL_URL= https://chise-server.cfapps.test.hana.ondemand.com\n' +
@@ -113,18 +118,18 @@ describe("commands unit tests", () => {
             expect(actualProperties.getAllProperties()).deep.equal(expectedProperties);
         });
 
-        it("return false when chisel params does not exists in .env file", async () => {
+        it("ok:: return false when chisel params does not exists in .env file", async () => {
             await utils.writeProperties(envFilePath, expectedProperties);
             expect(await deleteChiselParamsFromFile(envFilePath)).to.be.false;
             const actualProperties = PropertiesReader(envFilePath);
             expect(actualProperties.getAllProperties()).deep.equal(expectedProperties);
         });
 
-        it("return false when .env file does not exists ", async () => {
+        it("ok:: return false when .env file does not exists ", async () => {
             expect(await deleteChiselParamsFromFile(envFilePath)).to.be.false;
         });
 
-        it("return false when write to .env file is failed", async () => {
+        it("ok:: return false when write to .env file is failed", async () => {
             const envWithChisel = {   
                 "TUNNEL_PARAM": "2020:127.0.0.1:2020",
                 "CHISEL_URL": "https://chise-server.cfapps.test.hana.ondemand.com",
@@ -140,7 +145,7 @@ describe("commands unit tests", () => {
             expect(await deleteChiselParamsFromFile(envFilePath)).to.be.false;  
         });
 
-        it("return false when properties does not exists in the .env file", async () => {
+        it("ok:: return false when properties does not exists in the .env file", async () => {
             //await writeProperties(envFilePath, {});
             expect(await deleteChiselParamsFromFile(envFilePath)).to.be.false;
         });
