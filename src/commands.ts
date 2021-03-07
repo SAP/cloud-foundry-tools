@@ -246,7 +246,7 @@ export async function cmdSelectSpace(): Promise<string | undefined> {
 
 export async function cmdCreateTarget(): Promise<void> {
     // first ask for service-name
-    const targetName = await vscode.window.showInputBox({ placeHolder: messages.name_for_target });
+    const targetName = await vscode.window.showInputBox({ placeHolder: messages.name_for_target, ignoreFocusOut: true });
     if (targetName) {
         const cliResult: CliResult = await Cli.execute(["save-target", "-f", targetName]);
         if (cliResult.exitCode !== 0) {
@@ -301,14 +301,14 @@ async function createUpsInstance(name: string, info?: ServiceTypeInfo): Promise<
     let result;
     const quietMode = info?.tag && info.allowCreate?.name;
     const credentials = quietMode ? "{}" :
-        await vscode.window.showInputBox({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") });
+        await vscode.window.showInputBox({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") });
     if (credentials) {
         const tags = quietMode ? info.tag :
-            await vscode.window.showInputBox(_.merge({ prompt: messages.enter_tags }, info?.tag ? { value: info.tag } : {}));
+            await vscode.window.showInputBox(_.merge({ prompt: messages.enter_tags, ignoreFocusOut: true }, info?.tag ? { value: info.tag } : {}));
         if (undefined !== tags) {
-            const sysLogUrl = quietMode ? "" : await vscode.window.showInputBox({ prompt: messages.enter_sys_log_url });
+            const sysLogUrl = quietMode ? "" : await vscode.window.showInputBox({ prompt: messages.enter_sys_log_url, ignoreFocusOut: true });
             if (undefined !== sysLogUrl) {
-                const routeUrl = quietMode ? "" : await vscode.window.showInputBox({ prompt: messages.enter_route_service_url });
+                const routeUrl = quietMode ? "" : await vscode.window.showInputBox({ prompt: messages.enter_route_service_url, ignoreFocusOut: true });
                 if (undefined !== routeUrl) { // canceled
                     const response = await cfCreateUpsInstance({
                         instanceName: name,
@@ -340,7 +340,7 @@ async function createServiceInstance(name: string, info?: ServiceTypeInfo): Prom
     if (_.size(servicesInfo)) {
         const serviceInfo = (_.size(servicesInfo) === 1 && serviceName)
             ? servicesInfo[0]
-            : await vscode.window.showQuickPick<ServiceInfo>(servicesInfo, { placeHolder: messages.select_services });
+            : await vscode.window.showQuickPick<ServiceInfo>(servicesInfo, { placeHolder: messages.select_services, ignoreFocusOut: true });
 
         if (!_.isEmpty(serviceInfo)) {
             let plansInfo: PlanInfo[] = await onGetServicePlansFromCF(serviceInfo.service_plans_url);
@@ -351,7 +351,7 @@ async function createServiceInstance(name: string, info?: ServiceTypeInfo): Prom
                 if (_.size(plansInfo)) {
                     const planInfo: PlanInfo = (_.size(plansInfo) === 1 && servicePlan)
                         ? plansInfo[0]
-                        : await vscode.window.showQuickPick<PlanInfo>(plansInfo, { placeHolder: messages.select_service_plan });
+                        : await vscode.window.showQuickPick<PlanInfo>(plansInfo, { placeHolder: messages.select_service_plan, ignoreFocusOut: true });
 
                     if (planInfo) {
                         const params = (info?.allowCreate?.getParams) ? stringify(await info.allowCreate.getParams()) : await ask4ArbitraryParams(serviceInfo, planInfo);
@@ -379,7 +379,8 @@ async function createService(isUps: boolean, info?: ServiceTypeInfo): Promise<st
     // first ask for service-name
     const options = _.merge(
         { prompt: info?.allowCreate?.namePrompt ? `${info.allowCreate.namePrompt}` : messages.enter_service_name },
-        info?.allowCreate?.name ? { value: `${info.allowCreate.name}` } : {}
+        info?.allowCreate?.name ? { value: `${info.allowCreate.name}` } : {},
+        { ignoreFocusOut: true }
     );
     // Show instance name input box
     const instanceName = await vscode.window.showInputBox(options);

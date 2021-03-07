@@ -325,13 +325,13 @@ describe("commands unit tests", () => {
         const testArgs = ["save-target", "-f", targetName];
 
         it("targetName not selected", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target }).resolves();
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target, ignoreFocusOut: true }).resolves();
             cliMock.expects("execute").never();
             await commands.cmdCreateTarget();
         });
 
         it("targetName is selected, exitCode is 1", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target }).resolves(targetName);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target, ignoreFocusOut: true }).resolves(targetName);
             cliMock.expects("execute").withExactArgs(testArgs).resolves(cliResult);
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(cliResult.stdout).resolves();
             try {
@@ -343,7 +343,7 @@ describe("commands unit tests", () => {
         });
 
         it("targetName is selected, exitCode is 0", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target }).resolves(targetName);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target, ignoreFocusOut: true }).resolves(targetName);
             cliResult.exitCode = 0;
             cliMock.expects("execute").withExactArgs(testArgs).resolves(cliResult);
             cfViewMock.expects("get").returns({
@@ -354,7 +354,7 @@ describe("commands unit tests", () => {
         });
 
         it("targetName exception thown", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target }).resolves(targetName);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target, ignoreFocusOut: true }).resolves(targetName);
             cliResult.exitCode = 0;
             cliMock.expects("execute").withExactArgs(testArgs).resolves(cliResult);
             cfViewMock.expects("get").returns({
@@ -393,14 +393,14 @@ describe("commands unit tests", () => {
         });
 
         it("instanceName is empty", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves();
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves();
             const result = await commands.cmdCreateService();
             expect(result).to.be.undefined;
         });
 
         it("withProgress is called, servicesInfo is empty", async () => {
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(messages.no_services_instances_found);
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
             vscodeWindowMock.expects("withProgress").withArgs({
                 location: nsVsMock.testVscode.ProgressLocation.Notification,
                 title: messages.loading_services,
@@ -410,9 +410,9 @@ describe("commands unit tests", () => {
         });
 
         it("withProgress is called, servicesInfo is not empty, planInfo is empty", async () => {
-            const info = { service_plans_url: "test_service_plans_url", label: "testLabel" };
+            const info = { service_plans_url: "test_service_plans_url", label: "testLabel", ignoreFocusOut: true };
             vscodeWindowMock.expects("showQuickPick").resolves(info);
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
             vscodeWindowMock.expects("withProgress").withArgs({
                 location: nsVsMock.testVscode.ProgressLocation.Notification,
                 title: messages.loading_services,
@@ -425,7 +425,7 @@ describe("commands unit tests", () => {
 
         it("withProgress is called, servicesInfo is not empty, select service canceled", async () => {
             vscodeWindowMock.expects("showQuickPick").resolves(undefined);
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
             vscodeWindowMock.expects("withProgress").withArgs({
                 location: nsVsMock.testVscode.ProgressLocation.Notification,
                 title: messages.loading_services,
@@ -436,7 +436,7 @@ describe("commands unit tests", () => {
 
         it("withProgress is called, servicesInfo is not empty, planInfo several", async () => {
             vscodeWindowMock.expects("showQuickPick").never();
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
             vscodeWindowMock.expects("withProgress").withArgs({
                 location: nsVsMock.testVscode.ProgressLocation.Notification,
                 title: messages.loading_services,
@@ -466,7 +466,7 @@ describe("commands unit tests", () => {
 
         it("withProgress filtered is called, servicesInfo is not empty, planInfo is empty", async () => {
             vscodeWindowMock.expects("showQuickPick").never();
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
             vscodeWindowMock.expects("withProgress").withArgs({
                 location: nsVsMock.testVscode.ProgressLocation.Notification,
                 title: messages.loading_services,
@@ -484,9 +484,9 @@ describe("commands unit tests", () => {
         });
 
         it("withProgress is called, servicesInfo is not empty, planInfo is not empty", async () => {
-            vscodeWindowMock.expects("showQuickPick").resolves({ service_plans_url: "test_service_plans_url", label: "testServiceInfoLabel" });
-            vscodeWindowMock.expects("showQuickPick").withExactArgs([{}], { placeHolder: messages.select_service_plan }).resolves({ label: "testPlanInfoLabel" });
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
+            vscodeWindowMock.expects("showQuickPick").resolves({ service_plans_url: "test_service_plans_url", label: "testServiceInfoLabel", ignoreFocusOut: true });
+            vscodeWindowMock.expects("showQuickPick").withExactArgs([{}], { placeHolder: messages.select_service_plan, ignoreFocusOut: true }).resolves({ label: "testPlanInfoLabel" });
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
             vscodeWindowMock.expects("showInputBox").withArgs({
                 ignoreFocusOut: true,
                 prompt: messages.create_service_enter_params,
@@ -509,9 +509,9 @@ describe("commands unit tests", () => {
         });
 
         it("withProgress is called, servicesInfo is not empty, planInfo is not empty, params canceled", async () => {
-            vscodeWindowMock.expects("showQuickPick").resolves({ service_plans_url: "test_service_plans_url", label: "testServiceInfoLabel" });
-            vscodeWindowMock.expects("showQuickPick").withExactArgs([{}], { placeHolder: messages.select_service_plan }).resolves({ label: "testPlanInfoLabel" });
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
+            vscodeWindowMock.expects("showQuickPick").resolves({ service_plans_url: "test_service_plans_url", label: "testServiceInfoLabel" , ignoreFocusOut: true});
+            vscodeWindowMock.expects("showQuickPick").withExactArgs([{}], { placeHolder: messages.select_service_plan , ignoreFocusOut: true}).resolves({ label: "testPlanInfoLabel" });
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
             vscodeWindowMock.expects("showInputBox").withArgs({
                 ignoreFocusOut: true,
                 prompt: messages.create_service_enter_params,
@@ -529,10 +529,13 @@ describe("commands unit tests", () => {
         });
 
         it("withProgress is called, servicesInfo is not empty, select plan canceled", async () => {
-            vscodeWindowMock.expects("showQuickPick").resolves({ service_plans_url: "test_service_plans_url", label: "testServiceInfoLabel" });
-            vscodeWindowMock.expects("showQuickPick").withExactArgs([{}], { placeHolder: messages.select_service_plan }).resolves(undefined);
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
-            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.loading_service_plan_list, cancellable: false }).resolves([{}]);
+            vscodeWindowMock.expects("showQuickPick").resolves({ service_plans_url: "test_service_plans_url", label: "testServiceInfoLabel", ignoreFocusOut: true });
+            vscodeWindowMock.expects("showQuickPick").withExactArgs([{}], { placeHolder: messages.select_service_plan, ignoreFocusOut: true }).resolves(undefined);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
+            vscodeWindowMock.expects("withProgress").withArgs({ 
+                location: nsVsMock.testVscode.ProgressLocation.Notification, 
+                title: messages.loading_service_plan_list, 
+                cancellable: false }).resolves([{}]);
             vscodeWindowMock.expects("withProgress").withArgs({
                 location: nsVsMock.testVscode.ProgressLocation.Notification,
                 title: messages.loading_services,
@@ -542,9 +545,9 @@ describe("commands unit tests", () => {
         });
 
         it("withProgress is called, servicesInfo is not empty, planInfo is not empty", async () => {
-            vscodeWindowMock.expects("showQuickPick").resolves({ service_plans_url: "test_service_plans_url", label: "testServiceInfoLabel" });
-            vscodeWindowMock.expects("showQuickPick").withExactArgs([{}], { placeHolder: messages.select_service_plan }).resolves({ label: "testPlanInfoLabel" });
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
+            vscodeWindowMock.expects("showQuickPick").resolves({ service_plans_url: "test_service_plans_url", label: "testServiceInfoLabel", ignoreFocusOut: true });
+            vscodeWindowMock.expects("showQuickPick").withExactArgs([{}], { placeHolder: messages.select_service_plan, ignoreFocusOut: true }).resolves({ label: "testPlanInfoLabel" });
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
             vscodeWindowMock.expects("showInputBox").withArgs({
                 ignoreFocusOut: true,
                 prompt: messages.create_service_enter_params,
@@ -579,7 +582,8 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(messages.no_services_instances_found_for_type(info.name));
             vscodeWindowMock.expects("showInputBox").withExactArgs({
                 value: info.allowCreate.name,
-                prompt: info.allowCreate.namePrompt || messages.enter_service_name
+                prompt: info.allowCreate.namePrompt || messages.enter_service_name,
+                ignoreFocusOut: true
             }).resolves("instanceName");
             vscodeWindowMock.expects("withProgress").withArgs({
                 location: nsVsMock.testVscode.ProgressLocation.Notification,
@@ -591,7 +595,7 @@ describe("commands unit tests", () => {
         
         it("with service metadata info - quiet params", async () => {
             vscodeWindowMock.expects("showQuickPick").never();
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
             vscodeWindowMock.expects("withProgress").withArgs({
                 location: nsVsMock.testVscode.ProgressLocation.Notification,
                 title: messages.loading_services,
@@ -625,7 +629,7 @@ describe("commands unit tests", () => {
 
         it("withProgress is called but thrown exception", async () => {
             const error = new Error('withProgress error');
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceName");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceName");
             vscodeWindowMock.expects("withProgress").withArgs({
                 location: nsVsMock.testVscode.ProgressLocation.Notification,
                 title: messages.loading_services,
@@ -638,7 +642,7 @@ describe("commands unit tests", () => {
 
         async function testAllowCreateParams(expectedInstanceName: string, expectedServiceName: string, expectedPlanName: string, info: ServiceTypeInfo, plans: { label: string }[]) {
             vscodeWindowMock.expects("showQuickPick").never();
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves(expectedInstanceName);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves(expectedInstanceName);
             vscodeWindowMock.expects("withProgress").withArgs({
                 location: nsVsMock.testVscode.ProgressLocation.Notification,
                 title: messages.loading_services,
@@ -1034,11 +1038,11 @@ describe("commands unit tests", () => {
 
         it("empty info data - ok", async () => {
             const instanceUpsName = "myUps";
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves(instanceUpsName);
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves(instanceUpsName);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url, ignoreFocusOut: true }).resolves("");
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created(instanceUpsName));
             cfLocalMock.expects("cfCreateUpsInstance").withExactArgs({
                 instanceName: instanceUpsName,
@@ -1057,51 +1061,51 @@ describe("commands unit tests", () => {
         });
 
         it("createUps - no name", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves(undefined);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves(undefined);
             cfLocalMock.expects("cfCreateUpsInstance").never();
             expect(await commands.cmdCreateUps()).to.be.equal(undefined);
         });
 
         it("createUps - credentials canceled", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves('name');
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") }).resolves(undefined);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves('name');
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") }).resolves(undefined);
             cfLocalMock.expects("cfCreateUpsInstance").never();
             expect(await commands.cmdCreateUps()).to.be.equal(undefined);
         });
 
         it("createUps - tags canceled", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves('name');
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") }).resolves('{"user": "paswrd"}');
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags }).resolves(undefined);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves('name');
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") }).resolves('{"user": "paswrd"}');
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags, ignoreFocusOut: true }).resolves(undefined);
             cfLocalMock.expects("cfCreateUpsInstance").never();
             expect(await commands.cmdCreateUps()).to.be.equal(undefined);
         });
 
         it("createUps - enter_sys_log_url canceled", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves('name');
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") }).resolves('{"user": "paswrd"}');
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url }).resolves(undefined);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves('name');
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") }).resolves('{"user": "paswrd"}');
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url, ignoreFocusOut: true }).resolves(undefined);
             cfLocalMock.expects("cfCreateUpsInstance").never();
             expect(await commands.cmdCreateUps()).to.be.equal(undefined);
         });
 
         it("createUps - enter_route_service_url canceled", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves('name');
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") }).resolves('{"user": "paswrd"}');
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url }).resolves(undefined);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves('name');
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") }).resolves('{"user": "paswrd"}');
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url, ignoreFocusOut: true }).resolves(undefined);
             cfLocalMock.expects("cfCreateUpsInstance").never();
             expect(await commands.cmdCreateUps()).to.be.equal(undefined);
         });
 
         it("no info data - unexpected response format", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceUpsName");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceUpsName");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url, ignoreFocusOut: true }).resolves("");
             const response = { name: "name", metadata: {} };
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(_.toString(response)).resolves();
             cfLocalMock.expects("cfCreateUpsInstance").resolves(response);
@@ -1109,11 +1113,11 @@ describe("commands unit tests", () => {
         });
 
         it("no info data - exception thrown", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceUpsName");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceUpsName");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url, ignoreFocusOut: true }).resolves("");
             vscodeWindowMock.expects("showInformationMessage").never();
             const error = new Error("runtime error");
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message);
@@ -1122,11 +1126,11 @@ describe("commands unit tests", () => {
         });
 
         it("no info data - exception no error thrown", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves("instanceUpsName");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves("instanceUpsName");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url, ignoreFocusOut: true }).resolves("");
             vscodeWindowMock.expects("showInformationMessage").never();
             vscodeWindowMock.expects("showErrorMessage").once().resolves();
             cfLocalMock.expects("cfCreateUpsInstance").throws();
@@ -1143,7 +1147,7 @@ describe("commands unit tests", () => {
                     name: "silent"
                 }
             };
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, value: info.allowCreate.name }).resolves(info.allowCreate.name);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true, value: info.allowCreate.name }).resolves(info.allowCreate.name);
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created(info.allowCreate.name)).resolves();
             cfLocalMock.expects("cfCreateUpsInstance").withExactArgs({
                 instanceName: info.allowCreate.name,
@@ -1163,11 +1167,11 @@ describe("commands unit tests", () => {
                 tag: "mono"
             };
             const instanceUpsName = "myUps";
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves(instanceUpsName);
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags, value: info.tag }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves(instanceUpsName);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags, ignoreFocusOut: true, value: info.tag }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url, ignoreFocusOut: true }).resolves("");
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created(instanceUpsName)).resolves();
             cfLocalMock.expects("cfCreateUpsInstance").withExactArgs({
                 instanceName: instanceUpsName,
@@ -1181,11 +1185,11 @@ describe("commands unit tests", () => {
 
         it("responce isn't cf resource", async () => {
             const instanceUpsName = "myUps";
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name }).resolves(instanceUpsName);
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags }).resolves([]);
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url }).resolves("");
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true }).resolves(instanceUpsName);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_credentials, ignoreFocusOut: true, value: stringify({}), validateInput: validateParams("") }).resolves("{}");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_tags, ignoreFocusOut: true }).resolves([]);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_sys_log_url, ignoreFocusOut: true }).resolves("");
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_route_service_url, ignoreFocusOut: true }).resolves("");
             const response: any = null;
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(_.toString(response)).resolves();
             cfLocalMock.expects("cfCreateUpsInstance").withExactArgs({
