@@ -28,7 +28,7 @@ This VSCode extension provides tools for easy application development with Cloud
 ---
 
 ## Dependencies
-* cf-cli tool [v6.53.0](https://github.com/cloudfoundry/cli/releases/tag/v6.53.0)
+* cf-cli tool [v7.2.0](https://github.com/cloudfoundry/cli/releases/tag/v7.2.0)
 * cf-cli `targets` [see here](https://github.com/guidowb/cf-targets-plugin)
 * cf-cli called `cf-service-info` (go plugin for cf-cli tool that provides resource binding functionality)
 
