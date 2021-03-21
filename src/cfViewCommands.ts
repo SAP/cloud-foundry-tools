@@ -12,7 +12,7 @@ import {
 import * as _ from "lodash";
 import {
     getAvailableServices, updateServicesOnCFPageSize, isServiceTypeInfoInArray, updateInstanceNameAndTags, getInstanceName, fetchServicePlanList,
-    CMD_CREATE_SERVICE, USER_PROVIDED_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances
+    CMD_CREATE_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances
 } from "./commands";
 import { stringify } from "comment-json";
 import { checkAndCreateChiselTask, deleteChiselParamsFromFile } from "./chisel";
@@ -89,7 +89,7 @@ async function doBind(instances: ServiceInstanceInfo[], envPath: TEnvPath, tags?
         vscode.window.showInformationMessage(messages.service_bound_successful(args[1].join(",")));
         getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", `${args[1].join(",")}`);
     }
-    const ups = _.filter(instances, ['serviceName', USER_PROVIDED_SERVICE]);
+    const ups = _.filter(instances, ['serviceName', eServiceTypes.user_provided]);
     const services = _.difference(instances, ups);
     if (_.size(services)) {
         await runWithProgress(cfBindLocalServices, [envPath.path.fsPath, _.map(services, 'label'), tags, serviceKeyNames, serviceKeyParams]);

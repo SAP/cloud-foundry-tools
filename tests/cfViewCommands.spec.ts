@@ -452,7 +452,7 @@ describe("cfViewCommands tests", () => {
             service[0].ups = { isShow: true };
             opts.query = undefined;
             opts.ups = service[0].ups;
-            const services: ServiceInstanceInfo[] = [{ serviceName: commands.USER_PROVIDED_SERVICE, label: "ups1" }, { serviceName: commands.USER_PROVIDED_SERVICE, label: "ups2" }];
+            const services: ServiceInstanceInfo[] = [{ serviceName: eServiceTypes.user_provided, label: "ups1" }, { serviceName: eServiceTypes.user_provided, label: "ups2" }];
             commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves(services);
             _.set(commands, "updateInstanceNameAndTags", (availableServices: ServiceInstanceInfo[], serviceTypeInfo: ServiceTypeInfo[], instanceNames: string[]) => {
                 instanceNames.push(services[0].label);

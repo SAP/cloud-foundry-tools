@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import {
     ServiceInfo, PlanInfo, ServiceInstanceInfo, cfLogin, cfGetAvailableOrgs, cfGetAvailableSpaces, cfSetOrgSpace, CF_PAGE_SIZE, IServiceQuery,
-    Cli, CliResult, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance, cfGetServiceInstances, eFilters
+    Cli, CliResult, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance, cfGetServiceInstances, eFilters, eServiceTypes
 } from "@sap/cf-tools";
 import { messages } from "./messages";
 import { cmdReloadTargets } from "./cfViewCommands";
@@ -16,7 +16,6 @@ import { getModuleLogger } from "./logger/logger-wrapper";
 const OK = "OK";
 const MORE_RESULTS = "More results...";
 export const CMD_CREATE_SERVICE = "+ Create a new service instance";
-export const USER_PROVIDED_SERVICE = 'user_provided';
 const LOGGER_MODULE = "commands";
 
 export function isCFResource(obj: unknown): boolean {
@@ -462,7 +461,7 @@ export async function getInstanceName(availableServices: ServiceInstanceInfo[], 
 export async function updateInstanceNameAndTags(availableServices: ServiceInstanceInfo[], serviceTypeInfo: ServiceTypeInfo, instanceNames: string[], tags: string[]) {
     let instanceName = await getInstanceName(availableServices, serviceTypeInfo);
     if (instanceName === CMD_CREATE_SERVICE) {
-        instanceName = await (serviceTypeInfo.name === USER_PROVIDED_SERVICE ?
+        instanceName = await (serviceTypeInfo.name === eServiceTypes.user_provided ?
             cmdCreateUps(serviceTypeInfo) :
             cmdCreateService(serviceTypeInfo));
     }
