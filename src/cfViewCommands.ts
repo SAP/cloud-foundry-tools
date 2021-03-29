@@ -144,7 +144,7 @@ export async function cmdDeployServiceAPI(servicePath: string, message: string):
 }
 
 export async function cmdSetCurrentTarget(newTarget: CFTarget): Promise<unknown | undefined> {
-    if (_.get(newTarget, "isCurrent", false)) {
+    if (!_.get(newTarget, ['target', 'isCurrent'], false)) {
         let answer = YES;
         try {
             const currTarget = CFView.get().getCurrentTarget();
