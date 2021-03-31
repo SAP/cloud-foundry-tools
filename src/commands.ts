@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import {
     ServiceInfo, PlanInfo, ServiceInstanceInfo, cfLogin, cfGetAvailableOrgs, cfGetAvailableSpaces, cfSetOrgSpace, CF_PAGE_SIZE, IServiceQuery,
-    Cli, CliResult, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance, cfGetServiceInstances, eFilters, eServiceTypes
+    Cli, CliResult, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance, cfGetServiceInstances, eFilters, eServiceTypes, cfGetConfigFileField
 } from "@sap/cf-tools";
 import { messages } from "./messages";
 import { cmdReloadTargets } from "./cfViewCommands";
@@ -22,8 +22,8 @@ export function isCFResource(obj: unknown): boolean {
     return _.has(obj, "relationships") && _.has(obj, "links") && _.has(obj, "guid");
 }
 
-function getCFDefaultLandscape(): string {
-    return _.get(process, "env.CF_API_ENDPOINT", "");
+async function getCFDefaultLandscape(): Promise<string> {
+    return _.get(process, "env.CF_API_ENDPOINT", "") || await cfGetConfigFileField("Target");
 }
 
 export function isServiceTypeInfoInArray(obj: unknown): boolean {
@@ -157,7 +157,7 @@ function pickCfTargetWithProgress(): Thenable<ITarget | undefined> {
 
 async function executeLogin(): Promise<string | undefined> {
     let result = '';
-    const cfEndpoint = await vscode.window.showInputBox({ prompt: messages.enter_cf_endpoint, value: getCFDefaultLandscape(), ignoreFocusOut: true });
+    const cfEndpoint = await vscode.window.showInputBox({ prompt: messages.enter_cf_endpoint, value: await getCFDefaultLandscape(), ignoreFocusOut: true });
     if (cfEndpoint) {
         const userEmailName = await vscode.window.showInputBox({ prompt: messages.enter_user_email, ignoreFocusOut: true });
         if (userEmailName) {

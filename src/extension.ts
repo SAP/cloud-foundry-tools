@@ -28,15 +28,15 @@ const onDidChangeTarget = targetChangedEventEmitter.event;
 
 async function updateStatusBar(): Promise<boolean | undefined> {
 	let isUpdated;
-	const beforeText = _.get(cfStatusBarItem, 'text');
+	const beforeText = _.get(cfStatusBarItem, 'tooltip');
 	const results = await Promise.all([cfGetConfigFileField("OrganizationFields"), cfGetConfigFileField("SpaceFields")]);
 	const orgField = _.get(results, "[0].Name");
 	const spaceField = _.get(results, "[1].Name");
 	const isNoTarget = _.isEmpty(orgField) && _.isEmpty(spaceField);
-	const updatedText = `$(home) ${isNoTarget ? messages.not_targeted : messages.targeting(orgField, spaceField)}`;
+	const updatedText = `${isNoTarget ? messages.not_targeted : messages.targeting(orgField, spaceField)}`;
 
 	if (beforeText !== updatedText) {
-		_.set(cfStatusBarItem, "text", updatedText);
+		_.set(cfStatusBarItem, "tooltip", updatedText);
 		if (beforeText) { // eliminate firing event on initialization
 			const target = async () => { try { return await cfGetTarget(); } catch (e) { return; } };
 			targetChangedEventEmitter.fire(isNoTarget ? undefined : await target());
@@ -65,6 +65,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	const loginCmdId = "cf.login";
 	context.subscriptions.push(vscode.commands.registerCommand(loginCmdId, cmdLogin));
 	cfStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+	cfStatusBarItem.text = `$(location)`;
 	context.subscriptions.push(cfStatusBarItem);
 
 	// !!!! does not work on theia 1.5.0
@@ -80,7 +81,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		fsextra.watchFile(cfConfigFilePath, onCFConfigFileChange);
 	}
 
-	cfStatusBarItem.show();
+	// cfStatusBarItem.show();
 
 	context.subscriptions.push(vscode.commands.registerCommand("cf.target.set", cmdSetCurrentTarget));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.services.create", cmdCreateService));
