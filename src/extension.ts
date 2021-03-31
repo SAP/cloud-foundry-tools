@@ -8,10 +8,10 @@ import {
 } from "./commands";
 import {
 	cmdDeployServiceAPI, cmdSetCurrentTarget, cmdDeleteTarget, cmdBindLocal, cmdReloadTargets,
-	cmdGetSpaceServices, cmdGetUpsServiceInstances, cmdGetServiceInstances
+	cmdGetSpaceServices, cmdGetUpsServiceInstances, cmdGetServiceInstances, execSetTarget
 } from "./cfViewCommands";
 
-import { cfGetConfigFilePath, cfGetConfigFileField, ITarget, cfGetTarget } from "@sap/cf-tools";
+import { cfGetConfigFilePath, cfGetConfigFileField, ITarget, cfGetTarget, OK } from "@sap/cf-tools";
 import * as fsextra from "fs-extra";
 import { DependencyHandler } from "./run-configuration";
 import { IRunConfigRegistry } from "@sap/wing-run-config-types";
@@ -28,7 +28,7 @@ const onDidChangeTarget = targetChangedEventEmitter.event;
 
 async function updateStatusBar(): Promise<boolean | undefined> {
 	let isUpdated;
-	const beforeText = _.get(cfStatusBarItem, 'tooltip');
+	const beforeText = _.get(cfStatusBarItem, 'text');
 	const results = await Promise.all([cfGetConfigFileField("OrganizationFields"), cfGetConfigFileField("SpaceFields")]);
 	const orgField = _.get(results, "[0].Name");
 	const spaceField = _.get(results, "[1].Name");
@@ -36,7 +36,7 @@ async function updateStatusBar(): Promise<boolean | undefined> {
 	const updatedText = `${isNoTarget ? messages.not_targeted : messages.targeting(orgField, spaceField)}`;
 
 	if (beforeText !== updatedText) {
-		_.set(cfStatusBarItem, "tooltip", updatedText);
+		_.set(cfStatusBarItem, "text", updatedText);
 		if (beforeText) { // eliminate firing event on initialization
 			const target = async () => { try { return await cfGetTarget(); } catch (e) { return; } };
 			targetChangedEventEmitter.fire(isNoTarget ? undefined : await target());
@@ -60,19 +60,25 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const cfConfigFilePath: string = cfGetConfigFilePath();
 	treeDataProvider = new CFView(context, cfConfigFilePath);
-	vscode.window.registerTreeDataProvider("cfView", treeDataProvider);
+	const view = vscode.window.createTreeView("cfView", { treeDataProvider, showCollapseAll: true });
 
 	const loginCmdId = "cf.login";
-	context.subscriptions.push(vscode.commands.registerCommand(loginCmdId, cmdLogin));
+	context.subscriptions.push(vscode.commands.registerCommand(loginCmdId, async (weak, target) => {
+		if (OK === await cmdLogin(weak, target) && false == target) {
+			const active = _.find(treeDataProvider.targets, 'target.isCurrent');
+			if (active) {
+				await execSetTarget(active.target.label);
+			}
+		}
+	}));
 	cfStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-	cfStatusBarItem.text = `$(location)`;
 	context.subscriptions.push(cfStatusBarItem);
 
 	// !!!! does not work on theia 1.5.0
 	// cfStatusBarItem.command = {command: loginCmdId, arguments: [true], title: ""};
 	// start workarround  --> remove following workarround in future theia releases
 	context.subscriptions.push(vscode.commands.registerCommand("cf.login.weak", cmdLogin.bind(null, true)));
-	cfStatusBarItem.command = "cf.login.weak";
+	// cfStatusBarItem.command = "cf.login.weak";
 	// end workarround
 
 	updateStatusBar();
@@ -88,7 +94,17 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand("cf.ups.create", cmdCreateUps));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.services.bind.local", cmdBindLocal));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.set.orgspace", cmdCFSetOrgSpace));
-	context.subscriptions.push(vscode.commands.registerCommand("cf.targets.create", cmdCreateTarget));
+	context.subscriptions.push(vscode.commands.registerCommand("cf.targets.create", async () => {
+		const target = await cmdCreateTarget();
+		if (target) {
+			setTimeout(() => {
+				const treeItem = _.find(treeDataProvider.targets, ['label', target]);
+				if (treeItem) {
+					view.reveal(treeItem, { select: true, focus: true, expand: true });
+				}
+			}, 400);
+		}
+	}));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.target.delete", cmdDeleteTarget));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.targets.reload", cmdReloadTargets));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.select.space", cmdSelectSpace));

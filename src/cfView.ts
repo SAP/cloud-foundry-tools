@@ -10,7 +10,7 @@ export class CFTargetTI extends vscode.TreeItem {
 	constructor(
 		public readonly target: CFTarget
 	) {
-		super({ label: target.label }, target.isCurrent ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
+		super(target.label, target.isCurrent ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
 		this.tooltip = target.label;
 		this.iconPath = {
 			light: path.join(__dirname, '..', 'resources', 'light', `cftarget${this.target.isCurrent ? '-a' : ''}.svg`),
@@ -26,7 +26,7 @@ export class CFTargetTI extends vscode.TreeItem {
 export class CFMessageNode extends vscode.TreeItem { }
 
 export class CFLoginNode extends CFMessageNode {
-	public command = { title: "Login", command: "cf.login" };
+	public command = { title: "Login", command: "cf.login", arguments: [false, false] };
 	public contextValue = 'cf-login-required';
 	public iconPath = {
 		light: path.join(__dirname, '..', 'resources', 'light', 'login.svg'),
@@ -111,6 +111,10 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 		this.privateonDidChangeTreeData.fire(undefined);
 	}
 
+	public getParent(element: vscode.TreeItem): vscode.ProviderResult<vscode.TreeItem> {
+		return (element instanceof CFServicesFolder || element instanceof CFAppsFolder) ? element.parent : null;
+	}
+
 	public getTreeItem(element: vscode.TreeItem): Promise<vscode.TreeItem> {
 		if (/^cf-(service|application)$/.test(element.contextValue)) {
 			const item = _.cloneDeep(element);
@@ -129,7 +133,7 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 			} else if (/^(services|apps)$/.test(parent.contextValue)) {
 				if (_.get(parent, "parent.target.isCurrent")) {
 					try {
-						return parent instanceof CFAppsFolder 
+						return parent instanceof CFAppsFolder
 							? _.map(await cfGetApps(), app => new CFApplication(app.name, _.get(app, 'state')))
 							: _.map(await cfGetServiceInstancesList(), service => new CFService(service.label, service.serviceName));
 					} catch (e) {

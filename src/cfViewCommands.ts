@@ -7,7 +7,7 @@ import * as url from "url";
 import { updateGitIgnoreList, isWindows, toText, UpsServiceQueryOprions, ServiceQueryOptions, resolveFilterValue } from "./utils";
 import {
     CFTarget, DEFAULT_TARGET, ServiceInstanceInfo, IServiceQuery, eFilters, Cli, cfGetConfigFileField,
-    cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, padQuery, eServiceTypes
+    cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, padQuery, eServiceTypes, CliResult
 } from "@sap/cf-tools";
 import * as _ from "lodash";
 import {
@@ -143,6 +143,16 @@ export async function cmdDeployServiceAPI(servicePath: string, message: string):
     }
 }
 
+export async function execSetTarget(label: string) {
+    const response: CliResult = await Cli.execute(["set-target", "-f", label]);
+    if (response.exitCode !== 0) {
+        vscode.window.showErrorMessage(response.stdout);
+        getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand:: run 'set-target -f' with lable ${label} failed`, { output: response.stdout });
+    } else {
+        await cmdReloadTargets();
+    }
+}
+
 export async function cmdSetCurrentTarget(newTarget: CFTarget): Promise<unknown | undefined> {
     if (!_.get(newTarget, ['target', 'isCurrent'], false)) {
         let answer = YES;
@@ -164,14 +174,7 @@ export async function cmdSetCurrentTarget(newTarget: CFTarget): Promise<unknown 
                 return;
             }
 
-            return Cli.execute(["set-target", "-f", newTarget.label]).then(async (response: { exitCode: number; stdout: string }) => {
-                if (response.exitCode !== 0) {
-                    vscode.window.showErrorMessage(response.stdout);
-                    getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand:: run 'set-target -f' with lable ${newTarget.label} failed`, { output: response.stdout });
-                } else {
-                    await cmdReloadTargets();
-                }
-            });
+            return execSetTarget(newTarget.label);
         } catch (e) {
             vscode.window.showErrorMessage(toText(e));
             getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand with new target ${stringify(newTarget)} exception thrown`, { error: toText(e) });
