@@ -65,7 +65,11 @@
 			},
 			{
 				"command": "cf.targets.reload",
-				"title": "CF: Reload targets tree"
+				"title": "CF: Reload targets tree",
+				"icon": {
+					"light": "resources/light/reload.svg",
+					"dark": "resources/dark/reload.svg"
+				}
 			},
 			{
 				"command": "cf.target.set",
@@ -196,18 +200,14 @@
 			],
 			"view/title": [
 				{
-					"command": "cf.login.weak",
+					"command": "cf.targets.create",
 					"when": "view == cfView",
 					"group": "navigation@1"
 				},
 				{
-					"command": "cf.targets.create",
+					"command": "cf.targets.reload",
 					"when": "view == cfView",
 					"group": "navigation@2"
-				},
-				{
-					"command": "cf.targets.reload",
-					"when": "view == cfView"
 				}
 			],
 			"view/item/context": [
@@ -231,7 +231,7 @@
 				},
 				{
 					"command": "cf.target.delete",
-					"when": "view == cfView && viewItem =~ /^cf-target$/"
+					"when": "view == cfView && viewItem =~ /^cf-target(-active)?$/"
 				}
 			]
 		},
@@ -335,7 +335,7 @@
 		"nyc": "^15.1.0",
 		"prettier": "^2.0.5",
 		"rimraf": "^3.0.2",
-		"sinon": "^9.2.1",
+		"sinon": "^10.0.0",
 		"temp-dir": "2.0.0",
 		"ts-loader": "^8.0.12",
 		"ts-node": "^9.1.1",

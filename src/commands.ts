@@ -181,13 +181,13 @@ async function executeLogin(): Promise<string | undefined> {
     return result;
 }
 
-export async function cmdLogin(weak = false): Promise<string | undefined> {
+export async function cmdLogin(weak = false, target = true): Promise<string | undefined> {
     try {
         let result = weak ? (_.get(await pickCfTargetWithProgress(), "user") ? OK : undefined) : undefined;
         if (!result) {
             result = await executeLogin();
         }
-        if (OK === result) {
+        if (target && OK === result) {
             result = await cmdCFSetOrgSpace(true);
         }
         return result;
@@ -236,7 +236,7 @@ export async function cmdSelectSpace(): Promise<string | undefined> {
     }
 }
 
-export async function cmdCreateTarget(): Promise<void> {
+export async function cmdCreateTarget(): Promise<string|undefined> {
     // first ask for service-name
     const targetName = await vscode.window.showInputBox({ placeHolder: messages.name_for_target, ignoreFocusOut: true });
     if (targetName) {
@@ -250,6 +250,7 @@ export async function cmdCreateTarget(): Promise<void> {
         await cmdReloadTargets();
         vscode.window.showInformationMessage(messages.target_created(targetName));
         getModuleLogger(LOGGER_MODULE).debug("cmdCreateTarget: the <%s> target has been created", targetName);
+        return targetName;
     }
 }
 
