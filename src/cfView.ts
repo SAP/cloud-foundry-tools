@@ -13,8 +13,8 @@ export class CFTargetTI extends vscode.TreeItem {
 		super(target.label, target.isCurrent ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
 		this.tooltip = target.label;
 		this.iconPath = {
-			light: path.join(__dirname, '..', 'resources', 'light', `cftarget${this.target.isCurrent ? '-a' : ''}.svg`),
-			dark: path.join(__dirname, '..', 'resources', 'dark', `cftarget${this.target.isCurrent ? '-a' : ''}.svg`)
+			light: path.join(__dirname, '..', 'resources', 'light', `target${this.target.isCurrent ? '-a' : ''}.svg`),
+			dark: path.join(__dirname, '..', 'resources', 'dark', `target${this.target.isCurrent ? '-a' : ''}.svg`)
 		};
 	}
 
@@ -23,25 +23,30 @@ export class CFTargetTI extends vscode.TreeItem {
 	}
 }
 
-export class CFMessageNode extends vscode.TreeItem { }
+export class CFMessageNode extends vscode.TreeItem { 
+	public iconPath = {
+		light: path.join(__dirname, '..', 'resources', 'light', 'info.svg'),
+		dark: path.join(__dirname, '..', 'resources', 'dark', 'info.svg')
+	};
+	constructor(label: string, public readonly parent: CFFolder) {
+		super(label, vscode.TreeItemCollapsibleState.None);
+	}
+}
 
 export class CFLoginNode extends CFMessageNode {
-	public command = { title: "Login", command: "cf.login", arguments: [false] };
 	public contextValue = 'cf-login-required';
-	public iconPath = {
-		light: path.join(__dirname, '..', 'resources', 'light', 'login.svg'),
-		dark: path.join(__dirname, '..', 'resources', 'dark', 'login.svg')
-	};
-	constructor() {
-		super("Login required", vscode.TreeItemCollapsibleState.None);
+	constructor(parent: CFFolder) {
+		super(`Login required`, parent);
+		this.tooltip = `Log in to see details`;
 	}
 }
 
 export class CFTargetNotCurrent extends CFMessageNode {
 	public contextValue = 'cf-target-not-current';
 
-	constructor() {
-		super("Target needs to be current ", vscode.TreeItemCollapsibleState.None);
+	constructor(parent: CFFolder, targetName?: string) {
+		super(`Target needs to be active`, parent);
+		this.tooltip = `Set the '${targetName}' as the active target to see details.`;
 	}
 }
 
@@ -51,7 +56,8 @@ export class CFService extends vscode.TreeItem {
 
 	constructor(
 		public readonly label: string,
-		public readonly type: string) {
+		public readonly type: string,
+		public readonly parent: CFFolder) {
 		super(label, vscode.TreeItemCollapsibleState.None);
 	}
 }
@@ -62,7 +68,9 @@ export class CFApplication extends vscode.TreeItem {
 
 	constructor(
 		public readonly label: string,
-		public readonly state: string) {
+		public readonly state: string,
+		public readonly parent: CFFolder
+		) {
 		super(label, vscode.TreeItemCollapsibleState.None);
 	}
 }
@@ -70,22 +78,22 @@ export class CFApplication extends vscode.TreeItem {
 export class CFFolder extends vscode.TreeItem {
 	public iconPath = vscode.ThemeIcon.Folder;
 
-	constructor(public readonly label: string) {
+	constructor(public readonly label: string, public readonly parent: CFTargetTI) {
 		super(label, vscode.TreeItemCollapsibleState.Collapsed);
 		this.tooltip = `${label}`;
 	}
 }
 
 export class CFServicesFolder extends CFFolder {
-	constructor(public readonly label: string, public readonly parent: CFTargetTI) {
-		super(label);
+	constructor(public readonly label: string, parent: CFTargetTI) {
+		super(label, parent);
 		this.contextValue = 'services';
 	}
 }
 
 export class CFAppsFolder extends CFFolder {
-	constructor(public readonly label: string, public readonly parent: CFTargetTI) {
-		super(label);
+	constructor(public readonly label: string, parent: CFTargetTI) {
+		super(label, parent);
 		this.contextValue = 'apps';
 	}
 }
@@ -95,8 +103,8 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 		return cfView;
 	}
 
-	public readonly privateonDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
-	public readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this.privateonDidChangeTreeData.event;
+	public readonly privateOnDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
+	public readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this.privateOnDidChangeTreeData.event;
 	public targets?: CFTargetTI[];
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -107,11 +115,11 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 	}
 
 	public refresh() {
-		this.privateonDidChangeTreeData.fire(undefined);
+		this.privateOnDidChangeTreeData.fire(undefined);
 	}
 
 	public getParent(element: vscode.TreeItem): vscode.ProviderResult<vscode.TreeItem> {
-		return (element instanceof CFServicesFolder || element instanceof CFAppsFolder) ? element.parent : null;
+		return _.get(element, 'parent');
 	}
 
 	public getTreeItem(element: vscode.TreeItem): Promise<vscode.TreeItem> {
@@ -133,13 +141,13 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 				if (_.get(parent, "parent.target.isCurrent")) {
 					try {
 						return parent instanceof CFAppsFolder
-							? _.map(await cfGetApps(), app => new CFApplication(app.name, _.get(app, 'state')))
-							: _.map(await cfGetServiceInstancesList(), service => new CFService(service.label, service.serviceName));
+							? _.map(await cfGetApps(), app => new CFApplication(app.name, _.get(app, 'state'), parent))
+							: _.map(await cfGetServiceInstancesList(), service => new CFService(service.label, service.serviceName, parent as CFFolder));
 					} catch (e) {
-						return [new CFLoginNode()];
+						return [new CFLoginNode(parent as CFFolder)];
 					}
 				} else {
-					return [new CFTargetNotCurrent()];
+					return [new CFTargetNotCurrent(parent as CFFolder, _.get(parent, 'parent.target.label'))];
 				}
 			}
 			return [];
@@ -153,6 +161,10 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 		return _.get(_.find(this.targets, 'target.isCurrent'), 'target');
 	}
 
+	public getTargets(): CFTargetTI[] | undefined {
+		return this.targets;
+	}
+	
 	// keep temporary as a reference for future usage
 	// private subscribeOnFileEventsAndRefresh(context: vscode.ExtensionContext, configFilePath: string) {
 	// 	if (_.size(configFilePath) > 0) {

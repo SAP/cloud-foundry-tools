@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { CFView, CFService, CFTargetTI } from "./cfView";
+import { CFView, CFService, CFTargetTI, CFTargetNotCurrent } from "./cfView";
 import { messages } from "./messages";
 import * as https from 'https';
 import * as url from "url";
@@ -148,32 +148,38 @@ export async function cmdDeployServiceAPI(servicePath: string, message: string):
     }
 }
 
-export async function execSetTarget(label: string, options?: CmdOptions) {
-    const response: CliResult = await Cli.execute(["set-target", "-f", label]);
+export async function execSetTarget(item: CFTargetTI, options?: CmdOptions) {
+    const response: CliResult = await Cli.execute(["set-target", "-f", item.target.label]);
     if (response.exitCode !== 0) {
-        if (!options.silent) {
+        if (!options?.silent) {
             vscode.window.showErrorMessage(response.stdout);
         }
-        getModuleLogger(LOGGER_MODULE).error(`execSetTarget:: run 'set-target -f' with lable ${label} failed`, { output: response.stdout });
+        getModuleLogger(LOGGER_MODULE).error(`execSetTarget:: run 'set-target -f' with lable ${item.target.label} failed`, { output: response.stdout });
     } else {
-        if (!_.get(options, "skip-reload")) {
+        if (!options?.["skip-reload"]) {
             await cmdReloadTargets();
         }
     }
 }
 
-export async function execSaveTarget(label?: string, options?: CmdOptions) {
-    const response: CliResult = await Cli.execute(_.concat(["save-target"], label ? ['-f', label] : ''));
-    if (response.exitCode !== 0) {
-        if (!options.silent) {
-            vscode.window.showErrorMessage(response.stdout);
+export async function execSaveTarget(item?: CFTargetTI, options?: CmdOptions) {
+    if (item?.contextValue !== 'cf-target-notargets') {
+        const response: CliResult = await Cli.execute(_.concat(["save-target"], item?.target.label ? ['-f', item.target.label] : []));
+        if (response.exitCode !== 0) {
+            if (!options?.silent) {
+                vscode.window.showErrorMessage(response.stdout);
+            }
+            getModuleLogger(LOGGER_MODULE).error(`execSaveTarget:: run 'save-target -f' with lable ${item?.target.label} failed`, { output: response.stdout });
         }
-        getModuleLogger(LOGGER_MODULE).error(`execSaveTarget:: run 'save-target -f' with lable ${label} failed`, { output: response.stdout });
     }
 }
 
-export async function cmdSetCurrentTarget(newTarget: CFTargetTI): Promise<unknown | undefined> {
-    if (!newTarget.target.isCurrent) {
+export async function cmdSetCurrentTarget(newTarget: CFTargetTI|CFTargetNotCurrent): Promise<unknown | undefined> {
+    let item = newTarget as CFTargetTI;
+    while((_.get(item, 'parent'))) {
+        item = _.get(item, 'parent'); // walk up until target folder found
+    }
+    if (false === item?.target?.isCurrent) {
         let answer = YES;
         try {
             const currTarget = CFView.get().getCurrentTarget();
@@ -193,7 +199,7 @@ export async function cmdSetCurrentTarget(newTarget: CFTargetTI): Promise<unknow
                 return;
             }
 
-            return execSetTarget(newTarget.target.label);
+            return execSetTarget(item);
         } catch (e) {
             vscode.window.showErrorMessage(toText(e));
             getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand with new target ${stringify(newTarget)} exception thrown`, { error: toText(e) });
@@ -201,17 +207,17 @@ export async function cmdSetCurrentTarget(newTarget: CFTargetTI): Promise<unknow
     }
 }
 
-export async function cmdDeleteTarget(item: unknown, options?: CmdOptions): Promise<void> {
-    const targetLabel = _.get(item, "target.label");
+export async function cmdDeleteTarget(item: CFTargetTI, options?: CmdOptions): Promise<void> {
+    const targetLabel = item.target.label;
     if (targetLabel === DEFAULT_TARGET) {
         return;
     }
     const cliResult = await Cli.execute(["delete-target", targetLabel]);
     if (cliResult.exitCode === 0) {
-        if (!_.get(options, "skip-reload")) {
+        if (!options?.["skip-reload"]) {
             await cmdReloadTargets();
         }
-        if (!options.silent) {
+        if (!options?.silent) {
             vscode.window.showInformationMessage(messages.target_deleted(targetLabel));
         }
         getModuleLogger(LOGGER_MODULE).debug(`cmdDeleteTarget:: command "delete-target" of ${targetLabel} succeeded.`);

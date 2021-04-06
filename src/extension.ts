@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as _ from "lodash";
-import { CFTargetTI, CFView } from "./cfView";
+import { CFTargetNotCurrent, CFTargetTI, CFView } from "./cfView";
 import { messages } from "./messages";
 import {
 	cmdLogin, cmdCreateService, cmdCreateTarget,
@@ -65,12 +65,12 @@ export async function activate(context: vscode.ExtensionContext) {
 	const loginCmdId = "cf.login";
 	context.subscriptions.push(vscode.commands.registerCommand(loginCmdId, async (weak, target) => {
 		if (OK === await cmdLogin(weak, target)) {
-			const active = _.find(treeDataProvider.targets, 'target.isCurrent');
+			const active = _.find(treeDataProvider.getTargets(), 'target.isCurrent');
 			if (active) {
 				// after re-login the target data become invalid -> perform re-create target
 				await cmdDeleteTarget(active, { 'skip-reload': true, silent: true });
-				await execSaveTarget(active.target.label, { 'skip-reload': true, silent: true });
-				await execSetTarget(active.target.label, { silent: true });
+				await execSaveTarget(active, { 'skip-reload': true, silent: true });
+				await execSetTarget(active, { silent: true });
 			}
 		}
 	}));
@@ -93,14 +93,14 @@ export async function activate(context: vscode.ExtensionContext) {
 	// cfStatusBarItem.show();
 	function revealTargetItem(label?: string) {
 		setTimeout(() => {
-			const treeItem = label ? _.find(treeDataProvider.targets, ['label', label]) : _.find(treeDataProvider.targets, 'target.isCurrent');
+			const treeItem = _.find(treeDataProvider.getTargets(), label ? ['label', label] : 'target.isCurrent');
 			if (treeItem) {
 				view.reveal(treeItem, { select: true, focus: true, expand: true });
 			}
 		}, 400);
 	}
 
-	context.subscriptions.push(vscode.commands.registerCommand("cf.target.set", async (item: CFTargetTI) => {
+	context.subscriptions.push(vscode.commands.registerCommand("cf.target.set", async (item: CFTargetTI|CFTargetNotCurrent) => {
 		await cmdSetCurrentTarget(item);
 		revealTargetItem();
 	}));
