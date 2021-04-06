@@ -258,7 +258,17 @@ describe("cfViewCommands tests", () => {
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(cliResult.stdout).resolves();
             await cfViewCommands.cmdSetCurrentTarget(new cfView.CFTargetTI(target));
         });
-
+        
+        it("ok:: 'CFTargetNotCurrent' item received", async () => {
+            cliMock.expects("execute").never();
+            await cfViewCommands.cmdSetCurrentTarget(
+                new cfView.CFTargetNotCurrent(
+                    new cfView.CFAppsFolder('apps', 
+                        new cfView.CFTargetTI({ label: "my Target", isDirty: false, isCurrent: true })
+                    )
+                )
+            );
+        });
     });
 
     describe("execSetTarget scope", () => {
@@ -300,6 +310,11 @@ describe("cfViewCommands tests", () => {
             const cliResult = { exitCode: 0, stdout: "", stderr: "" };
             cliMock.expects("execute").withExactArgs(["save-target"]).resolves(cliResult);
             await cfViewCommands.execSaveTarget();
+        });
+
+        it("ok:: 'no-targets' node received", async () => {
+            cliMock.expects("execute").never();
+            await cfViewCommands.execSaveTarget(new cfView.CFTargetTI({label: 'my (no targets)', isCurrent: false, isDirty: true}));
         });
     });
 
