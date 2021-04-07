@@ -34,7 +34,7 @@ export class DependencyHandler implements types.IDependencyHandler {
   public async bind(bindContext: types.IBindContext): Promise<void | types.IBindResult> {
     const resourceTag: string = _.get(bindContext, "depContext.data.resourceTag");
     const serviceType: cfLocal.ServiceTypeInfo[] = [{
-      name: bindContext.depContext.type,
+      name: _.get(bindContext.depContext, ['type'], ''),
       plan: _.get(bindContext.depContext, ['data', 'plan'], ''),
       tag: resourceTag ? resourceTag + _.get(bindContext, "depContext.data.resourceName") : "",
       prompt: ""
@@ -74,6 +74,7 @@ export class DependencyHandler implements types.IDependencyHandler {
     }
   }
 
+  // TODO: Consider not showing message in silent mode. Add parameter: options?: {silent: boolean}
   public async unbind(bindContext: types.IBindContext): Promise<void | types.IBindResult> {
     const configObject = new types.ConfigObject(
       {},
