@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect, assert } from "chai";
 import * as _ from "lodash";
-import * as sinon from "sinon";
 import * as url from "url";
 import * as nsVsMock from "./ext/mockVscode";
 import { mockVscode } from "./ext/mockUtil";
@@ -22,23 +21,24 @@ import { messages } from "../src/messages";
 import { fail } from "assert";
 import { DisplayServices, ServiceQueryOptions, UpsServiceQueryOprions } from "../src/utils";
 import * as chisel from "../src/chisel";
+import { createSandbox, SinonMock, SinonSandbox } from "sinon";
 
 describe("cfViewCommands tests", () => {
-    let sandbox: any;
-    let vscodeWindowMock: any;
-    let vscodeWorkspaceMock: any;
-    let cfViewCommandsMock: any;
-    let commandsMock: any;
-    let cliMock: any;
-    let httpsMock: any;
-    let cfLocalMock: any;
-    let cfLocalUtilsMock: any;
-    let cfViewMock: any;
-    let chiselMock: any;
+    let sandbox: SinonSandbox;
+    let vscodeWindowMock: SinonMock;
+    let vscodeWorkspaceMock: SinonMock;
+    let cfViewCommandsMock: SinonMock;
+    let commandsMock: SinonMock;
+    let cliMock: SinonMock;
+    let httpsMock: SinonMock;
+    let cfLocalMock: SinonMock;
+    let cfLocalUtilsMock: SinonMock;
+    let cfViewMock: SinonMock;
+    let chiselMock: SinonMock;
     const cliResult = { exitCode: 0, stdout: "", stderr: "" };
 
     before(() => {
-        sandbox = sinon.createSandbox();
+        sandbox = createSandbox();
     });
 
     after(() => {
@@ -191,53 +191,52 @@ describe("cfViewCommands tests", () => {
             getCurrentTarget: () => currentTarget,
             refresh: () => ''
         };
-        const target: CFTarget = { label: "my Target", isDirty: false, isCurrent: false };
 
-        it("ok:: target is not current", async () => {
+        it("ok:: target is current already, nothing done", async () => {
             cliMock.expects("execute").never();
-            await cfViewCommands.cmdSetCurrentTarget(target);
+            cfViewMock.expects("get").never();
+            await cfViewCommands.cmdSetCurrentTarget(new cfView.CFTargetTI({ label: "my Target", isDirty: false, isCurrent: true }));
         });
 
-        it("ok:: target is current, reload called", async () => {
-            target.isCurrent = true;
+        it("ok:: target is set, reload called", async () => {
+            const target = { label: "my Target", isDirty: false, isCurrent: false };
             cfViewMock.expects("get").twice().returns(localView);
             cliMock.expects("execute").withExactArgs(["set-target", "-f", target.label]).resolves(cliResult);
-            await cfViewCommands.cmdSetCurrentTarget(target);
+            await cfViewCommands.cmdSetCurrentTarget(new cfView.CFTargetTI(target));
         });
 
         it("ok:: target is current, is dirty, not save - No", async () => {
-            target.isCurrent = true;
+            const target = { label: "my Target", isDirty: false, isCurrent: false };
             currentTarget.isCurrent = true;
             currentTarget.isDirty = true;
             cfViewMock.expects("get").twice().returns(localView);
             vscodeWindowMock.expects("showWarningMessage").withExactArgs(messages.target_dirty_save(currentTarget.label), "Yes", "No", "Cancel").resolves("No");
             cliMock.expects("execute").withExactArgs(["set-target", "-f", target.label]).resolves(cliResult);
-            await cfViewCommands.cmdSetCurrentTarget(target);
+            await cfViewCommands.cmdSetCurrentTarget(new cfView.CFTargetTI(target));
         });
 
         it("ok:: target is current, is dirty, not save - Cancel", async () => {
-            target.isCurrent = true;
+            const target = { label: "my Target", isDirty: false, isCurrent: false };
             currentTarget.isCurrent = true;
             currentTarget.isDirty = true;
             cfViewMock.expects("get").returns(localView);
             vscodeWindowMock.expects("showWarningMessage").withExactArgs(messages.target_dirty_save(currentTarget.label), "Yes", "No", "Cancel").resolves(undefined);
             cliMock.expects("execute").withExactArgs(["set-target", "-f", target.label]).never();
-            await cfViewCommands.cmdSetCurrentTarget(target);
+            await cfViewCommands.cmdSetCurrentTarget(new cfView.CFTargetTI(target));
         });
 
         it("ok:: target is current, is dirty, save - Yes", async () => {
-            target.isCurrent = true;
+            const target = { label: "my Target", isDirty: false, isCurrent: false };
             currentTarget.isCurrent = true;
             currentTarget.isDirty = true;
             cfViewMock.expects("get").twice().returns(localView);
             vscodeWindowMock.expects("showWarningMessage").withExactArgs(messages.target_dirty_save(currentTarget.label), "Yes", "No", "Cancel").resolves("Yes");
             cliMock.expects("execute").withExactArgs(["set-target", "-f", target.label]).resolves(cliResult);
-            cliMock.expects("execute").withExactArgs(["save-target"]).resolves();
-            await cfViewCommands.cmdSetCurrentTarget(target);
+            cliMock.expects("execute").withExactArgs(["save-target"]).resolves(cliResult);
+            await cfViewCommands.cmdSetCurrentTarget(new cfView.CFTargetTI(target));
         });
 
         it("exception:: target is current, exception thrown", async () => {
-            target.isCurrent = true;
             currentTarget.isCurrent = true;
             currentTarget.isDirty = true;
             cfViewMock.expects("get").returns(localView);
@@ -245,11 +244,11 @@ describe("cfViewCommands tests", () => {
             const error = new Error("my error");
             cliMock.expects("execute").withExactArgs(["save-target"]).throws(error);
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message).resolves();
-            await cfViewCommands.cmdSetCurrentTarget(target);
+            await cfViewCommands.cmdSetCurrentTarget(new cfView.CFTargetTI({ label: "my Target", isDirty: false, isCurrent: false }));
         });
 
         it("fail:: target is current, not dirty, execute failed", async () => {
-            target.isCurrent = true;
+            const target = { label: "my Target", isDirty: false, isCurrent: false };
             currentTarget.isCurrent = true;
             currentTarget.isDirty = false;
             cfViewMock.expects("get").returns(localView);
@@ -257,7 +256,65 @@ describe("cfViewCommands tests", () => {
             cliResult.stdout = "any error";
             cliMock.expects("execute").withExactArgs(["set-target", "-f", target.label]).resolves(cliResult);
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(cliResult.stdout).resolves();
-            await cfViewCommands.cmdSetCurrentTarget(target);
+            await cfViewCommands.cmdSetCurrentTarget(new cfView.CFTargetTI(target));
+        });
+        
+        it("ok:: 'CFTargetNotCurrent' item received", async () => {
+            cliMock.expects("execute").never();
+            await cfViewCommands.cmdSetCurrentTarget(
+                new cfView.CFTargetNotCurrent(
+                    new cfView.CFAppsFolder('apps', 
+                        new cfView.CFTargetTI({ label: "my Target", isDirty: false, isCurrent: true })
+                    )
+                )
+            );
+        });
+    });
+
+    describe("execSetTarget scope", () => {
+        const item = new cfView.CFTargetTI({label: 'my Target', isCurrent: false, isDirty: true});
+
+        it("ok:: silent mode required", async () => {
+            const cliResult = { exitCode: -1, stdout: "", stderr: "" };
+            cliMock.expects("execute").withExactArgs(["set-target", "-f", item.target.label]).resolves(cliResult);
+            vscodeWindowMock.expects("showErrorMessage").never();
+            await cfViewCommands.execSetTarget(item, { silent: true });
+        });
+
+        it("ok:: 'skip-reload' mode required", async () => {
+            const cliResult = { exitCode: 0, stdout: "", stderr: "" };
+            cliMock.expects("execute").withExactArgs(["set-target", "-f", item.target.label]).resolves(cliResult);
+            cfViewMock.expects("get").never();
+            await cfViewCommands.execSetTarget(item, { silent: true, "skip-reload": true });
+        });
+    });
+
+    describe("execSaveTarget scope", () => {
+        const item = new cfView.CFTargetTI({label: 'my Target', isCurrent: false, isDirty: true});
+
+        it("ok:: error occured", async () => {
+            const cliResult = { exitCode: -1, stdout: "", stderr: "" };
+            cliMock.expects("execute").withExactArgs(["save-target", "-f", item.target.label]).resolves(cliResult);
+            vscodeWindowMock.expects("showErrorMessage").resolves();
+            await cfViewCommands.execSaveTarget(item);
+        });
+
+        it("ok:: silent mode required", async () => {
+            const cliResult = { exitCode: -1, stdout: "", stderr: "" };
+            cliMock.expects("execute").withExactArgs(["save-target", "-f", item.target.label]).resolves(cliResult);
+            vscodeWindowMock.expects("showErrorMessage").never();
+            await cfViewCommands.execSaveTarget(item, { silent: true });
+        });
+
+        it("ok:: without args", async () => {
+            const cliResult = { exitCode: 0, stdout: "", stderr: "" };
+            cliMock.expects("execute").withExactArgs(["save-target"]).resolves(cliResult);
+            await cfViewCommands.execSaveTarget();
+        });
+
+        it("ok:: 'no-targets' node received", async () => {
+            cliMock.expects("execute").never();
+            await cfViewCommands.execSaveTarget(new cfView.CFTargetTI({label: 'my (no targets)', isCurrent: false, isDirty: true}));
         });
     });
 
@@ -265,25 +322,32 @@ describe("cfViewCommands tests", () => {
         const localView = {
             refresh: () => ''
         };
+        const item = new cfView.CFTargetTI({ label: "other", isCurrent: true, isDirty: false });
 
         it("ok:: default-target", async () => {
-            const item = { target: { label: DEFAULT_TARGET } };
             cliMock.expects("execute").withArgs(["delete-target"]).never();
-            await cfViewCommands.cmdDeleteTarget(item);
+            await cfViewCommands.cmdDeleteTarget(new cfView.CFTargetTI({ label: DEFAULT_TARGET, isCurrent: true, isDirty: false }));
         });
 
         it("ok:: other deleted", async () => {
             cliResult.exitCode = 0;
             cliResult.stdout = "";
-            const item = { target: { label: "other" } };
             cliMock.expects("execute").withArgs(["delete-target", item.target.label]).resolves(cliResult);
             cfViewMock.expects("get").returns(localView);
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.target_deleted(item.target.label)).resolves();
             await cfViewCommands.cmdDeleteTarget(item);
         });
 
+        it("ok:: other deleted, silent and 'skip-reload' mode", async () => {
+            cliResult.exitCode = 0;
+            cliResult.stdout = "";
+            cliMock.expects("execute").withArgs(["delete-target", item.target.label]).resolves(cliResult);
+            cfViewMock.expects("get").never();
+            vscodeWindowMock.expects("showInformationMessage").never();
+            await cfViewCommands.cmdDeleteTarget(item, { silent: true, "skip-reload": true });
+        });
+
         it("ok:: other failure", async () => {
-            const item = { target: { label: "other" } };
             cliResult.stdout = "some error during delete";
             cliResult.exitCode = -1;
             cliMock.expects("execute").withArgs(["delete-target", item.target.label]).resolves(cliResult);

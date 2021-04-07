@@ -16,7 +16,7 @@ export const messages = {
   no_available_orgs: "There are no available organizations.",
   no_available_spaces: "There are no available spaces.",
   name_for_target: "Enter a name for the target",
-  not_targeted: "The organization and space in CF have not been set.",
+  not_targeted: "Login to CF",
   space_not_set: "Space not set",
   cf_setting_not_set: "Could not find the Cloud Foundry settings. Make sure you have assigned an org and space in Cloud Foundry.",
   enter_service_name: "Enter a name for the service instance",
