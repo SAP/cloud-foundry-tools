@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect, assert } from "chai";
 import * as _ from "lodash";
-import * as sinon from "sinon";
 import * as nsVsMock from "./ext/mockVscode";
 import { mockVscode } from "./ext/mockUtil";
 
@@ -14,14 +13,15 @@ import * as utils from "../src/utils";
 import { IBindContext, ConfigurationTarget, ConfigMetadata, BindState } from "@sap/wing-run-config-types";
 import { messages } from "../src/messages";
 import * as usageTracker from "../src/usage/usageTracker";
+import { createSandbox, SinonMock, SinonSandbox } from "sinon";
 
 describe("run-configuration tests package", () => {
-    let sandbox: any;
-    let vscodeWindowMock: any;
-    let usageMock: any;
+    let sandbox: SinonSandbox;
+    let vscodeWindowMock: SinonMock;
+    let usageMock: SinonMock;
 
     before(() => {
-        sandbox = sinon.createSandbox();
+        sandbox = createSandbox();
     });
 
     beforeEach(() => {
@@ -113,7 +113,7 @@ describe("run-configuration tests package", () => {
                 tag: resourceTag ? resourceTag + resourceName : "",
                 prompt: ""
             }];
-            sandbox.stub(cfViewCommands, "bindLocalService").withArgs(serviceType).resolves(['testInstance']);
+            sandbox.stub(cfViewCommands, "bindLocalService").withArgs(serviceType, bindContext.envPath).resolves(['testInstance']);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
             usageMock.expects("trackChiselTask").never();
             expect(await new DependencyHandler("test.Handler.id").bind(bindContext)).to.be.deep.equal({ configData: bindContext.configData, resource: { name: "testInstance", type: "resourceType" } });
@@ -128,7 +128,7 @@ describe("run-configuration tests package", () => {
             }];
             const copyContext = _.cloneDeep(bindContext);
             copyContext.depContext.data = {};
-            sandbox.stub(cfViewCommands, "bindLocalService").withArgs(serviceType).resolves(['testInstance']);
+            sandbox.stub(cfViewCommands, "bindLocalService").withArgs(serviceType, bindContext.envPath).resolves(['testInstance']);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
             usageMock.expects("trackChiselTask").never();
             expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
@@ -190,7 +190,7 @@ describe("run-configuration tests package", () => {
         it("ok:: 'unbind' - empty property", async () => {
             const configurationData = { config: { data: {}, type: ConfigurationTarget.launch }, dependentTasks: [{}] };
             configurationData.dependentTasks = [];
-            const property = {};
+            const property = {resourceName: "", envPath: "", resourceData: {}};
             sandbox.stub(utils, "removeResourceFromEnv").resolves(property);
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_unbound_successful(_.get(property, "resourceName"))).resolves();
             assert.deepEqual(await new DependencyHandler("test.Handler.id").unbind(bindContext), { configData: configurationData, resource: { name: "", type: "", data: {} } });

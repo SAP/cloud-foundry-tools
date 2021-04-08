@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { CFView, CFService } from "./cfView";
+import { CFView, CFService, CFTargetTI, CFTargetNotCurrent } from "./cfView";
 import { messages } from "./messages";
 import * as https from 'https';
 import * as url from "url";
 import { updateGitIgnoreList, isWindows, toText, UpsServiceQueryOprions, ServiceQueryOptions, resolveFilterValue } from "./utils";
 import {
-    CFTarget, DEFAULT_TARGET, ServiceInstanceInfo, IServiceQuery, eFilters, Cli, cfGetConfigFileField,
-    cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, padQuery, eServiceTypes
+    DEFAULT_TARGET, ServiceInstanceInfo, IServiceQuery, eFilters, Cli, cfGetConfigFileField,
+    cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, padQuery, eServiceTypes, CliResult
 } from "@sap/cf-tools";
 import * as _ from "lodash";
 import {
@@ -34,6 +34,11 @@ interface BindLocalData {
     instanceName: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     chiselTask?: any;
+}
+
+interface CmdOptions {
+    silent?: boolean;
+    'skip-reload'?: boolean;
 }
 
 export function cmdReloadTargets(): Promise<void> {
@@ -143,15 +148,45 @@ export async function cmdDeployServiceAPI(servicePath: string, message: string):
     }
 }
 
-export async function cmdSetCurrentTarget(newTarget: CFTarget): Promise<unknown | undefined> {
-    if (_.get(newTarget, "isCurrent", false)) {
+export async function execSetTarget(item: CFTargetTI, options?: CmdOptions) {
+    const response: CliResult = await Cli.execute(["set-target", "-f", item.target.label]);
+    if (response.exitCode !== 0) {
+        if (!options?.silent) {
+            vscode.window.showErrorMessage(response.stdout);
+        }
+        getModuleLogger(LOGGER_MODULE).error(`execSetTarget:: run 'set-target -f' with lable ${item.target.label} failed`, { output: response.stdout });
+    } else {
+        if (!options?.["skip-reload"]) {
+            await cmdReloadTargets();
+        }
+    }
+}
+
+export async function execSaveTarget(item?: CFTargetTI, options?: CmdOptions) {
+    if (item?.contextValue !== 'cf-target-notargets') {
+        const response: CliResult = await Cli.execute(_.concat(["save-target"], item?.target.label ? ['-f', item.target.label] : []));
+        if (response.exitCode !== 0) {
+            if (!options?.silent) {
+                vscode.window.showErrorMessage(response.stdout);
+            }
+            getModuleLogger(LOGGER_MODULE).error(`execSaveTarget:: run 'save-target -f' with lable ${item?.target.label} failed`, { output: response.stdout });
+        }
+    }
+}
+
+export async function cmdSetCurrentTarget(newTarget: CFTargetTI|CFTargetNotCurrent): Promise<unknown | undefined> {
+    let item = newTarget as CFTargetTI;
+    while((_.get(item, 'parent'))) {
+        item = _.get(item, 'parent'); // walk up until target folder found
+    }
+    if (false === item?.target?.isCurrent) {
         let answer = YES;
         try {
             const currTarget = CFView.get().getCurrentTarget();
             if (_.get(currTarget, "isDirty", false)) {
                 answer = await vscode.window.showWarningMessage(messages.target_dirty_save(currTarget.label), YES, NO, CANCEL).then(selection => {
                     if (selection === YES) {
-                        return Cli.execute(["save-target"]).then(() => selection);
+                        return execSaveTarget().then(() => selection);
                     } else if (selection) {
                         return NO;
                     }
@@ -164,14 +199,7 @@ export async function cmdSetCurrentTarget(newTarget: CFTarget): Promise<unknown 
                 return;
             }
 
-            return Cli.execute(["set-target", "-f", newTarget.label]).then(async (response: { exitCode: number; stdout: string }) => {
-                if (response.exitCode !== 0) {
-                    vscode.window.showErrorMessage(response.stdout);
-                    getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand:: run 'set-target -f' with lable ${newTarget.label} failed`, { output: response.stdout });
-                } else {
-                    await cmdReloadTargets();
-                }
-            });
+            return execSetTarget(item);
         } catch (e) {
             vscode.window.showErrorMessage(toText(e));
             getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand with new target ${stringify(newTarget)} exception thrown`, { error: toText(e) });
@@ -179,16 +207,19 @@ export async function cmdSetCurrentTarget(newTarget: CFTarget): Promise<unknown 
     }
 }
 
-export async function cmdDeleteTarget(item: unknown): Promise<void> {
-    const targetLabel = _.get(item, "target.label");
+export async function cmdDeleteTarget(item: CFTargetTI, options?: CmdOptions): Promise<void> {
+    const targetLabel = item.target.label;
     if (targetLabel === DEFAULT_TARGET) {
         return;
     }
-
     const cliResult = await Cli.execute(["delete-target", targetLabel]);
     if (cliResult.exitCode === 0) {
-        await cmdReloadTargets();
-        vscode.window.showInformationMessage(messages.target_deleted(targetLabel));
+        if (!options?.["skip-reload"]) {
+            await cmdReloadTargets();
+        }
+        if (!options?.silent) {
+            vscode.window.showInformationMessage(messages.target_deleted(targetLabel));
+        }
         getModuleLogger(LOGGER_MODULE).debug(`cmdDeleteTarget:: command "delete-target" of ${targetLabel} succeeded.`);
     } else {
         vscode.window.showErrorMessage(cliResult.stdout);

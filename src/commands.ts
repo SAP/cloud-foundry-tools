@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import {
     ServiceInfo, PlanInfo, ServiceInstanceInfo, cfLogin, cfGetAvailableOrgs, cfGetAvailableSpaces, cfSetOrgSpace, CF_PAGE_SIZE, IServiceQuery,
-    Cli, CliResult, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance, cfGetServiceInstances, eFilters, eServiceTypes
+    Cli, CliResult, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance, cfGetServiceInstances, eFilters, eServiceTypes, cfGetConfigFileField
 } from "@sap/cf-tools";
 import { messages } from "./messages";
 import { cmdReloadTargets } from "./cfViewCommands";
@@ -22,8 +22,8 @@ export function isCFResource(obj: unknown): boolean {
     return _.has(obj, "relationships") && _.has(obj, "links") && _.has(obj, "guid");
 }
 
-function getCFDefaultLandscape(): string {
-    return _.get(process, "env.CF_API_ENDPOINT", "");
+async function getCFDefaultLandscape(): Promise<string> {
+    return _.get(process, "env.CF_API_ENDPOINT", "") || await cfGetConfigFileField("Target");
 }
 
 export function isServiceTypeInfoInArray(obj: unknown): boolean {
@@ -157,7 +157,7 @@ function pickCfTargetWithProgress(): Thenable<ITarget | undefined> {
 
 async function executeLogin(): Promise<string | undefined> {
     let result = '';
-    const cfEndpoint = await vscode.window.showInputBox({ prompt: messages.enter_cf_endpoint, value: getCFDefaultLandscape(), ignoreFocusOut: true });
+    const cfEndpoint = await vscode.window.showInputBox({ prompt: messages.enter_cf_endpoint, value: await getCFDefaultLandscape(), ignoreFocusOut: true });
     if (cfEndpoint) {
         const userEmailName = await vscode.window.showInputBox({ prompt: messages.enter_user_email, ignoreFocusOut: true });
         if (userEmailName) {
@@ -181,13 +181,13 @@ async function executeLogin(): Promise<string | undefined> {
     return result;
 }
 
-export async function cmdLogin(weak = false): Promise<string | undefined> {
+export async function cmdLogin(weak = false, target = true): Promise<string | undefined> {
     try {
         let result = weak ? (_.get(await pickCfTargetWithProgress(), "user") ? OK : undefined) : undefined;
         if (!result) {
             result = await executeLogin();
         }
-        if (OK === result) {
+        if (target && OK === result) {
             result = await cmdCFSetOrgSpace(true);
         }
         return result;
@@ -236,7 +236,7 @@ export async function cmdSelectSpace(): Promise<string | undefined> {
     }
 }
 
-export async function cmdCreateTarget(): Promise<void> {
+export async function cmdCreateTarget(): Promise<string|undefined> {
     // first ask for service-name
     const targetName = await vscode.window.showInputBox({ placeHolder: messages.name_for_target, ignoreFocusOut: true });
     if (targetName) {
@@ -250,6 +250,7 @@ export async function cmdCreateTarget(): Promise<void> {
         await cmdReloadTargets();
         vscode.window.showInformationMessage(messages.target_created(targetName));
         getModuleLogger(LOGGER_MODULE).debug("cmdCreateTarget: the <%s> target has been created", targetName);
+        return targetName;
     }
 }
 

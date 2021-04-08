@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as sinon from "sinon";
 import * as _ from "lodash";
 import * as fsextra from "fs-extra";
 import * as path from "path";
@@ -9,60 +8,39 @@ import { mockVscode } from "./ext/mockUtil";
 const statusBarItem = { show: () => "" };
 
 mockVscode(nsVsMock.testVscode, "src/extension.ts");
-mockVscode(nsVsMock.testVscode, "src/cfView.ts");
-mockVscode(nsVsMock.testVscode, "src/utils.ts");
+mockVscode(nsVsMock.testVscode, "src/commands.ts");
+mockVscode(nsVsMock.testVscode, "src/cfViewCommands.ts");
+mockVscode(nsVsMock.testVscode, "src/run-configuration.ts");
 import * as extension from "../src/extension";
-import * as cflocal from "@sap/cf-tools/out/src/cf-local";
-import * as cflocalUnits from "@sap/cf-tools/out/src/utils";
 import * as commands from "../src/commands";
 import * as cfViewCommands from "../src/cfViewCommands";
-import { DependencyHandler } from "../src/run-configuration";
+import * as cflocal from "@sap/cf-tools/out/src/cf-local";
+import * as cflocalUnits from "@sap/cf-tools/out/src/utils";
 import * as loggerWrapper from "../src/logger/logger-wrapper";
-import { cfGetConfigFilePath, ITarget } from "@sap/cf-tools";
+import { cfGetConfigFilePath, ITarget, OK } from "@sap/cf-tools";
+import { expect } from "chai";
+import { createSandbox, SinonMock, SinonSandbox } from "sinon";
+import { CFTargetTI } from "../src/cfView";
 
 describe('extension unit test', () => {
-    let sandbox: any;
-    let commandsMock: any;
-    let windowMock: any;
-    let fsExtraMock: any;
-    let mockCfLocal: any;
-    let mockCfLocalUnits: any;
-    let mockStatusBarItem: any;
-    let extensionsMock: any;
-    let loggerWrapperMock: any;
-    const dependencyHandler: any = new DependencyHandler("cf-tools-rsource-dependency");
-    const commandsMap = {
-        "cf.login": commands.cmdLogin,
-        "cf.login.weak": commands.cmdLogin.bind(null, true),
-        "cf.target.set": cfViewCommands.cmdSetCurrentTarget,
-        "cf.services.create": commands.cmdCreateService,
-        "cf.services.bind.local": cfViewCommands.cmdBindLocal,
-        "cf.services.unbind": dependencyHandler.unbind,
-        "cf.services.bind": dependencyHandler.bind,
-        "cf.set.orgspace": commands.cmdCFSetOrgSpace,
-        "cf.targets.create": commands.cmdCreateTarget,
-        "cf.target.delete": cfViewCommands.cmdDeleteTarget,
-        "cf.targets.reload": cfViewCommands.cmdReloadTargets,
-        "cf.select.space": commands.cmdSelectSpace,
-        "cf.deploy-service.api": cfViewCommands.cmdDeployServiceAPI,
-        "cf.services.binding.state": dependencyHandler.getBindState,
-        "cf.services.get-space-services": cfViewCommands.cmdGetSpaceServices,
-        "cf.services.get-ups-services": cfViewCommands.cmdGetUpsServiceInstances,
-        "cf.services.get-services": cfViewCommands.cmdGetServiceInstances,
-        "cf.ups.create": commands.cmdCreateUps
-    };
+    const runConfigExtName = "sap.vscode-wing-run-config";
+    let sandbox: SinonSandbox;
+    let windowMock: SinonMock;
+    let viewCommandsMock: SinonMock;
+    let fsExtraMock: SinonMock;
+    let mockCfLocal: SinonMock;
+    let mockCfLocalUnits: SinonMock;
+    let mockStatusBarItem: SinonMock;
+    let extensionsMock: SinonMock;
+    let loggerWrapperMock: SinonMock;
 
     before(() => {
-        sandbox = sinon.createSandbox();
-    });
-
-    after(() => {
-        sandbox.restore();
+        sandbox = createSandbox();
     });
 
     beforeEach(() => {
-        commandsMock = sandbox.mock(nsVsMock.testVscode.commands);
         windowMock = sandbox.mock(nsVsMock.testVscode.window);
+        viewCommandsMock = sandbox.mock(cfViewCommands);
         fsExtraMock = sandbox.mock(fsextra);
         mockCfLocal = sandbox.mock(cflocal);
         mockCfLocalUnits = sandbox.mock(cflocalUnits);
@@ -72,14 +50,15 @@ describe('extension unit test', () => {
     });
 
     afterEach(() => {
-        commandsMock.verify();
         windowMock.verify();
+        viewCommandsMock.verify();
         fsExtraMock.verify();
         mockCfLocal.verify();
         mockCfLocalUnits.verify();
         mockStatusBarItem.verify();
         extensionsMock.verify();
         loggerWrapperMock.verify();
+        sandbox.restore();
     });
 
     describe("deactivate", () => {
@@ -95,25 +74,16 @@ describe('extension unit test', () => {
         });
     });
 
-    describe("activate", () => {
+    describe("activate- fake createTreeView", () => {
         let testContext: any;
         const runConfigExtName = "sap.vscode-wing-run-config";
 
         beforeEach(() => {
-            windowMock.expects("registerTreeDataProvider").withArgs("cfView");
+            windowMock.expects("createTreeView").withArgs("cfView");
             testContext = { "subscriptions": [], logUri: { fsPath: path.resolve(__dirname) } };
             loggerWrapperMock.expects("initLogger").withExactArgs(testContext).resolves();
-
-            _.forEach(commandsMap, (command, commandName) => {
-                if (commandName === "cf.login.weak") {
-                    commandsMock.expects("registerCommand").withArgs(commandName);
-                } else if (commandName !== "cf.services.unbind" && commandName !== "cf.services.bind" && commandName !== "cf.services.binding.state") {
-                    commandsMock.expects("registerCommand").withExactArgs(commandName, command);
-                }
-            });
-
-            mockStatusBarItem.expects("show");
-            windowMock.expects("createStatusBarItem").returns(statusBarItem).withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100);
+            mockStatusBarItem.expects("show").never();
+            windowMock.expects("createStatusBarItem").withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100).returns(statusBarItem);
         });
 
         it("ok:: cfConfigFilePath does not exist", async () => {
@@ -121,28 +91,13 @@ describe('extension unit test', () => {
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             fsExtraMock.expects("watchFile").never();
             await extension.activate(testContext);
+            windowMock.verify();
         });
 
         it("ok:: cfConfigFilePath exists", async () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
             fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
-            await extension.activate(testContext);
-        });
-
-        it("ok:: depended platform extension is defined and activated", async () => {
-            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").atLeast(1).resolves({ Name: "testName1" });
-            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").atLeast(1).resolves({ Name: "testName2" });
-            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
-            extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns({
-                isActive: true,
-                exports: {
-                    registerDependency: () => ""
-                }
-            });
-            commandsMock.expects("registerCommand").withExactArgs("cf.services.unbind", commandsMap["cf.services.unbind"]);
-            commandsMock.expects("registerCommand").withExactArgs("cf.services.bind", commandsMap["cf.services.bind"]);
-            commandsMock.expects("registerCommand").withExactArgs("cf.services.binding.state", commandsMap["cf.services.binding.state"]);
             await extension.activate(testContext);
         });
 
@@ -160,9 +115,6 @@ describe('extension unit test', () => {
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             mockExt.expects("activate").resolves();
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(extRun);
-            commandsMock.expects("registerCommand").withExactArgs("cf.services.unbind", commandsMap["cf.services.unbind"]);
-            commandsMock.expects("registerCommand").withExactArgs("cf.services.bind", commandsMap["cf.services.bind"]);
-            commandsMock.expects("registerCommand").withExactArgs("cf.services.binding.state", commandsMap["cf.services.binding.state"]);
             await extension.activate(testContext);
             mockExt.verify();
         });
@@ -181,17 +133,134 @@ describe('extension unit test', () => {
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             mockExt.expects("activate").rejects(new Error("my error"));
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(extRun);
-            commandsMock.expects("registerCommand").withExactArgs("cf.services.unbind", commandsMap["cf.services.unbind"]).never();
-            commandsMock.expects("registerCommand").withExactArgs("cf.services.bind", commandsMap["cf.services.bind"]).never();
-            commandsMock.expects("registerCommand").withExactArgs("cf.services.binding.state", commandsMap["cf.services.binding.state"]).never();
             await extension.activate(testContext);
             mockExt.verify();
         });
     });
 
+    describe("activate - depended platform extension is defined and activated", () => {
+        let testContext: any;
+        let mockCommands: SinonMock;
+
+        beforeEach(async () => {
+            mockCommands = sandbox.mock(commands);
+            testContext = { "subscriptions": [], logUri: { fsPath: path.resolve(__dirname) } };
+            loggerWrapperMock.expects("initLogger").withExactArgs(testContext).resolves();
+            windowMock.expects("createStatusBarItem").withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100).returns(statusBarItem);
+            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
+            fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
+            extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns({
+                isActive: true,
+                exports: {
+                    registerDependency: () => ""
+                }
+            });
+            await extension.activate(testContext);
+        });
+
+        afterEach(() => {
+            mockCommands.verify();
+        });
+
+        it("ok:: depended platform extension is defined and activated, verify commands", () => {
+            _.each(["cf.login", "cf.login.weak", "cf.target.set", "cf.services.create", "cf.services.bind.local",
+                "cf.services.unbind", "cf.services.bind", "cf.services.binding.state",
+                "cf.set.orgspace", "cf.targets.create", "cf.target.delete", "cf.targets.reload", "cf.select.space",
+                "cf.deploy-service.api", "cf.services.get-space-services", "cf.services.get-ups-services",
+                "cf.services.get-services", "cf.ups.create"
+            ], cmd => {
+                expect(_.get(nsVsMock.getTestRegisteredCommands(), cmd)).to.be.ok;
+            });
+        });
+
+        it("ok:: cmdLogin command triggered", async () => {
+            const targets = [new CFTargetTI({ label: 'test-target', isCurrent: true, isDirty: false })];
+            sandbox.stub(nsVsMock.getTestTreeProvider(), 'getTargets').returns(targets);
+            mockCommands.expects('cmdLogin').resolves(OK);
+            viewCommandsMock.expects('cmdDeleteTarget').withExactArgs(targets[0], { silent: true, 'skip-reload': true }).resolves();
+            viewCommandsMock.expects('execSaveTarget').withExactArgs(targets[0], { silent: true, 'skip-reload': true }).resolves();
+            viewCommandsMock.expects('execSetTarget').withExactArgs(targets[0], { silent: true }).resolves();
+            await _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'login'])();
+        });
+
+        it("ok:: cmdLogin command triggered, canceled", async () => {
+            mockCommands.expects('cmdLogin').resolves();
+            await _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'login'])();
+        });
+
+        it("ok:: cmdLogin command triggered, no active target", async () => {
+            sandbox.stub(nsVsMock.getTestTreeProvider(), 'getCurrentTarget').returns(undefined);
+            mockCommands.expects('cmdLogin').resolves(OK);
+            await _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'login'])();
+        });
+
+        it("ok:: 'cf.target.set' command triggered", (done) => {
+            const targets = [
+                new CFTargetTI({ label: 'test-target', isCurrent: false, isDirty: false }),
+                new CFTargetTI({ label: 'test-target-active', isCurrent: true, isDirty: false })
+            ];
+            const cfViewMock = sandbox.mock(nsVsMock.getTestTreeView());
+            sandbox.stub(nsVsMock.getTestTreeProvider(), 'getTargets').returns(targets);
+            cfViewMock.expects('reveal').withExactArgs(targets[1], { select: true, focus: true, expand: true }).resolves();
+            viewCommandsMock.expects('cmdSetCurrentTarget').withExactArgs(targets[0]).resolves();
+            _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'target', 'set'])(targets[0]);
+            setTimeout(() => {
+                cfViewMock.verify();
+                done();
+            }, 600);
+        });
+
+        it("ok:: 'cf.target.set' command triggered, reveal item not found", (done) => {
+            const targets = [
+                new CFTargetTI({ label: 'test-target', isCurrent: false, isDirty: false }),
+                new CFTargetTI({ label: 'test-target-active', isCurrent: false, isDirty: false })
+            ];
+            const cfViewMock = sandbox.mock(nsVsMock.getTestTreeView());
+            sandbox.stub(nsVsMock.getTestTreeProvider(), 'getTargets').returns(targets);
+            cfViewMock.expects('reveal').never();
+            viewCommandsMock.expects('cmdSetCurrentTarget').withExactArgs(targets[0]).resolves();
+            _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'target', 'set'])(targets[0]);
+            setTimeout(() => {
+                cfViewMock.verify();
+                done();
+            }, 600);
+        });
+
+        it("ok:: 'cf.targets.create' command triggered", (done) => {
+            const targets = [
+                new CFTargetTI({ label: 'test-target', isCurrent: false, isDirty: false }),
+                new CFTargetTI({ label: 'test-target-active', isCurrent: true, isDirty: false })
+            ];
+            const cfViewMock = sandbox.mock(nsVsMock.getTestTreeView());
+            sandbox.stub(nsVsMock.getTestTreeProvider(), 'getTargets').returns(targets);
+            cfViewMock.expects('reveal').withExactArgs(targets[1], { select: true, focus: true, expand: true }).resolves();
+            mockCommands.expects('cmdCreateTarget').resolves(targets[1].label);
+            _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'targets', 'create'])();
+            setTimeout(() => {
+                cfViewMock.verify();
+                done();
+            }, 600);
+        });
+
+        it("ok:: 'cf.targets.create' command triggered, creation canceled", (done) => {
+            const targets = [
+                new CFTargetTI({ label: 'test-target', isCurrent: false, isDirty: false }),
+                new CFTargetTI({ label: 'test-target-active', isCurrent: true, isDirty: false })
+            ];
+            const cfViewMock = sandbox.mock(nsVsMock.getTestTreeView());
+            sandbox.stub(nsVsMock.getTestTreeProvider(), 'getTargets').returns(targets);
+            cfViewMock.expects('reveal').never();
+            mockCommands.expects('cmdCreateTarget').resolves();
+            _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'targets', 'create'])();
+            setTimeout(() => {
+                cfViewMock.verify();
+                done();
+            }, 600);
+        });
+    });
+
     describe("onCFConfigFileChange", () => {
         let testContext: any;
-        const runConfigExtName = "sap.vscode-wing-run-config";
         const target: ITarget = {
             "api endpoint": "endpoint",
             "api version": "3.2.1",
@@ -201,40 +270,27 @@ describe('extension unit test', () => {
         };
 
         beforeEach(() => {
-            windowMock.expects("registerTreeDataProvider").withArgs("cfView");
+            windowMock.expects("createTreeView").withArgs("cfView");
             testContext = { "subscriptions": [], logUri: { fsPath: path.resolve(__dirname) } };
             loggerWrapperMock.expects("initLogger").withExactArgs(testContext).resolves();
-
-            _.forEach(commandsMap, (command, commandName) => {
-                if (commandName === "cf.login.weak") {
-                    commandsMock.expects("registerCommand").withArgs(commandName);
-                } else if (commandName !== "cf.services.unbind" && commandName !== "cf.services.bind" && commandName !== "cf.services.binding.state") {
-                    commandsMock.expects("registerCommand").withExactArgs(commandName, command);
-                }
-            });
-
-            mockStatusBarItem.expects("show");
-            windowMock.expects("createStatusBarItem").returns(statusBarItem).withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100);
-        });
-
-        it("ok:: verify callback trigger, target updated", async () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
             fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
+            windowMock.expects("createStatusBarItem").withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100).returns(statusBarItem);
+        });
+
+        it("ok:: verify callback trigger, target updated", async () => {
             await extension.activate(testContext);
+            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
+            mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName2" });
+            mockCfLocal.expects("cfGetTarget").resolves(target);
             setTimeout(() => {
-                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
-                mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName2" });
-                mockCfLocal.expects("cfGetTarget").resolves(target);
                 extension.onCFConfigFileChange();
             }, 100);
             await new Promise(resolve => setTimeout(resolve, 200));
         });
 
         it("ok:: nothing updated", async () => {
-            extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
-            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
-            fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
             await extension.activate(testContext);
 
             setTimeout(() => {
@@ -253,9 +309,6 @@ describe('extension unit test', () => {
         });
 
         it("ok:: not targeted", async () => {
-            extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
-            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
-            fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
             await extension.activate(testContext);
 
             setTimeout(() => {
@@ -268,9 +321,6 @@ describe('extension unit test', () => {
         });
 
         it("ok:: not logged in", async () => {
-            extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
-            mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
-            fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
             mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
             mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName3" });
             await extension.activate(testContext);

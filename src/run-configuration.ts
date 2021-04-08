@@ -54,6 +54,7 @@ export class DependencyHandler implements types.IDependencyHandler {
             getModuleLogger(DependencyHandler.MODULE_NAME).info("bind: <%s> task for opening the VPN tunnel to the Cloud Foundry space has been created", chiselTask.label);
 
             if (_.isNil(bindContext.configData.dependentTasks)) {
+              // eslint-disable-next-line require-atomic-updates
               bindContext.configData.dependentTasks = [];
             }
             bindContext.configData.dependentTasks.push(chiselTask);
