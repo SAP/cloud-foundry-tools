@@ -36,7 +36,7 @@ interface BindLocalData {
     chiselTask?: any;
 }
 
-interface CmdOptions {
+export interface CmdOptions {
     silent?: boolean;
     'skip-reload'?: boolean;
 }

@@ -31,7 +31,7 @@ export class DependencyHandler implements types.IDependencyHandler {
     return bindState;
   }
 
-  public async bind(bindContext: types.IBindContext): Promise<void | types.IBindResult> {
+  public async bind(bindContext: types.IBindContext, options?: cfViewCommands.CmdOptions): Promise<void | types.IBindResult> {
     const resourceTag: string = _.get(bindContext, "depContext.data.resourceTag");
     const serviceType: cfLocal.ServiceTypeInfo[] = [{
       name: _.get(bindContext.depContext, ['type'], ''),
@@ -50,7 +50,9 @@ export class DependencyHandler implements types.IDependencyHandler {
           const chiselTaskNameSuffix = instanceNames.join("&");
           const chiselTask = await checkAndCreateChiselTask(bindContext.envPath?.fsPath, chiselTaskNameSuffix);
           if (chiselTask) {
-            vscode.window.showInformationMessage(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`);
+            if (!options?.silent) {
+              vscode.window.showInformationMessage(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`);
+            }
             getModuleLogger(DependencyHandler.MODULE_NAME).info("bind: <%s> task for opening the VPN tunnel to the Cloud Foundry space has been created", chiselTask.label);
 
             if (_.isNil(bindContext.configData.dependentTasks)) {
@@ -74,16 +76,14 @@ export class DependencyHandler implements types.IDependencyHandler {
     }
   }
 
-  // TODO: Consider not showing message in silent mode. Add parameter: options?: {silent: boolean}
-  public async unbind(bindContext: types.IBindContext): Promise<void | types.IBindResult> {
-    const configObject = new types.ConfigObject(
-      {},
-      types.ConfigurationTarget.launch
-    );
+  public async unbind(bindContext: types.IBindContext, options?: cfViewCommands.CmdOptions): Promise<void | types.IBindResult> {
+    const configObject = new types.ConfigObject({}, types.ConfigurationTarget.launch);
     const configurationData: types.IConfigurationData = { config: configObject, dependentTasks: [] };
     try {
       const removedResourceDetails = await removeResourceFromEnv(bindContext);
-      vscode.window.showInformationMessage(messages.service_unbound_successful(_.get(removedResourceDetails, "resourceName")));
+      if (!options?.silent) {
+        vscode.window.showInformationMessage(messages.service_unbound_successful(_.get(removedResourceDetails, "resourceName")));
+      }
       getModuleLogger(DependencyHandler.MODULE_NAME).info("unbind: the <%s> service has been unbound", _.get(removedResourceDetails, "resourceName"));
       return Promise.resolve({
         configData: configurationData,
