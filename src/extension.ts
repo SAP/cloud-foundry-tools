@@ -63,16 +63,21 @@ export async function activate(context: vscode.ExtensionContext) {
 	const view = vscode.window.createTreeView("cfView", { treeDataProvider, showCollapseAll: true });
 
 	const loginCmdId = "cf.login";
-	context.subscriptions.push(vscode.commands.registerCommand(loginCmdId, async (weak, target) => {
-		if (OK === await cmdLogin(weak, target)) {
-			const active = _.find(treeDataProvider.getTargets(), 'target.isCurrent');
-			if (active) {
-				// after re-login the target data become invalid -> perform re-create target
-				await cmdDeleteTarget(active, { 'skip-reload': true, silent: true });
-				await execSaveTarget(active, { 'skip-reload': true, silent: true });
-				await execSetTarget(active, { silent: true });
+	context.subscriptions.push(vscode.commands.registerCommand(loginCmdId, (weak, target) => {
+		return cmdLogin(weak, target).then((result) => {
+			if (OK === result) {
+				const active = _.find(treeDataProvider.getTargets(), 'target.isCurrent');
+				if (active) {
+					// after re-login the target data become invalid -> perform re-create target
+					cmdDeleteTarget(active, { 'skip-reload': true, silent: true }).then(() => {
+						execSaveTarget(active, { 'skip-reload': true, silent: true }).then(() => {
+							execSetTarget(active, { silent: true });
+						});
+					});
+				}
 			}
-		}
+			return result;
+		});
 	}));
 	cfStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
 	context.subscriptions.push(cfStatusBarItem);
@@ -100,7 +105,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		}, 400);
 	}
 
-	context.subscriptions.push(vscode.commands.registerCommand("cf.target.set", async (item: CFTargetTI|CFTargetNotCurrent) => {
+	context.subscriptions.push(vscode.commands.registerCommand("cf.target.set", async (item: CFTargetTI | CFTargetNotCurrent) => {
 		await cmdSetCurrentTarget(item);
 		revealTargetItem();
 	}));

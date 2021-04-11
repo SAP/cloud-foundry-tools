@@ -40,7 +40,7 @@ export class DependencyHandler implements types.IDependencyHandler {
       prompt: ""
     }];
     try {
-      const instanceNames: string[] = await cfViewCommands.bindLocalService(serviceType, bindContext.envPath);
+      const instanceNames: string[] = await cfViewCommands.bindLocalService(serviceType, bindContext.envPath, options);
 
       if (_.size(instanceNames)) {
          // Get metadata of service instance by service name

@@ -183,6 +183,14 @@ describe('extension unit test', () => {
             await _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'login'])();
         });
 
+        it("ok:: cmdLogin command triggered and failed", async () => {
+            const targets = [new CFTargetTI({ label: 'test-target', isCurrent: true, isDirty: false })];
+            sandbox.stub(nsVsMock.getTestTreeProvider(), 'getTargets').returns(targets);
+            mockCommands.expects('cmdLogin').resolves('failed');
+            viewCommandsMock.expects('cmdDeleteTarget').never();
+            await _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'login'])();
+        });
+
         it("ok:: cmdLogin command triggered, canceled", async () => {
             mockCommands.expects('cmdLogin').resolves();
             await _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'login'])();
