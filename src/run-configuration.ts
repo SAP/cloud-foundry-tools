@@ -41,9 +41,9 @@ export class DependencyHandler implements types.IDependencyHandler {
     }];
     try {
       const instanceNames: string[] = await cfViewCommands.bindLocalService(serviceType, bindContext.envPath, options);
-
+      let chiselTask;
       if (_.size(instanceNames)) {
-         // Get metadata of service instance by service name
+        // Get metadata of service instance by service name
         const instanceType = (await cfLocal.cfGetInstanceMetadata(instanceNames[0])).service;
 
         // Create chisel task if neccessary
@@ -52,7 +52,7 @@ export class DependencyHandler implements types.IDependencyHandler {
 
           // Create it in dependent task
           const chiselTaskNameSuffix = instanceNames.join("&");
-          const chiselTask = await checkAndCreateChiselTask(bindContext.envPath?.fsPath, chiselTaskNameSuffix);
+          chiselTask = await checkAndCreateChiselTask(bindContext.envPath?.fsPath, chiselTaskNameSuffix);
           if (chiselTask) {
             if (!options?.silent) {
               vscode.window.showInformationMessage(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`);
@@ -66,13 +66,13 @@ export class DependencyHandler implements types.IDependencyHandler {
             bindContext.configData.dependentTasks.push(chiselTask);
           }
         }
-        return {
+        return _.merge({
           configData: bindContext.configData,
           resource: {
             name: instanceNames[0],
             type: instanceType || ""
           }
-        };
+        }, chiselTask ? { resource: { data: { chiselTask } } } : {});
       }
     } catch (e) {
       vscode.window.showErrorMessage(toText(e));
