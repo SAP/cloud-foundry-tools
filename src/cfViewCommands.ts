@@ -85,25 +85,36 @@ type TEnvPath = {
     ignore?: boolean;
 };
 
-async function doBind(instances: ServiceInstanceInfo[], envPath: TEnvPath, tags?: string[], serviceKeyNames?: string[], serviceKeyParams?: unknown[]) {
+type BindArgs = {
+    instances: ServiceInstanceInfo[];
+    envPath: TEnvPath;
+    tags?: string[];
+    serviceKeyNames?: string[];
+    serviceKeyParams?: unknown[];
+    options?: CmdOptions;
+};
+
+async function doBind(opts: BindArgs) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async function runWithProgress(fnc: (filePath: string, instanceNames: string[], tags?: string[], serviceKeyNames?: string[]) => Promise<void>, args: any[]) {
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification, title: messages.binding_service_to_file, cancellable: false
         }, () => fnc.apply(null, args));
-        vscode.window.showInformationMessage(messages.service_bound_successful(args[1].join(",")));
+        if (!opts.options?.silent) {
+            vscode.window.showInformationMessage(messages.service_bound_successful(args[1].join(",")));
+        }
         getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", `${args[1].join(",")}`);
     }
-    const ups = _.filter(instances, ['serviceName', eServiceTypes.user_provided]);
-    const services = _.difference(instances, ups);
+    const ups = _.filter(opts.instances, ['serviceName', eServiceTypes.user_provided]);
+    const services = _.difference(opts.instances, ups);
     if (_.size(services)) {
-        await runWithProgress(cfBindLocalServices, [envPath.path.fsPath, _.map(services, 'label'), tags, serviceKeyNames, serviceKeyParams]);
+        await runWithProgress(cfBindLocalServices, [opts.envPath.path.fsPath, _.map(services, 'label'), opts.tags, opts.serviceKeyNames, opts.serviceKeyParams]);
     }
     if (_.size(ups)) {
-        await runWithProgress(cfBindLocalUps, [envPath.path.fsPath, _.map(ups, 'label'), tags]);
+        await runWithProgress(cfBindLocalUps, [opts.envPath.path.fsPath, _.map(ups, 'label'), opts.tags]);
     }
-    if (!envPath.ignore) {
-        updateGitIgnoreList(envPath.path.fsPath);
+    if (!opts.envPath.ignore) {
+        updateGitIgnoreList(opts.envPath.path.fsPath);
     }
 }
 
@@ -174,9 +185,9 @@ export async function execSaveTarget(item?: CFTargetTI, options?: CmdOptions) {
     }
 }
 
-export async function cmdSetCurrentTarget(newTarget: CFTargetTI|CFTargetNotCurrent): Promise<unknown | undefined> {
+export async function cmdSetCurrentTarget(newTarget: CFTargetTI | CFTargetNotCurrent): Promise<unknown | undefined> {
     let item = newTarget as CFTargetTI;
-    while((_.get(item, 'parent'))) {
+    while ((_.get(item, 'parent'))) {
         item = _.get(item, 'parent'); // walk up until target folder found
     }
     if (false === item?.target?.isCurrent) {
@@ -322,7 +333,7 @@ class EnvPathHelper {
     }
 }
 
-export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath, instanceName?: string): Promise<BindLocalData | undefined> {
+export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath, instanceName?: string, opts?: CmdOptions): Promise<BindLocalData | undefined> {
     // Handle .env path
     let filePath = EnvPathHelper.getPath(envPath);
     if (EnvPathHelper.isPathEmpty(filePath)) {
@@ -336,7 +347,14 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
     try {
         const bindDetails = await collectBindDetails(service, instanceName);
         if (bindDetails) {
-            await doBind(bindDetails.instances, { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, bindDetails.tags, bindDetails.keyNames, bindDetails.serviceKeyParams);
+            await doBind({
+                instances: bindDetails.instances,
+                envPath: { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) },
+                tags: bindDetails.tags,
+                serviceKeyNames: bindDetails.keyNames,
+                serviceKeyParams: bindDetails.serviceKeyParams,
+                options: opts
+            });
             const instanceName = _.get(_.head(bindDetails.instances), 'label');
             if (instanceName) {
                 const chiselTask = await checkAndCreateChiselTask(filePath.fsPath, instanceName);
@@ -355,7 +373,7 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
     return;
 }
 
-export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath): Promise<string[]> {
+export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath, opts?: CmdOptions): Promise<string[]> {
     try {
         const filePath = EnvPathHelper.getPath(envPath);
         if (EnvPathHelper.isPathEmpty(filePath)) {
@@ -384,13 +402,13 @@ export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath:
                 return result;
             }, []);
             if (_.size(instanceNames) > 0) {
-                await doBind(_.compact(instances), { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, _.compact(tags));
+                await doBind({ instances: _.compact(instances), envPath: { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, tags: _.compact(tags), options: opts });
                 return instanceNames;
             }
         } else {
             const instanceName = await getInstanceName(availableServices);
             if (instanceName) {
-                await doBind([_.find(availableServices, ['label', instanceName])], { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) });
+                await doBind({ instances: [_.find(availableServices, ['label', instanceName])], envPath: { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, options: opts });
                 return [instanceName];
             }
         }
