@@ -1,7 +1,7 @@
 {
 	"name": "vscode-wing-cf-tools",
 	"displayName": "Cloud Foundry Tools",
-	"version": "6.1.0",
+	"version": "6.2.0",
 	"description": "Vscode extension of Cloud Foundry tools",
 	"categories": [
 		"Other"
@@ -318,7 +318,7 @@
 	"dependencies": {
 		"@sap/cf-tools": "^1.1.0",
 		"@sap/swa-for-sapbas-vsx": "1.1.13",
-		"@sap/wing-run-config-types": "4.1.5",
+		"@sap/wing-run-config-types": "4.2.0",
 		"@vscode-logging/wrapper": "1.0.0",
 		"comment-json": "4.1.0",
 		"fs-extra": "9.1.0",

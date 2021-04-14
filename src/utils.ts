@@ -88,7 +88,7 @@ export async function removeResourceFromEnv(bindContext: types.IBindContext): Pr
 	let instanceData;
 	const envFilePath: string = bindContext.envPath.fsPath;
 	const vcapServicesObj = await getEnvResources(envFilePath);
-	const bindResourceType = bindContext.depContext.type;
+	const bindResourceType = bindContext.depContext.type === types.DependencyType.runtimeservice ? bindContext.depContext.displayType : bindContext.depContext.type;
 	let instanceName: string;
 	// If this is a tagged resource - remove by tag
 	const resourceTag: string = _.get(bindContext, "depContext.data.resourceTag");
@@ -118,7 +118,7 @@ export async function removeResourceFromEnv(bindContext: types.IBindContext): Pr
 		if (!_.isEmpty(serviceToDelete)) {
 			instanceData = serviceToDelete[0];
 			instanceName = instanceData.instance_name;
-			delete vcapServicesObj[bindContext.depContext.type];
+			delete vcapServicesObj[bindResourceType];
 		}
 	}
 

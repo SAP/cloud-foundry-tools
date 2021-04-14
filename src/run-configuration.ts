@@ -31,26 +31,32 @@ export class DependencyHandler implements types.IDependencyHandler {
     return bindState;
   }
 
-  public async bind(bindContext: types.IBindContext): Promise<void | types.IBindResult> {
+  public async bind(bindContext: types.IBindContext, options?: cfViewCommands.CmdOptions): Promise<void | types.IBindResult> {
     const resourceTag: string = _.get(bindContext, "depContext.data.resourceTag");
     const serviceType: cfLocal.ServiceTypeInfo[] = [{
-      name: bindContext.depContext.type,
+      name: _.get(bindContext.depContext, ['type'], ''),
       plan: _.get(bindContext.depContext, ['data', 'plan'], ''),
       tag: resourceTag ? resourceTag + _.get(bindContext, "depContext.data.resourceName") : "",
       prompt: ""
     }];
     try {
-      const instanceNames: string[] = await cfViewCommands.bindLocalService(serviceType, bindContext.envPath);
+      const instanceNames: string[] = await cfViewCommands.bindLocalService(serviceType, bindContext.envPath, options);
+      let chiselTask;
       if (_.size(instanceNames)) {
+        // Get metadata of service instance by service name
+        const instanceType = (await cfLocal.cfGetInstanceMetadata(instanceNames[0])).service;
+
         // Create chisel task if neccessary
-        if (_.get(bindContext, "depContext.data.isCreateChiselTask")) {
+        if (_.get(bindContext, "depContext.data.isCreateChiselTask") || /^hana(trial)?$/.test(instanceType)) {
           trackChiselTask("Chisel Task", ["CF tools"]);
 
           // Create it in dependent task
           const chiselTaskNameSuffix = instanceNames.join("&");
-          const chiselTask = await checkAndCreateChiselTask(bindContext.envPath?.fsPath, chiselTaskNameSuffix);
+          chiselTask = await checkAndCreateChiselTask(bindContext.envPath?.fsPath, chiselTaskNameSuffix);
           if (chiselTask) {
-            vscode.window.showInformationMessage(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`);
+            if (!options?.silent) {
+              vscode.window.showInformationMessage(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`);
+            }
             getModuleLogger(DependencyHandler.MODULE_NAME).info("bind: <%s> task for opening the VPN tunnel to the Cloud Foundry space has been created", chiselTask.label);
 
             if (_.isNil(bindContext.configData.dependentTasks)) {
@@ -60,13 +66,13 @@ export class DependencyHandler implements types.IDependencyHandler {
             bindContext.configData.dependentTasks.push(chiselTask);
           }
         }
-        return {
+        return _.merge({
           configData: bindContext.configData,
           resource: {
             name: instanceNames[0],
-            type: (await cfLocal.cfGetInstanceMetadata(instanceNames[0])).service || ""
+            type: instanceType || ""
           }
-        };
+        }, chiselTask ? { resource: { data: { chiselTask } } } : {});
       }
     } catch (e) {
       vscode.window.showErrorMessage(toText(e));
@@ -74,15 +80,14 @@ export class DependencyHandler implements types.IDependencyHandler {
     }
   }
 
-  public async unbind(bindContext: types.IBindContext): Promise<void | types.IBindResult> {
-    const configObject = new types.ConfigObject(
-      {},
-      types.ConfigurationTarget.launch
-    );
+  public async unbind(bindContext: types.IBindContext, options?: cfViewCommands.CmdOptions): Promise<void | types.IBindResult> {
+    const configObject = new types.ConfigObject({}, types.ConfigurationTarget.launch);
     const configurationData: types.IConfigurationData = { config: configObject, dependentTasks: [] };
     try {
       const removedResourceDetails = await removeResourceFromEnv(bindContext);
-      vscode.window.showInformationMessage(messages.service_unbound_successful(_.get(removedResourceDetails, "resourceName")));
+      if (!options?.silent) {
+        vscode.window.showInformationMessage(messages.service_unbound_successful(_.get(removedResourceDetails, "resourceName")));
+      }
       getModuleLogger(DependencyHandler.MODULE_NAME).info("unbind: the <%s> service has been unbound", _.get(removedResourceDetails, "resourceName"));
       return Promise.resolve({
         configData: configurationData,

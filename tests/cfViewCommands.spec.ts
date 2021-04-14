@@ -647,6 +647,13 @@ describe("cfViewCommands tests", () => {
             assert.deepEqual(await cfViewCommands.bindLocalService(service, { path: envPath, ignore: true }), [services[1].label]);
         });
 
+        it("ok:: path defined, plan required, service selected, silent mode required", async () => {
+            commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves(services);
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.binding_service_to_file, cancellable: false }).resolves();
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_bound_successful(services[1].label)).never();
+            assert.deepEqual(await cfViewCommands.bindLocalService(service, { path: envPath, ignore: true }, {silent: true}), [services[1].label]);
+        });
+
         it("ok:: serviceInfo is not array, service selected", async () => {
             vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(undefined);
             commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves(services);

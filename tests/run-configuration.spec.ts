@@ -145,18 +145,62 @@ describe("run-configuration tests package", () => {
         });
 
         it("ok:: 'bind' - create chisel task - no depended tasks", async () => {
-            const chiselLabel = "chiselLabel";
+            const chiselTask = { label: 'chiselLabel', data: { context: "some" } };
             sandbox.stub(chisel, "checkAndCreateChiselTask")
                 .withArgs(_.get(bindContext, "envPath.fsPath"), instances.join('&'))
-                .resolves({ label: chiselLabel, data: { context: "some" } });
+                .resolves(chiselTask);
+            sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
+            sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "ahana" });
+            const copyContext = _.cloneDeep(bindContext);
+            copyContext.depContext.data = { isCreateChiselTask: true };
+            usageMock.expects("trackChiselTask").withExactArgs("Chisel Task", ["CF tools"]).resolves();
+            copyContext.configData.dependentTasks = undefined;
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`).resolves();
+            expect(await new DependencyHandler("test.Handler.id").bind(copyContext, { "skip-reload": false })).to.be.deep.equal({
+                configData: copyContext.configData,
+                resource: {
+                    name: "testInstance", type: "ahana", data: { chiselTask }
+                }
+            });
+        });
+
+        it("ok:: 'bind' - create chisel task - no depended tasks, create chisel task is not required explicitly", async () => {
+            const chiselTask = { label: 'chiselLabel', data: { context: "some" } };
+            sandbox.stub(chisel, "checkAndCreateChiselTask")
+                .withArgs(_.get(bindContext, "envPath.fsPath"), instances.join('&'))
+                .resolves(chiselTask);
+            sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
+            sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "hanatrial" });
+            const copyContext = _.cloneDeep(bindContext);
+            usageMock.expects("trackChiselTask").withExactArgs("Chisel Task", ["CF tools"]).resolves();
+            copyContext.configData.dependentTasks = undefined;
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`).resolves();
+            expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({
+                configData: copyContext.configData,
+                resource: {
+                    name: "testInstance", type: "hanatrial", data: { chiselTask }
+                }
+            });
+        });
+
+        it("ok:: 'bind' - create chisel task - no depended tasks, silent mode required", async () => {
+            const chiselTask = { label: 'chiselLabel', data: { context: "some" } };
+            sandbox.stub(chisel, "checkAndCreateChiselTask")
+                .withArgs(_.get(bindContext, "envPath.fsPath"), instances.join('&'))
+                .resolves(chiselTask);
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
             const copyContext = _.cloneDeep(bindContext);
             copyContext.depContext.data = { isCreateChiselTask: true };
             usageMock.expects("trackChiselTask").withExactArgs("Chisel Task", ["CF tools"]).resolves();
             copyContext.configData.dependentTasks = undefined;
-            vscodeWindowMock.expects("showInformationMessage").withExactArgs(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselLabel}'`).resolves();
-            expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
+            vscodeWindowMock.expects("showInformationMessage").never();
+            expect(await new DependencyHandler("test.Handler.id").bind(copyContext, { silent: true })).to.be.deep.equal({
+                configData: copyContext.configData,
+                resource: {
+                    name: "testInstance", type: "resourceType", data: { chiselTask }
+                }
+            });
         });
 
         it("ok:: 'bind' - create chisel task - depended tasks", async () => {
@@ -174,7 +218,10 @@ describe("run-configuration tests package", () => {
             copyContext.depContext.data = { isCreateChiselTask: true };
             usageMock.expects("trackChiselTask").withExactArgs("Chisel Task", ["CF tools"]).resolves();
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselLabel}'`).resolves();
-            expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({ configData: copyContext.configData, resource: { name: "testInstance", type: "resourceType" } });
+            expect(await new DependencyHandler("test.Handler.id").bind(copyContext)).to.be.deep.equal({
+                configData: copyContext.configData,
+                resource: { name: "testInstance", type: "resourceType", data: { chiselTask: chiselJson } }
+            });
             assert.deepEqual(copyContext.configData.dependentTasks, [tsk, chiselJson]);
         });
 
@@ -190,7 +237,7 @@ describe("run-configuration tests package", () => {
         it("ok:: 'unbind' - empty property", async () => {
             const configurationData = { config: { data: {}, type: ConfigurationTarget.launch }, dependentTasks: [{}] };
             configurationData.dependentTasks = [];
-            const property = {resourceName: "", envPath: "", resourceData: {}};
+            const property = { resourceName: "", envPath: "", resourceData: {} };
             sandbox.stub(utils, "removeResourceFromEnv").resolves(property);
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_unbound_successful(_.get(property, "resourceName"))).resolves();
             assert.deepEqual(await new DependencyHandler("test.Handler.id").unbind(bindContext), { configData: configurationData, resource: { name: "", type: "", data: {} } });
