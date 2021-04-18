@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { CFView, CFService } from "./cfView";
+import { CFView, CFService, CFTargetTI, CFTargetNotCurrent } from "./cfView";
 import { messages } from "./messages";
 import * as https from 'https';
 import * as url from "url";
 import { updateGitIgnoreList, isWindows, toText, UpsServiceQueryOprions, ServiceQueryOptions, resolveFilterValue } from "./utils";
 import {
-    CFTarget, DEFAULT_TARGET, ServiceInstanceInfo, IServiceQuery, eFilters, Cli, cfGetConfigFileField,
-    cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, padQuery, eServiceTypes
+    DEFAULT_TARGET, ServiceInstanceInfo, IServiceQuery, eFilters, Cli, cfGetConfigFileField,
+    cfBindLocalServices, ServiceTypeInfo, cfBindLocalUps, cfGetInstanceMetadata, cfGetAuthToken, padQuery, eServiceTypes, CliResult
 } from "@sap/cf-tools";
 import * as _ from "lodash";
 import {
@@ -34,6 +34,11 @@ interface BindLocalData {
     instanceName: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     chiselTask?: any;
+}
+
+export interface CmdOptions {
+    silent?: boolean;
+    'skip-reload'?: boolean;
 }
 
 export function cmdReloadTargets(): Promise<void> {
@@ -80,25 +85,36 @@ type TEnvPath = {
     ignore?: boolean;
 };
 
-async function doBind(instances: ServiceInstanceInfo[], envPath: TEnvPath, tags?: string[], serviceKeyNames?: string[], serviceKeyParams?: unknown[]) {
+type BindArgs = {
+    instances: ServiceInstanceInfo[];
+    envPath: TEnvPath;
+    tags?: string[];
+    serviceKeyNames?: string[];
+    serviceKeyParams?: unknown[];
+    options?: CmdOptions;
+};
+
+async function doBind(opts: BindArgs) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async function runWithProgress(fnc: (filePath: string, instanceNames: string[], tags?: string[], serviceKeyNames?: string[]) => Promise<void>, args: any[]) {
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification, title: messages.binding_service_to_file, cancellable: false
         }, () => fnc.apply(null, args));
-        vscode.window.showInformationMessage(messages.service_bound_successful(args[1].join(",")));
+        if (!opts.options?.silent) {
+            vscode.window.showInformationMessage(messages.service_bound_successful(args[1].join(",")));
+        }
         getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", `${args[1].join(",")}`);
     }
-    const ups = _.filter(instances, ['serviceName', eServiceTypes.user_provided]);
-    const services = _.difference(instances, ups);
+    const ups = _.filter(opts.instances, ['serviceName', eServiceTypes.user_provided]);
+    const services = _.difference(opts.instances, ups);
     if (_.size(services)) {
-        await runWithProgress(cfBindLocalServices, [envPath.path.fsPath, _.map(services, 'label'), tags, serviceKeyNames, serviceKeyParams]);
+        await runWithProgress(cfBindLocalServices, [opts.envPath.path.fsPath, _.map(services, 'label'), opts.tags, opts.serviceKeyNames, opts.serviceKeyParams]);
     }
     if (_.size(ups)) {
-        await runWithProgress(cfBindLocalUps, [envPath.path.fsPath, _.map(ups, 'label'), tags]);
+        await runWithProgress(cfBindLocalUps, [opts.envPath.path.fsPath, _.map(ups, 'label'), opts.tags]);
     }
-    if (!envPath.ignore) {
-        updateGitIgnoreList(envPath.path.fsPath);
+    if (!opts.envPath.ignore) {
+        updateGitIgnoreList(opts.envPath.path.fsPath);
     }
 }
 
@@ -143,15 +159,45 @@ export async function cmdDeployServiceAPI(servicePath: string, message: string):
     }
 }
 
-export async function cmdSetCurrentTarget(newTarget: CFTarget): Promise<unknown | undefined> {
-    if (_.get(newTarget, "isCurrent", false)) {
+export async function execSetTarget(item: CFTargetTI, options?: CmdOptions) {
+    const response: CliResult = await Cli.execute(["set-target", "-f", item.target.label]);
+    if (response.exitCode !== 0) {
+        if (!options?.silent) {
+            vscode.window.showErrorMessage(response.stdout);
+        }
+        getModuleLogger(LOGGER_MODULE).error(`execSetTarget:: run 'set-target -f' with lable ${item.target.label} failed`, { output: response.stdout });
+    } else {
+        if (!options?.["skip-reload"]) {
+            await cmdReloadTargets();
+        }
+    }
+}
+
+export async function execSaveTarget(item?: CFTargetTI, options?: CmdOptions) {
+    if (item?.contextValue !== 'cf-target-notargets') {
+        const response: CliResult = await Cli.execute(_.concat(["save-target"], item?.target.label ? ['-f', item.target.label] : []));
+        if (response.exitCode !== 0) {
+            if (!options?.silent) {
+                vscode.window.showErrorMessage(response.stdout);
+            }
+            getModuleLogger(LOGGER_MODULE).error(`execSaveTarget:: run 'save-target -f' with lable ${item?.target.label} failed`, { output: response.stdout });
+        }
+    }
+}
+
+export async function cmdSetCurrentTarget(newTarget: CFTargetTI | CFTargetNotCurrent): Promise<unknown | undefined> {
+    let item = newTarget as CFTargetTI;
+    while ((_.get(item, 'parent'))) {
+        item = _.get(item, 'parent'); // walk up until target folder found
+    }
+    if (false === item?.target?.isCurrent) {
         let answer = YES;
         try {
             const currTarget = CFView.get().getCurrentTarget();
             if (_.get(currTarget, "isDirty", false)) {
                 answer = await vscode.window.showWarningMessage(messages.target_dirty_save(currTarget.label), YES, NO, CANCEL).then(selection => {
                     if (selection === YES) {
-                        return Cli.execute(["save-target"]).then(() => selection);
+                        return execSaveTarget().then(() => selection);
                     } else if (selection) {
                         return NO;
                     }
@@ -164,14 +210,7 @@ export async function cmdSetCurrentTarget(newTarget: CFTarget): Promise<unknown 
                 return;
             }
 
-            return Cli.execute(["set-target", "-f", newTarget.label]).then(async (response: { exitCode: number; stdout: string }) => {
-                if (response.exitCode !== 0) {
-                    vscode.window.showErrorMessage(response.stdout);
-                    getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand:: run 'set-target -f' with lable ${newTarget.label} failed`, { output: response.stdout });
-                } else {
-                    await cmdReloadTargets();
-                }
-            });
+            return execSetTarget(item);
         } catch (e) {
             vscode.window.showErrorMessage(toText(e));
             getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand with new target ${stringify(newTarget)} exception thrown`, { error: toText(e) });
@@ -179,16 +218,19 @@ export async function cmdSetCurrentTarget(newTarget: CFTarget): Promise<unknown 
     }
 }
 
-export async function cmdDeleteTarget(item: unknown): Promise<void> {
-    const targetLabel = _.get(item, "target.label");
+export async function cmdDeleteTarget(item: CFTargetTI, options?: CmdOptions): Promise<void> {
+    const targetLabel = item.target.label;
     if (targetLabel === DEFAULT_TARGET) {
         return;
     }
-
     const cliResult = await Cli.execute(["delete-target", targetLabel]);
     if (cliResult.exitCode === 0) {
-        await cmdReloadTargets();
-        vscode.window.showInformationMessage(messages.target_deleted(targetLabel));
+        if (!options?.["skip-reload"]) {
+            await cmdReloadTargets();
+        }
+        if (!options?.silent) {
+            vscode.window.showInformationMessage(messages.target_deleted(targetLabel));
+        }
         getModuleLogger(LOGGER_MODULE).debug(`cmdDeleteTarget:: command "delete-target" of ${targetLabel} succeeded.`);
     } else {
         vscode.window.showErrorMessage(cliResult.stdout);
@@ -291,7 +333,7 @@ class EnvPathHelper {
     }
 }
 
-export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath, instanceName?: string): Promise<BindLocalData | undefined> {
+export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath, instanceName?: string, opts?: CmdOptions): Promise<BindLocalData | undefined> {
     // Handle .env path
     let filePath = EnvPathHelper.getPath(envPath);
     if (EnvPathHelper.isPathEmpty(filePath)) {
@@ -305,7 +347,14 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
     try {
         const bindDetails = await collectBindDetails(service, instanceName);
         if (bindDetails) {
-            await doBind(bindDetails.instances, { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, bindDetails.tags, bindDetails.keyNames, bindDetails.serviceKeyParams);
+            await doBind({
+                instances: bindDetails.instances,
+                envPath: { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) },
+                tags: bindDetails.tags,
+                serviceKeyNames: bindDetails.keyNames,
+                serviceKeyParams: bindDetails.serviceKeyParams,
+                options: opts
+            });
             const instanceName = _.get(_.head(bindDetails.instances), 'label');
             if (instanceName) {
                 const chiselTask = await checkAndCreateChiselTask(filePath.fsPath, instanceName);
@@ -324,7 +373,7 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
     return;
 }
 
-export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath): Promise<string[]> {
+export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath, opts?: CmdOptions): Promise<string[]> {
     try {
         const filePath = EnvPathHelper.getPath(envPath);
         if (EnvPathHelper.isPathEmpty(filePath)) {
@@ -353,13 +402,13 @@ export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath:
                 return result;
             }, []);
             if (_.size(instanceNames) > 0) {
-                await doBind(_.compact(instances), { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, _.compact(tags));
+                await doBind({ instances: _.compact(instances), envPath: { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, tags: _.compact(tags), options: opts });
                 return instanceNames;
             }
         } else {
             const instanceName = await getInstanceName(availableServices);
             if (instanceName) {
-                await doBind([_.find(availableServices, ['label', instanceName])], { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) });
+                await doBind({ instances: [_.find(availableServices, ['label', instanceName])], envPath: { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, options: opts });
                 return [instanceName];
             }
         }

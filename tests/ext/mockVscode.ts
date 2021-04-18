@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as _ from "lodash";
@@ -91,7 +95,7 @@ export const testVscode = {
     debug: {
         startDebugging: () => Promise.resolve()
     },
-    TreeItemCollapsibleState: { Collapsed: 0, Expand: 1 },
+    TreeItemCollapsibleState: { Collapsed: 1, Expanded: 2, None: 0 },
     commands: {
         registerCommand: (id: string, cmd: any) => { _.set(testRegisteredCommands, id, cmd); return Promise.resolve(testRegisteredCommands); },
         executeCommand: () => Promise.reject()
@@ -155,7 +159,14 @@ export const testVscode = {
     extensions: {
         getExtension: () => { return; }
     },
-    StatusBarAlignment: { Left: "left" }
+    StatusBarAlignment: { Left: "left" },
+    ThemeIcon: class MockThemeIcon {
+        static readonly File: vscode.ThemeIcon;
+        static readonly Folder: vscode.ThemeIcon;
+        readonly id: string;
+        readonly color?: vscode.ThemeColor;
+        constructor(id: string, color?: vscode.ThemeColor) { return; }
+    }
 };
 
 export function setTestRoots(projects: string[]) {
