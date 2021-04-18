@@ -317,7 +317,7 @@
 	},
 	"dependencies": {
 		"@sap/cf-tools": "^1.1.0",
-		"@sap/swa-for-sapbas-vsx": "1.1.13",
+		"@sap/swa-for-sapbas-vsx": "1.2.14",
 		"@sap/wing-run-config-types": "4.2.0",
 		"@vscode-logging/wrapper": "1.0.0",
 		"comment-json": "4.1.0",
