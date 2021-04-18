@@ -81,6 +81,7 @@ describe("cfViewCommands tests", () => {
         const testToken = " \ntestToken\n";
         const errorText = "my error";
         const result = {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             on: (type: string, callback: any) => callback(new Error(errorText))
         };
         const urlPath = "url/path";

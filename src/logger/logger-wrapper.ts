@@ -25,7 +25,7 @@ function setLogger(newLogger: IVSCodeExtLogger): void {
   loggerImpel = newLogger;
 }
 
-export function getModuleLogger(name: string) {
+export function getModuleLogger(name: string): IChildLogger {
     return getLogger().getChildLogger({ label: name});
 }
 

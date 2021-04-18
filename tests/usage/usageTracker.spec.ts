@@ -15,7 +15,7 @@ import * as usageTracker from "../../src/usage/usageTracker";
 
 
 describe("usageTracker unit tests", () => {
-    let sandbox: any;
+    let sandbox: sinon.SinonSandbox;
     let swaTracker: SWATracker;
 
     before(() => {
@@ -30,11 +30,12 @@ describe("usageTracker unit tests", () => {
         const jsonPackage = parse(fsextra.readFileSync(path.resolve(path.join(__dirname, "..", "..", "package.json")), { encoding: "utf8" }));
         swaTracker = usageTracker.Init4Tests();
         expect(_.get(swaTracker, "vsxPackageName")).to.be.equal(jsonPackage.name);
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
         expect(_.get(swaTracker, "reporterUniqueId")).to.be.equal(jsonPackage.publisher + "." + jsonPackage.name);
     });
 
     describe("usageTracker initialized with SWATracker instance - trackChiselTask", () => {
-        let usageTrackerMock: any;
+        let usageTrackerMock: sinon.SinonMock;
 
         beforeEach(() => {
             usageTrackerMock = sandbox.mock(swaTracker);
@@ -45,7 +46,7 @@ describe("usageTracker unit tests", () => {
         });
 
         it("ok:: config.args are empty", async () => {
-            usageTrackerMock.expects("track").withExactArgs("Chisel Task", ["CF tools"]).returns();
+            usageTrackerMock.expects("track").withExactArgs("Chisel Task", ["CF tools"]).resolves();
             await usageTracker.trackChiselTask("Chisel Task", ["CF tools"]);
         });
 

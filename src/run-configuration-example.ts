@@ -41,7 +41,9 @@ export class RunConfigHandler implements IRunConfigHandler {
     public getRunnables(): Promise<IRunnable[]> {
         return Promise.resolve([
             new Runnable(this.id),
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             new Runnable(this.id + 1),
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             new Runnable(this.id + 2)
         ]);
     }
@@ -54,7 +56,7 @@ export class RunConfigHandler implements IRunConfigHandler {
     public createConfiguration(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         runnableId: string
-    ) {
+    ): Promise<IConfigurationData> {
         return Promise.resolve(
             {
                 config:
@@ -62,6 +64,7 @@ export class RunConfigHandler implements IRunConfigHandler {
                         {
                             type: "node",
                             request: "launch",
+                            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                             name: "cf run " + Date.now(),
                             env: {
                                 "Saggi": 1,

@@ -47,7 +47,7 @@ async function updateStatusBar(): Promise<boolean | undefined> {
 }
 
 export function onCFConfigFileChange(): void {
-	updateStatusBar().then(isUpdated => {
+	void updateStatusBar().then(isUpdated => {
 		if (isUpdated) {
 			getModuleLogger(LOGGER_MODULE).debug("onCFConfigFileChange: the Cloud Foundry 'config' file has changed. The status bar will be updated");
 			treeDataProvider.refresh();
@@ -55,7 +55,7 @@ export function onCFConfigFileChange(): void {
 	});
 }
 
-export async function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext): Promise<unknown> {
 	await initLogger(context);
 
 	const cfConfigFilePath: string = cfGetConfigFilePath();
@@ -69,9 +69,9 @@ export async function activate(context: vscode.ExtensionContext) {
 				const active = _.find(treeDataProvider.getTargets(), 'target.isCurrent');
 				if (active) {
 					// after re-login the target data become invalid -> perform re-create target
-					cmdDeleteTarget(active, { 'skip-reload': true, silent: true }).then(() => {
-						execSaveTarget(active, { 'skip-reload': true, silent: true }).then(() => {
-							execSetTarget(active, { silent: true });
+					void cmdDeleteTarget(active, { 'skip-reload': true, silent: true }).then(() => {
+						void execSaveTarget(active, { 'skip-reload': true, silent: true }).then(() => {
+							void execSetTarget(active, { silent: true });
 						});
 					});
 				}
@@ -89,7 +89,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	// cfStatusBarItem.command = "cf.login.weak";
 	// end workarround
 
-	updateStatusBar();
+	void updateStatusBar();
 
 	if (!_.isEmpty(cfConfigFilePath)) {
 		fsextra.watchFile(cfConfigFilePath, onCFConfigFileChange);
@@ -100,7 +100,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		setTimeout(() => {
 			const treeItem = _.find(treeDataProvider.getTargets(), label ? ['label', label] : 'target.isCurrent');
 			if (treeItem) {
-				view.reveal(treeItem, { select: true, focus: true, expand: true });
+				void view.reveal(treeItem, { select: true, focus: true, expand: true });
 			}
 		}, 400);
 	}
@@ -140,8 +140,11 @@ export async function activate(context: vscode.ExtensionContext) {
 		if (platformExtension) {
 			const genericDependencyHandler = new DependencyHandler("cf-tools-rsource-dependency");
 			platformExtension.exports.registerDependency(genericDependencyHandler);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			context.subscriptions.push(vscode.commands.registerCommand("cf.services.bind", genericDependencyHandler.bind));
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			context.subscriptions.push(vscode.commands.registerCommand("cf.services.unbind", genericDependencyHandler.unbind));
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			context.subscriptions.push(vscode.commands.registerCommand("cf.services.binding.state", genericDependencyHandler.getBindState));
 		}
 	}
@@ -154,7 +157,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	};
 }
 
-export function deactivate() {
+export function deactivate(): void {
 	const cfConfigFilePath = cfGetConfigFilePath();
 	if (cfConfigFilePath) {
 		fsextra.unwatchFile(cfConfigFilePath);
