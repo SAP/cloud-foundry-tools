@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect } from "chai";
 import * as _ from "lodash";
-import * as sinon from "sinon";
+import { createSandbox, SinonMock, SinonSandbox, SinonSpy } from "sinon";
 import * as nsVsMock from "./ext/mockVscode";
 import { mockVscode } from "./ext/mockUtil";
 
@@ -10,28 +10,30 @@ import * as commands from "../src/commands";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
 import { ServiceTypeInfo, ServiceInstanceInfo, Cli, CliResult, CF_PAGE_SIZE, OK } from "@sap/cf-tools";
 import { messages } from "../src/messages";
+import * as cfLocalUtils from "@sap/cf-tools/out/src/utils";
 import * as cfView from "../src/cfView";
 import { fail } from "assert";
 import { validateParams } from "../src/utils";
 import { stringify } from "comment-json";
 
 describe("commands unit tests", () => {
-    let sandbox: any;
-    let vscodeWindowMock: any;
-    let vscodeCommandsMock: any;
-    let cliMock: any;
-    let cfLocalMock: any;
-    let cfViewMock: any;
-    const testCFDefaultLandscape = `https://api.cf.sap.hana.ondemand.com`;
+    let sandbox: SinonSandbox;
+    let vscodeWindowMock: SinonMock;
+    let vscodeCommandsMock: SinonMock;
+    let cliMock: SinonMock;
+    let cfLocalMock: SinonMock;
+    let cfViewMock: SinonMock;
+    let cfLocalUtilsMock: SinonMock;
+    const testCFDefaultLandscape = `https://my.api.cf.sap.hana.ondemand.com`;
     const testUserEmail = "user@test.com";
     const testUserPassword = "userPassword";
     let originalCFDefaultLandscape: string;
-    let loginSpy: any;
+    let loginSpy: SinonSpy;
     const orgs: any[] = [{ label: "devx", guid: "1" }, { label: "devx2", guid: "2" }, { label: "HRTT", guid: "3" }, { label: "SAP_CoCo_Messaging", guid: "4" }];
     const spaces: any[] = [{ label: "ArchTeam" }, { label: "platform2" }];
 
     before(() => {
-        sandbox = sinon.createSandbox();
+        sandbox = createSandbox();
     });
 
     after(() => {
@@ -45,6 +47,7 @@ describe("commands unit tests", () => {
         cfViewMock = sandbox.mock(cfView.CFView);
         cfLocalMock = sandbox.mock(cfLocal);
         cliMock = sandbox.mock(Cli);
+        cfLocalUtilsMock = sandbox.mock(cfLocalUtils);
         originalCFDefaultLandscape = _.get(process, "env.CF_API_ENDPOINT");
         _.set(process, "env.CF_API_ENDPOINT", testCFDefaultLandscape);
     });
@@ -54,6 +57,7 @@ describe("commands unit tests", () => {
         vscodeWindowMock.verify();
         vscodeCommandsMock.verify();
         cliMock.verify();
+        cfLocalUtilsMock.verify();
         cfViewMock.verify();
         _.set(process, "env.CF_API_ENDPOINT", originalCFDefaultLandscape);
         if (loginSpy) {
@@ -65,6 +69,14 @@ describe("commands unit tests", () => {
 
         it("ok:: cf endpoint is not entered", async () => {
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_cf_endpoint, value: testCFDefaultLandscape, ignoreFocusOut: true }).resolves();
+            await commands.cmdLogin();
+        });
+
+        it("ok:: cf endpoint is not entered, reads cf config settings", async () => {
+            _.set(process, "env.CF_API_ENDPOINT", '');
+            const ap = "https://api.cf.sap.hana.ondemand.com:8090";
+            cfLocalUtilsMock.expects("cfGetConfigFileField").withExactArgs("Target").resolves(ap);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_cf_endpoint, value: ap, ignoreFocusOut: true }).resolves();
             await commands.cmdLogin();
         });
     });
@@ -100,17 +112,11 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_cf_endpoint, value: testCFDefaultLandscape, ignoreFocusOut: true }).resolves(testCFDefaultLandscape);
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_user_email, ignoreFocusOut: true }).resolves(testUserEmail);
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.label_enter_password, password: true, ignoreFocusOut: true }).resolves(testUserPassword);
-            loginSpy = sandbox.spy(cfLocal.cfLogin, "bind");
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.loggin_in }).resolves(OK);
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.login_success).resolves();
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).resolves([]);
             vscodeWindowMock.expects("showWarningMessage").withArgs(messages.no_available_orgs).resolves();
             await commands.cmdLogin(true);
-            expect(loginSpy.args[0]).to.have.lengthOf(4);
-            expect(loginSpy.args[0][0]).to.be.equal(undefined);
-            expect(loginSpy.args[0][1]).to.be.equal(testCFDefaultLandscape);
-            expect(loginSpy.args[0][2]).to.be.equal(testUserEmail);
-            expect(loginSpy.args[0][3]).to.be.equal(testUserPassword);
         });
 
         it("fail:: cf endpoint, userEmailName and password are entered, result is not OK", async () => {
@@ -173,11 +179,8 @@ describe("commands unit tests", () => {
         it("fail:: there are no available orgs", async () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves({ data: {} });
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).resolves();
-            loginSpy = sandbox.spy(cfLocal.cfGetAvailableOrgs, "bind");
             vscodeWindowMock.expects("showWarningMessage").withExactArgs(messages.no_available_orgs).resolves();
             expect(await commands.cmdCFSetOrgSpace()).to.be.undefined;
-            expect(loginSpy.args[0]).to.have.lengthOf(1);
-            expect(loginSpy.args[0][0]).to.be.equal(undefined);
         });
 
         it("fail:: there are available orgs, no org is selected", async () => {
@@ -194,11 +197,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("showQuickPick").withExactArgs(orgs, { placeHolder: messages.select_org, canPickMany: false, matchOnDetail: true, ignoreFocusOut: true }).resolves(orgs[1]);
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_spaces }).resolves();
             vscodeWindowMock.expects("showWarningMessage").withExactArgs(messages.no_available_spaces).resolves();
-            loginSpy = sandbox.spy(cfLocal.cfGetAvailableSpaces, "bind");
             expect(await commands.cmdCFSetOrgSpace()).to.be.undefined;
-            expect(loginSpy.args[0]).to.have.lengthOf(2);
-            expect(loginSpy.args[0][0]).to.be.equal(undefined);
-            expect(loginSpy.args[0][1]).to.be.equal(orgs[1].guid);
         });
 
         it("fail:: org is selected, no space is selected", async () => {
@@ -235,12 +234,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("showQuickPick").withExactArgs(spaces, { placeHolder: messages.select_space, canPickMany: false, matchOnDetail: true, ignoreFocusOut: true }).resolves(spaces[0]);
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.success_set_org_space).resolves();
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.set_org_space }).resolves();
-            loginSpy = sandbox.spy(cfLocal.cfSetOrgSpace, "bind");
             await commands.cmdCFSetOrgSpace();
-            expect(loginSpy.args[0]).to.have.lengthOf(3);
-            expect(loginSpy.args[0][0]).to.be.equal(undefined);
-            expect(loginSpy.args[0][1]).to.be.equal(orgs[1].label);
-            expect(loginSpy.args[0][2]).to.be.equal(spaces[0].label);
         });
     });
 

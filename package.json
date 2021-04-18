@@ -1,7 +1,7 @@
 {
 	"name": "vscode-wing-cf-tools",
 	"displayName": "Cloud Foundry Tools",
-	"version": "6.0.1",
+	"version": "6.2.0",
 	"description": "Vscode extension of Cloud Foundry tools",
 	"categories": [
 		"Other"
@@ -33,41 +33,72 @@
 		"commands": [
 			{
 				"command": "cf.login",
-				"title": "CF: Login to cloud foundry",
-				"icon": "resources/common/login.svg"
+				"category": "CF",
+				"title": "Login to Cloud Foundry",
+				"icon": {
+					"light": "resources/light/login.svg",
+					"dark": "resources/dark/login.svg"
+				}
+			},
+			{
+				"command": "cf.login.weak",
+				"category": "CF",
+				"title": "Login to Cloud Foundry",
+				"icon": {
+					"light": "resources/light/login.svg",
+					"dark": "resources/dark/login.svg"
+				}
 			},
 			{
 				"command": "cf.set.orgspace",
-				"title": "CF: Set Org and Space"
+				"category": "CF",
+				"title": "Set Org and Space"
 			},
 			{
 				"command": "cf.select.space",
-				"title": "CF: Select a space from your allowed spaces"
+				"category": "CF",
+				"title": "Select a space from your allowed spaces"
 			},
 			{
 				"command": "cf.targets.create",
-				"title": "CF: Create new target Cloud Foundry",
-				"icon": "resources/common/login.svg"
+				"category": "CF",
+				"title": "Create a Cloud Foundry Target",
+				"icon": {
+					"light": "resources/light/add.svg",
+					"dark": "resources/dark/add.svg"
+				}
 			},
 			{
 				"command": "cf.targets.reload",
-				"title": "CF: Reload targets tree"
+				"category": "CF",
+				"title": "Reload Targets Tree",
+				"icon": {
+					"light": "resources/light/reload.svg",
+					"dark": "resources/dark/reload.svg"
+				}
 			},
 			{
 				"command": "cf.target.set",
-				"title": "CF: Set Current target Cloud Foundry"
+				"category": "CF",
+				"title": "Set Cloud Foundry Target",
+				"icon": {
+					"light": "resources/light/set-target.svg",
+					"dark": "resources/dark/set-target.svg"
+				}
 			},
 			{
 				"command": "cf.target.delete",
-				"title": "CF: Delete target Cloud Foundry"
+				"category": "CF",
+				"title": "Delete Cloud Foundry Target"
 			},
 			{
 				"command": "cf.services.bind.local",
-				"title": "CF: Bind a service to a locally run application"
+				"category": "CF",
+				"title": "Bind a service to a locally run application"
 			},
 			{
 				"command": "cf.services.unbind",
-				"title": "CF: Unbind a service from a locally run application - (Hidden from command palette)"
+				"title": "Unbind a service from a locally run application - (Hidden from command palette)"
 			},
 			{
 				"command": "cf.services.bind",
@@ -79,28 +110,37 @@
 			},
 			{
 				"command": "cf.services.create",
-				"title": "CF: Create a new service instance",
-				"icon": "resources/common/login.svg"
+				"category": "CF",
+				"title": "Create a service instance",
+				"icon": {
+					"light": "resources/light/add.svg",
+					"dark": "resources/dark/add.svg"
+				}
 			},
 			{
 				"command": "cf.ups.create",
-				"title": "CF: Create a user provided service instance"
+				"category": "CF",
+				"title": "Create a user provided service instance"
 			},
 			{
 				"command": "cf.deploy-service.api",
-				"title": "CF: Make a rest API call to the Deploy Service"
+				"category": "CF",
+				"title": "Make a rest API call to the Deploy Service"
 			},
 			{
 				"command": "cf.services.get-space-services",
-				"title": "CF: Fetch available services (and ups) from particular space"
+				"category": "CF",
+				"title": "Fetch available services (and ups) from particular space"
 			},
 			{
 				"command": "cf.services.get-ups-services",
-				"title": "CF: Fetch available User Provided services from particular space"
+				"category": "CF",
+				"title": "Fetch available User Provided services from particular space"
 			},
 			{
 				"command": "cf.services.get-services",
-				"title": "CF: Fetch available services from particular space"
+				"category": "CF",
+				"title": "Fetch available services from particular space"
 			}
 		],
 		"configuration": {
@@ -134,7 +174,15 @@
 			"commandPalette": [
 				{
 					"when": "false",
+					"command": "cf.login.weak"
+				},
+				{
+					"when": "false",
 					"command": "cf.target.delete"
+				},
+				{
+					"when": "false",
+					"command": "cf.targets.create"
 				},
 				{
 					"when": "false",
@@ -177,13 +225,14 @@
 				},
 				{
 					"command": "cf.targets.reload",
-					"when": "view == cfView"
+					"when": "view == cfView",
+					"group": "navigation@2"
 				}
 			],
 			"view/item/context": [
 				{
 					"command": "cf.services.create",
-					"when": "view == cfView && viewItem == Services",
+					"when": "view == cfView && viewItem == services",
 					"group": "inline"
 				},
 				{
@@ -197,11 +246,18 @@
 				},
 				{
 					"command": "cf.target.set",
-					"when": "view == cfView && viewItem == cf-target"
+					"when": "view == cfView && viewItem =~ /^cf-target$|^cf-target-not-current$/",
+					"group": "inline"
+				},
+				{
+					"command": "cf.target.set",
+					"when": "view == cfView && viewItem =~ /^cf-target$/",
+					"group": "appearance@1"
 				},
 				{
 					"command": "cf.target.delete",
-					"when": "view == cfView && viewItem == cf-target"
+					"when": "view == cfView && viewItem =~ /^cf-target(-active)?$/",
+					"group": "appearance@2"
 				}
 			]
 		},
@@ -260,9 +316,9 @@
 		}
 	},
 	"dependencies": {
-		"@sap/cf-tools": "^1.0.2",
+		"@sap/cf-tools": "^1.1.0",
 		"@sap/swa-for-sapbas-vsx": "1.1.13",
-		"@sap/wing-run-config-types": "4.1.5",
+		"@sap/wing-run-config-types": "4.2.0",
 		"@vscode-logging/wrapper": "1.0.0",
 		"comment-json": "4.1.0",
 		"fs-extra": "9.1.0",
@@ -291,8 +347,8 @@
 		"clean-webpack-plugin": "^3.0.0",
 		"coveralls": "^3.1.0",
 		"cz-conventional-changelog": "3.3.0",
-		"eslint": "^7.20.0",
-		"eslint-config-prettier": "^8.1.0",
+		"eslint": "6.0.0",
+		"eslint-config-prettier": "^6.15.0",
 		"grunt": "^1.0.4",
 		"grunt-contrib-clean": "^2.0.0",
 		"grunt-contrib-copy": "^1.0.0",
