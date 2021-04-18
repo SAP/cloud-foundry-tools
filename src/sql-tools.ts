@@ -8,15 +8,16 @@ const CONNECTIONS = "connections";
 
 function saveSettings(filePath: string, configuration: any) {
     const sqltoolsSettings = vscode.workspace.getConfiguration("sqltools", vscode.Uri.file(filePath));
-    const connections: any = sqltoolsSettings.get(CONNECTIONS) || [];
+    const connections: any[] = sqltoolsSettings.get(CONNECTIONS) || [];
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const existingConnIndex = connections.findIndex((conn: any) => conn.name === configuration.name);
     if (existingConnIndex >= 0) {
         connections[existingConnIndex] = configuration;
     } else {
         connections.push(configuration);
     }
-    sqltoolsSettings.update(CONNECTIONS, connections);
+    void sqltoolsSettings.update(CONNECTIONS, connections);
 }
 
 export async function checkAndCreateSQLToolsSettings(filePath: string): Promise<string> {

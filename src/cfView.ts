@@ -114,7 +114,7 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 		cfView = this;
 	}
 
-	public refresh() {
+	public refresh(): void {
 		this.privateOnDidChangeTreeData.fire(undefined);
 	}
 
@@ -126,8 +126,8 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 		if (/^cf-(service|application)$/.test(element.contextValue)) {
 			const item = _.cloneDeep(element);
 			item.label = element.contextValue === 'cf-application'
-				? `${element.label} (${(element as CFApplication).state})`
-				: `${element.label} (${(element as CFService).type})`;
+				? `${element.label.toString()} (${(element as CFApplication).state})`
+				: `${element.label.toString()} (${(element as CFService).type})`;
 			return Promise.resolve(item);
 		}
 		return Promise.resolve(element);

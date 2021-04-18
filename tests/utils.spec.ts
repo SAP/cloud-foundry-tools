@@ -14,12 +14,12 @@ mockVscode(nsVsMock.testVscode, "src/utils.ts");
 import * as utils from "../src/utils";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
 import { ServiceInstanceInfo, eFilters } from "@sap/cf-tools";
-const PropertiesReader = require('properties-reader');
+import * as PropertiesReader from "properties-reader";
 
 describe('utils unit tests', () => {
-    let sandbox: any;
-    let vscodeWorkspaceMock: any;
-    let fsExtraMock: any;
+    let sandbox: sinon.SinonSandbox;
+    let vscodeWorkspaceMock: sinon.SinonMock;
+    let fsExtraMock: sinon.SinonMock;
 
     before(() => {
         sandbox = sinon.createSandbox();
@@ -60,7 +60,7 @@ describe('utils unit tests', () => {
     describe("getEnvResources", () => {
 
         it("ok:: sanity with valid VCAP_SERVICES value", async () => {
-            sandbox.stub(fsextra, "pathExists").returns(true);
+            sandbox.stub(fsextra, "existsSync").returns(true);
             const envFilePath: string = path.join(__dirname, "resources", ".testValidEnv");
             const vcapServicesObj = await utils.getEnvResources(envFilePath);
             expect(vcapServicesObj).to.not.be.empty;
@@ -68,7 +68,7 @@ describe('utils unit tests', () => {
         });
 
         it("fail:: invalid VCAP_SERVICES value in env file", async () => {
-            sandbox.stub(fsextra, "pathExists").returns(true);
+            sandbox.stub(fsextra, "existsSync").returns(true);
             const envFilePath: string = path.join(__dirname, "resources", ".testInValidVCAP");
             let vcapServicesObj;
             try {
@@ -80,13 +80,13 @@ describe('utils unit tests', () => {
         });
 
         it("ok:: '.env' file does not exist", async () => {
-            sandbox.stub(fsextra, "pathExists").returns(true);
+            sandbox.stub(fsextra, "existsSync").returns(true);
             const envFilePath: string = path.join(__dirname, "resources", ".notExists");
             expect(await utils.getEnvResources(envFilePath)).to.be.null;
         });
 
         it("ok:: '.env' file without VCAP_SERVICES key", async () => {
-            sandbox.stub(fsextra, "pathExists").returns(true);
+            sandbox.stub(fsextra, "existsSync").returns(true);
             const envFilePath: string = path.join(__dirname, "resources", ".envNoVCAP");
             expect(await utils.getEnvResources(envFilePath)).to.be.null;
         });
@@ -381,7 +381,7 @@ describe('utils unit tests', () => {
 
     describe("updateGitIgnoreList suite", () => {
 
-        const project: any = { uri: nsVsMock.testVscode.Uri.file(path.resolve("myProject")) };
+        const project = { uri: nsVsMock.testVscode.Uri.file(path.resolve("myProject")) };
         const ignorePattern = new nsVsMock.testVscode.RelativePattern(project, GITIGNORE);
         const gitIgnoreFile = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/${GITIGNORE}`));
 
@@ -418,7 +418,7 @@ describe('utils unit tests', () => {
             const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
             vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
             vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([]);
-            fsExtraMock.expects("createFileSync").withExactArgs(path.resolve(gitIgnoreFile.fsPath)).returns();
+            fsExtraMock.expects("createFileSync").withExactArgs(path.resolve(gitIgnoreFile.fsPath)).returns(undefined);
             fsExtraMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, UTF8).resolves(gitIgnoreContent);
             const patterns = _.split(gitIgnoreContent, EOL);
             const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);

@@ -75,6 +75,7 @@ export function getEnvResources(envFilePath: string): Promise<any> {
 function findServiceByResourceNameTag(vcapServices: any, yamlResourceName: string, resourceTag: string): any {
 	for (const key in vcapServices) {
 		for (const service of vcapServices[key]) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			if (service.tags && service.tags.find((t: string) => t.startsWith(resourceTag) && t.substr(resourceTag.length) === yamlResourceName)) {
 				return [key, service];
 			}
@@ -123,10 +124,8 @@ export async function removeResourceFromEnv(bindContext: types.IBindContext): Pr
 	}
 
 	// Update VCAP_SERVICES in the .env file
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const envProperties: any = PropertiesReader(envFilePath);
+	const envProperties = PropertiesReader(envFilePath);
 	envProperties.set(ENV_VCAP_RESOURCES, JSON.stringify(vcapServicesObj));
-	// save does not exist in @types but in Properties.Reader
 	await envProperties.save(envFilePath);
 	return { resourceName: instanceName, envPath: envFilePath, resourceData: instanceData };
 }
@@ -250,7 +249,7 @@ export async function getAllServiceInstances(opts?: DisplayServices): Promise<Se
 const UTF8 = "utf8";
 const GITIGNORE = ".gitignore";
 
-export async function updateGitIgnoreList(envPath: string) {
+export async function updateGitIgnoreList(envPath: string): Promise<void> {
 	const project = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(envPath));
 	if (project) {
 		const isNotEmptyPattern = (value: string): boolean => {
@@ -304,5 +303,6 @@ export async function writeProperties(filePath: string, properties: Record<strin
 
 export function resolveFilterValue(value: string): string {
 	// allowed patterns: 'hana'|' "hana ", " xsuaa"'|'["xsuaa", "hana"]'
+	// eslint-disable-next-line @typescript-eslint/unbound-method
 	return _.join(_.map(_.isString(value) ? _.split(value, ',') : value, _.trim));
 }

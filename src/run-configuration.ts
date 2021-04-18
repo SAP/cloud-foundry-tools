@@ -25,7 +25,7 @@ export class DependencyHandler implements types.IDependencyHandler {
         bindState = types.BindState.cloud;
       }
     } catch (e) {
-      vscode.window.showErrorMessage(toText(e));
+      void vscode.window.showErrorMessage(toText(e));
       getModuleLogger(DependencyHandler.MODULE_NAME).error("getBindState: processing failed", { exception: toText(e) });
     }
     return bindState;
@@ -36,6 +36,7 @@ export class DependencyHandler implements types.IDependencyHandler {
     const serviceType: cfLocal.ServiceTypeInfo[] = [{
       name: _.get(bindContext.depContext, ['type'], ''),
       plan: _.get(bindContext.depContext, ['data', 'plan'], ''),
+      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
       tag: resourceTag ? resourceTag + _.get(bindContext, "depContext.data.resourceName") : "",
       prompt: ""
     }];
@@ -48,14 +49,15 @@ export class DependencyHandler implements types.IDependencyHandler {
 
         // Create chisel task if neccessary
         if (_.get(bindContext, "depContext.data.isCreateChiselTask") || /^hana(trial)?$/.test(instanceType)) {
-          trackChiselTask("Chisel Task", ["CF tools"]);
+          void trackChiselTask("Chisel Task", ["CF tools"]);
 
           // Create it in dependent task
           const chiselTaskNameSuffix = instanceNames.join("&");
           chiselTask = await checkAndCreateChiselTask(bindContext.envPath?.fsPath, chiselTaskNameSuffix);
           if (chiselTask) {
             if (!options?.silent) {
-              vscode.window.showInformationMessage(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`);
+              // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+              void vscode.window.showInformationMessage(`A task for opening the VPN tunnel to the Cloud Foundry space has been created. Name: '${chiselTask.label}'`);
             }
             getModuleLogger(DependencyHandler.MODULE_NAME).info("bind: <%s> task for opening the VPN tunnel to the Cloud Foundry space has been created", chiselTask.label);
 
@@ -75,7 +77,7 @@ export class DependencyHandler implements types.IDependencyHandler {
         }, chiselTask ? { resource: { data: { chiselTask } } } : {});
       }
     } catch (e) {
-      vscode.window.showErrorMessage(toText(e));
+      void vscode.window.showErrorMessage(toText(e));
       getModuleLogger(DependencyHandler.MODULE_NAME).error("bind: processing failed", { exception: toText(e) });
     }
   }
@@ -86,7 +88,7 @@ export class DependencyHandler implements types.IDependencyHandler {
     try {
       const removedResourceDetails = await removeResourceFromEnv(bindContext);
       if (!options?.silent) {
-        vscode.window.showInformationMessage(messages.service_unbound_successful(_.get(removedResourceDetails, "resourceName")));
+        void vscode.window.showInformationMessage(messages.service_unbound_successful(_.get(removedResourceDetails, "resourceName")));
       }
       getModuleLogger(DependencyHandler.MODULE_NAME).info("unbind: the <%s> service has been unbound", _.get(removedResourceDetails, "resourceName"));
       return Promise.resolve({
@@ -98,7 +100,7 @@ export class DependencyHandler implements types.IDependencyHandler {
         }
       });
     } catch (e) {
-      vscode.window.showErrorMessage(toText(e));
+      void vscode.window.showErrorMessage(toText(e));
       getModuleLogger(DependencyHandler.MODULE_NAME).error("unbind: processing failed", { exception: toText(e) });
     }
   }

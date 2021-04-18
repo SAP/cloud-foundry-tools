@@ -35,6 +35,7 @@ function invokeLongFunctionWithProgress(longFunction: any, progressMessage: stri
     return vscode.window.withProgress({
         location: vscode.ProgressLocation.Window,
         title: progressMessage
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     }, () => longFunction());
 }
 
@@ -72,9 +73,10 @@ async function runWithProgressAndLoginRetry(isCancelable: boolean, titleMessage:
                 location: vscode.ProgressLocation.Notification,
                 title: titleMessage,
                 cancellable: isCancelable
+            // eslint-disable-next-line prefer-spread
             }, (progress, token) => longFunction.apply(null, _.isArray(args) ? _.concat(args, token) : [args, token]));
         } catch (error) {
-            const errorMessage: string = _.get(error, "message", error.toString());
+            const errorMessage: string = _.get(error, "message", _.toString(error));
             if (errorMessage.includes(messages.cf_setting_not_set) || errorMessage.includes("login") || errorMessage.includes("re-authenticate")) {
                 await setCfTarget(errorMessage);
             } else {
@@ -118,7 +120,7 @@ export async function cmdCFSetOrgSpace(weak = false): Promise<string | undefined
                         });
                         if (space) {
                             await invokeLongFunctionWithProgress(cfSetOrgSpace.bind(undefined, _.get(org, "label"), _.get(space, "label")), messages.set_org_space);
-                            vscode.window.showInformationMessage(messages.success_set_org_space);
+                            void vscode.window.showInformationMessage(messages.success_set_org_space);
                             getModuleLogger(LOGGER_MODULE).debug("cmdCFSetOrgSpace: Organization <%s> and space <%s> have been set", _.get(org, "label"), _.get(space, "label"), { weak: weak });
                             return OK;
                         } else {
@@ -138,12 +140,12 @@ export async function cmdCFSetOrgSpace(weak = false): Promise<string | undefined
                 getModuleLogger(LOGGER_MODULE).warn("cmdCFSetOrgSpace: No available organization found", { weak: weak });
             }
             if (warningMessage) {
-                vscode.window.showWarningMessage(warningMessage);
+                void vscode.window.showWarningMessage(warningMessage);
             }
         }
         return result;
     } catch (e) {
-        vscode.window.showErrorMessage(toText(e));
+        void vscode.window.showErrorMessage(toText(e));
         getModuleLogger(LOGGER_MODULE).error("cmdCFSetOrgSpace failed", { weak: weak }, { exception: toText(e) });
         return '';
     }
@@ -167,7 +169,7 @@ async function executeLogin(): Promise<string | undefined> {
                 if (OK !== result) {
                     throw new Error(messages.authentication_failed(result));
                 }
-                vscode.window.showInformationMessage(messages.login_success);
+                void vscode.window.showInformationMessage(messages.login_success);
                 getModuleLogger(LOGGER_MODULE).debug("executeLogin: login succeeded");
             } else {
                 result = password; // undefined -> canceled
@@ -192,7 +194,7 @@ export async function cmdLogin(weak = false, target = true): Promise<string | un
         }
         return result;
     } catch (e) {
-        vscode.window.showErrorMessage(toText(e));
+        void vscode.window.showErrorMessage(toText(e));
         getModuleLogger(LOGGER_MODULE).error("cmdLogin failed", { weak: weak }, { exception: toText(e) });
         return '';
     }
@@ -209,7 +211,7 @@ export async function cmdSelectSpace(): Promise<string | undefined> {
                 const org = _.find(await cfGetAvailableOrgs(), ['guid', space.orgGUID]);
                 if (org) {
                     await invokeLongFunctionWithProgress(cfSetOrgSpace.bind(undefined, org.label, space.label), messages.set_org_space);
-                    vscode.window.showInformationMessage(messages.success_set_org_space);
+                    void vscode.window.showInformationMessage(messages.success_set_org_space);
                     getModuleLogger(LOGGER_MODULE).debug("cmdSelectSpace: org <%s> and space <%s> have been set", org.label, space.label);
                     result = OK;
                 } else {
@@ -226,11 +228,11 @@ export async function cmdSelectSpace(): Promise<string | undefined> {
             getModuleLogger(LOGGER_MODULE).warn("cmdSelectSpace: no available spaces found");
         }
         if (warningMessage) {
-            vscode.window.showWarningMessage(warningMessage);
+            void vscode.window.showWarningMessage(warningMessage);
         }
         return result;
     } catch (e) {
-        vscode.window.showErrorMessage(toText(e));
+        void vscode.window.showErrorMessage(toText(e));
         getModuleLogger(LOGGER_MODULE).error("cmdSelectSpace failed", { exception: toText(e) });
         return '';
     }
@@ -242,13 +244,13 @@ export async function cmdCreateTarget(): Promise<string|undefined> {
     if (targetName) {
         const cliResult: CliResult = await Cli.execute(["save-target", "-f", targetName]);
         if (cliResult.exitCode !== 0) {
-            vscode.window.showErrorMessage(cliResult.stdout);
+            void vscode.window.showErrorMessage(cliResult.stdout);
             getModuleLogger(LOGGER_MODULE).error("cmdCreateTarget : command 'save-target -f <%s>' failed", targetName, { output: cliResult.stdout });
             return Promise.reject(new Error(cliResult.stdout));
         }
 
         await cmdReloadTargets();
-        vscode.window.showInformationMessage(messages.target_created(targetName));
+        void vscode.window.showInformationMessage(messages.target_created(targetName));
         getModuleLogger(LOGGER_MODULE).debug("cmdCreateTarget: the <%s> target has been created", targetName);
         return targetName;
     }
@@ -278,9 +280,9 @@ async function onGetServicePlansFromCF(opt: { planName?: string; serviceGuid: st
 }
 
 export async function onCreateService(planInfo: PlanInfo, instanceName: string, params: unknown, tags: string[],
-    progress: vscode.Progress<{ message?: string; increment?: number }>, cancelToken: vscode.CancellationToken) {
+    progress: vscode.Progress<{ message?: string; increment?: number }>, cancelToken: vscode.CancellationToken): Promise<string> {
     const response = await cfCreateService(planInfo.guid, instanceName, params || {}, tags || [], { "progress": progress, "cancelToken": cancelToken });
-    vscode.window.showInformationMessage(messages.service_created(response.name));
+    void vscode.window.showInformationMessage(messages.service_created(response.name));
     getModuleLogger(LOGGER_MODULE).debug("onCreateService: the service has been created", { response: response });
     return response.name;
 }
@@ -305,7 +307,7 @@ async function createUpsInstance(name: string, info?: ServiceTypeInfo): Promise<
                         credentials: parse(credentials),
                         tags: _.compact(_.split(tags, /[,\s]/))
                     });
-                    vscode.window.showInformationMessage(isCFResource(response) ? messages.service_created(response.name) : _.toString(response));
+                    void vscode.window.showInformationMessage(isCFResource(response) ? messages.service_created(response.name) : _.toString(response));
                     getModuleLogger(LOGGER_MODULE).debug("createUpsInstance: the service has been created", { response: response });
                     result = response?.name;
                 }
@@ -366,7 +368,7 @@ async function createService(isUps: boolean, info?: ServiceTypeInfo): Promise<st
         try {
             return await (isUps ? createUpsInstance(instanceName, info) : createServiceInstance(instanceName, info));
         } catch (error) {
-            vscode.window.showErrorMessage(toText(error));
+            void vscode.window.showErrorMessage(toText(error));
             getModuleLogger(LOGGER_MODULE).error("createService: create instance <%s> failed", instanceName, { ups: isUps }, { info: info }, { exception: toText(error) });
         }
     }
@@ -405,7 +407,7 @@ async function askUserForServiceInstanceName(availableServices: ServiceInstanceI
     const availableServicesToShow = availableServices;
 
     if (!_.size(availableServicesToShow)) {
-        vscode.window.showErrorMessage(
+        void vscode.window.showErrorMessage(
             serviceName && !isRegexExpression(serviceName) ? messages.no_services_instances_found_for_type(serviceName) : messages.no_services_instances_found
         );
         getModuleLogger(LOGGER_MODULE).debug("askUserForServiceInstanceName: no service instances found for <%s> type", serviceName);
@@ -451,7 +453,7 @@ async function checkForMoreServices(instanceName: string | undefined, availableS
     return false;
 }
 
-export async function getInstanceName(availableServices: ServiceInstanceInfo[], serviceType?: ServiceTypeInfo) {
+export async function getInstanceName(availableServices: ServiceInstanceInfo[], serviceType?: ServiceTypeInfo): Promise<string> {
     let instanceName = await askUserForServiceInstanceName(availableServices, serviceType);
     while (await checkForMoreServices(instanceName, availableServices, serviceType)) {
         instanceName = await askUserForServiceInstanceName(availableServices, serviceType);
@@ -459,7 +461,7 @@ export async function getInstanceName(availableServices: ServiceInstanceInfo[], 
     return instanceName;
 }
 
-export async function updateInstanceNameAndTags(availableServices: ServiceInstanceInfo[], serviceTypeInfo: ServiceTypeInfo, instanceNames: string[], tags: string[]) {
+export async function updateInstanceNameAndTags(availableServices: ServiceInstanceInfo[], serviceTypeInfo: ServiceTypeInfo, instanceNames: string[], tags: string[]): Promise<string> {
     let instanceName = await getInstanceName(availableServices, serviceTypeInfo);
     if (instanceName === CMD_CREATE_SERVICE) {
         instanceName = await (serviceTypeInfo.name === eServiceTypes.user_provided ?
@@ -473,7 +475,7 @@ export async function updateInstanceNameAndTags(availableServices: ServiceInstan
     return instanceName;
 }
 
-export function updateServicesOnCFPageSize(availableServices: ServiceInstanceInfo[]) {
+export function updateServicesOnCFPageSize(availableServices: ServiceInstanceInfo[]): void {
     if (_.size(availableServices) === CF_PAGE_SIZE) {
         availableServices.push({ label: MORE_RESULTS, serviceName: "more:2", alwaysShow: true });
     }

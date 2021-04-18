@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import * as _ from "lodash";
 import { getModuleLogger } from "./logger/logger-wrapper";
 import { toText, writeProperties } from "./utils";
@@ -41,6 +42,7 @@ export function checkAndCreateChiselTask(filePath: string, name: string): any | 
             args: [
                 "client",
                 "--auth",
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 `${envProperties.get(ChiselKeys.CHISEL_USER)}:${envProperties.get(ChiselKeys.CHISEL_PASSWORD)}`,
                 chiselUrl,
                 envProperties.get(ChiselKeys.TUNNEL_PARAM)

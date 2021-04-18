@@ -99,11 +99,12 @@ async function doBind(opts: BindArgs) {
     async function runWithProgress(fnc: (filePath: string, instanceNames: string[], tags?: string[], serviceKeyNames?: string[]) => Promise<void>, args: any[]) {
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification, title: messages.binding_service_to_file, cancellable: false
+        // eslint-disable-next-line prefer-spread
         }, () => fnc.apply(null, args));
         if (!opts.options?.silent) {
-            vscode.window.showInformationMessage(messages.service_bound_successful(args[1].join(",")));
+            void vscode.window.showInformationMessage(messages.service_bound_successful(_.join(args[1], ',')));
         }
-        getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", `${args[1].join(",")}`);
+        getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", `${_.join(args[1], ',')}`);
     }
     const ups = _.filter(opts.instances, ['serviceName', eServiceTypes.user_provided]);
     const services = _.difference(opts.instances, ups);
@@ -114,7 +115,7 @@ async function doBind(opts: BindArgs) {
         await runWithProgress(cfBindLocalUps, [opts.envPath.path.fsPath, _.map(ups, 'label'), opts.tags]);
     }
     if (!opts.envPath.ignore) {
-        updateGitIgnoreList(opts.envPath.path.fsPath);
+        void updateGitIgnoreList(opts.envPath.path.fsPath);
     }
 }
 
@@ -124,7 +125,7 @@ async function getServiceInstanceInfo(instanceName: string): Promise<ServiceInst
 }
 
 export async function cfDeployServiceAPI(urlPath: string): Promise<string> {
-    const cfApi = await cfGetConfigFileField("Target");
+    const cfApi: string = await cfGetConfigFileField("Target");
     if (_.size(cfApi) > 0) {
         // https://api.cf.<cf domain>
         const deployServiceUrl = cfApi.replace("api.cf", "deploy-service.cfapps");
@@ -159,11 +160,11 @@ export async function cmdDeployServiceAPI(servicePath: string, message: string):
     }
 }
 
-export async function execSetTarget(item: CFTargetTI, options?: CmdOptions) {
+export async function execSetTarget(item: CFTargetTI, options?: CmdOptions): Promise<void> {
     const response: CliResult = await Cli.execute(["set-target", "-f", item.target.label]);
     if (response.exitCode !== 0) {
         if (!options?.silent) {
-            vscode.window.showErrorMessage(response.stdout);
+            void vscode.window.showErrorMessage(response.stdout);
         }
         getModuleLogger(LOGGER_MODULE).error(`execSetTarget:: run 'set-target -f' with lable ${item.target.label} failed`, { output: response.stdout });
     } else {
@@ -173,12 +174,12 @@ export async function execSetTarget(item: CFTargetTI, options?: CmdOptions) {
     }
 }
 
-export async function execSaveTarget(item?: CFTargetTI, options?: CmdOptions) {
+export async function execSaveTarget(item?: CFTargetTI, options?: CmdOptions): Promise<void> {
     if (item?.contextValue !== 'cf-target-notargets') {
         const response: CliResult = await Cli.execute(_.concat(["save-target"], item?.target.label ? ['-f', item.target.label] : []));
         if (response.exitCode !== 0) {
             if (!options?.silent) {
-                vscode.window.showErrorMessage(response.stdout);
+                void vscode.window.showErrorMessage(response.stdout);
             }
             getModuleLogger(LOGGER_MODULE).error(`execSaveTarget:: run 'save-target -f' with lable ${item?.target.label} failed`, { output: response.stdout });
         }
@@ -212,7 +213,7 @@ export async function cmdSetCurrentTarget(newTarget: CFTargetTI | CFTargetNotCur
 
             return execSetTarget(item);
         } catch (e) {
-            vscode.window.showErrorMessage(toText(e));
+            void vscode.window.showErrorMessage(toText(e));
             getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand with new target ${stringify(newTarget)} exception thrown`, { error: toText(e) });
         }
     }
@@ -229,11 +230,11 @@ export async function cmdDeleteTarget(item: CFTargetTI, options?: CmdOptions): P
             await cmdReloadTargets();
         }
         if (!options?.silent) {
-            vscode.window.showInformationMessage(messages.target_deleted(targetLabel));
+            void vscode.window.showInformationMessage(messages.target_deleted(targetLabel));
         }
         getModuleLogger(LOGGER_MODULE).debug(`cmdDeleteTarget:: command "delete-target" of ${targetLabel} succeeded.`);
     } else {
-        vscode.window.showErrorMessage(cliResult.stdout);
+        void vscode.window.showErrorMessage(cliResult.stdout);
         getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand:: run 'delete-target of ${targetLabel} failed`, { output: cliResult.stdout });
     }
 }
@@ -268,9 +269,10 @@ async function collectBindDetails(service: CFService | ServiceTypeInfo[], requst
         const query = await composeQueryToObtainInstances(service as ServiceTypeInfo[]);
         let availableServices = await getAvailableServices({ query, ups: _.get(service, ['0', 'ups']) });
         if (_.isEmpty(availableServices)) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             getModuleLogger(LOGGER_MODULE).debug(`No services found for plan ${_.get(service, '[0].plan')}`);
             if (!_.find(service as ServiceTypeInfo[], 'allowCreate')) {
-                vscode.window.showInformationMessage(messages.no_services_instances_found);
+                void vscode.window.showInformationMessage(messages.no_services_instances_found);
                 return details;
             }
         }
@@ -366,7 +368,7 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
         }
     } catch (e) {
         if (e) { // login to cf canceled by user
-            vscode.window.showErrorMessage(toText(e));
+            void vscode.window.showErrorMessage(toText(e));
             getModuleLogger(LOGGER_MODULE).error(`cmdBindLocal exception thrown`, { error: toText(e) }, { service: service }, { envPath: filePath }, { instanceName: instanceName });
         }
     }
@@ -386,7 +388,7 @@ export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath:
                 getModuleLogger(LOGGER_MODULE).debug(`No service found for the plan ${serviceInfos[0].plan}`);
             }
             if (!_.find(serviceInfos, 'allowCreate')) {
-                vscode.window.showInformationMessage(messages.no_services_instances_found);
+                void vscode.window.showInformationMessage(messages.no_services_instances_found);
             }
             return [];
         }
@@ -413,7 +415,7 @@ export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath:
             }
         }
     } catch (e) {
-        vscode.window.showErrorMessage(toText(e));
+        void vscode.window.showErrorMessage(toText(e));
         getModuleLogger(LOGGER_MODULE).error(`bindLocalService exception thrown`, { error: toText(e) }, { serviceInfos: serviceInfos }, { envPath: EnvPathHelper.getPath(envPath) });
     }
 }
