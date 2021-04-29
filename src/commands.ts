@@ -1,14 +1,15 @@
 import * as vscode from "vscode";
 import {
     ServiceInfo, PlanInfo, ServiceInstanceInfo, cfLogin, cfGetAvailableOrgs, cfGetAvailableSpaces, cfSetOrgSpace, CF_PAGE_SIZE, IServiceQuery,
-    Cli, CliResult, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance, cfGetServiceInstances, eFilters, eServiceTypes, cfGetConfigFileField
+    Cli, CliResult, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance,
+    cfGetServiceInstances, eFilters, eServiceTypes, cfGetConfigFileField
 } from "@sap/cf-tools";
 import { messages } from "./messages";
 import { cmdReloadTargets } from "./cfViewCommands";
 import * as _ from "lodash";
 import {
     validateParams, generateParams4Service, getAllServiceInstances, DisplayServices, isRegexExpression,
-    toText, UpsServiceQueryOprions, getUpsServiceInstances, resolveFilterValue
+    toText, UpsServiceQueryOprions, getUpsServiceInstances, resolveFilterValue, notifyWhenServicesInfoResultIncomplete
 } from "./utils";
 import { stringify, parse } from "comment-json";
 import { getModuleLogger } from "./logger/logger-wrapper";
@@ -35,7 +36,7 @@ function invokeLongFunctionWithProgress(longFunction: any, progressMessage: stri
     return vscode.window.withProgress({
         location: vscode.ProgressLocation.Window,
         title: progressMessage
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     }, () => longFunction());
 }
 
@@ -73,7 +74,7 @@ async function runWithProgressAndLoginRetry(isCancelable: boolean, titleMessage:
                 location: vscode.ProgressLocation.Notification,
                 title: titleMessage,
                 cancellable: isCancelable
-            // eslint-disable-next-line prefer-spread
+                // eslint-disable-next-line prefer-spread
             }, (progress, token) => longFunction.apply(null, _.isArray(args) ? _.concat(args, token) : [args, token]));
         } catch (error) {
             const errorMessage: string = _.get(error, "message", _.toString(error));
@@ -238,7 +239,7 @@ export async function cmdSelectSpace(): Promise<string | undefined> {
     }
 }
 
-export async function cmdCreateTarget(): Promise<string|undefined> {
+export async function cmdCreateTarget(): Promise<string | undefined> {
     // first ask for service-name
     const targetName = await vscode.window.showInputBox({ placeHolder: messages.name_for_target, ignoreFocusOut: true });
     if (targetName) {
@@ -390,16 +391,22 @@ export async function fetchServicePlanList(query?: IServiceQuery): Promise<PlanI
     return runWithProgressAndLoginRetry(false, messages.loading_service_plan_list, cfGetServicePlansList, query);
 }
 
-export async function getAvailableServices(opts?: DisplayServices, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
-    return runWithProgressAndLoginRetry(true, progressTitle || messages.loading_services, getAllServiceInstances, opts);
+export function getAvailableServices(opts?: DisplayServices, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
+    return notifyWhenServicesInfoResultIncomplete(
+        runWithProgressAndLoginRetry(true, progressTitle || messages.loading_services, getAllServiceInstances, opts)
+    );
 }
 
 export async function getServiceInstances(query?: IServiceQuery, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
-    return runWithProgressAndLoginRetry(true, progressTitle || messages.loading_services, cfGetServiceInstances, query);
+    return notifyWhenServicesInfoResultIncomplete(
+        runWithProgressAndLoginRetry(true, progressTitle || messages.loading_services, cfGetServiceInstances, query)
+    );
 }
 
 export async function getUserProvidedServiceInstances(options?: UpsServiceQueryOprions, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
-    return runWithProgressAndLoginRetry(true, progressTitle || messages.loading_ups_services, getUpsServiceInstances, options);
+    return notifyWhenServicesInfoResultIncomplete(
+        runWithProgressAndLoginRetry(true, progressTitle || messages.loading_ups_services, getUpsServiceInstances, options)
+    );
 }
 
 async function askUserForServiceInstanceName(availableServices: ServiceInstanceInfo[], serviceType?: ServiceTypeInfo): Promise<string | undefined> {

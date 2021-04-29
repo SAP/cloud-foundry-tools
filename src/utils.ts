@@ -238,8 +238,8 @@ export async function getAllServiceInstances(opts?: DisplayServices): Promise<Se
 	if (opts?.ups?.isShow || opts?.ups?.tag) {
 		const copyQuery = _.cloneDeep(opts.query);
 		_.remove(copyQuery?.filters, (item) => {
-			return !_.includes([eFilters.names, eFilters.space_guids, eFilters.organization_guids, eFilters.oder_by, 
-				eFilters.page, eFilters.per_page, eFilters.updated_ats, eFilters.created_ats], item.key);
+			return !_.includes([eFilters.names, eFilters.space_guids, eFilters.organization_guids, eFilters.oder_by,
+			eFilters.page, eFilters.per_page, eFilters.updated_ats, eFilters.created_ats], item.key);
 		});
 		ups2Show = await doGetUpsServiceInstances(copyQuery, opts.ups.tag);
 	}
@@ -305,4 +305,20 @@ export function resolveFilterValue(value: string): string {
 	// allowed patterns: 'hana'|' "hana ", " xsuaa"'|'["xsuaa", "hana"]'
 	// eslint-disable-next-line @typescript-eslint/unbound-method
 	return _.join(_.map(_.isString(value) ? _.split(value, ',') : value, _.trim));
+}
+
+export function notifyWhenServicesInfoResultIncomplete(list: Promise<ServiceInstanceInfo[]>): Promise<ServiceInstanceInfo[]> {
+	const isUnknown = (value: string) => 'unknown' === value;
+	return list.then(infos => {
+		const results = _.reduce(infos, (res, info) => {
+			if (isUnknown(info.serviceName) || isUnknown(info.plan)) {
+				res.push(info.label);
+			}
+			return res;
+		}, []);
+		if (_.size(results)) {
+			void vscode.window.showWarningMessage(messages.service_instances_list_incomplete(results));
+		}
+		return infos;
+	});
 }

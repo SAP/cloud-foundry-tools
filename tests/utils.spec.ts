@@ -15,6 +15,7 @@ import * as utils from "../src/utils";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
 import { ServiceInstanceInfo, eFilters } from "@sap/cf-tools";
 import * as PropertiesReader from "properties-reader";
+import * as messages from "../src/messages";
 
 describe('utils unit tests', () => {
     let sandbox: sinon.SinonSandbox;
@@ -444,6 +445,68 @@ describe('utils unit tests', () => {
             const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);
             fsExtraMock.expects("writeFile").withExactArgs(gitIgnoreFile.fsPath, expectedPatterns, { encoding: UTF8 }).throws(new Error("access denied"));
             await utils.updateGitIgnoreList(testEnv.fsPath);
+        });
+
+        describe("notifyWhenServicesInfoResultIncomplete method", () => {
+            let vscodeWindowMock: sinon.SinonMock;
+
+            beforeEach(() => {
+                vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
+            });
+
+            afterEach(() => {
+                vscodeWindowMock.verify();
+            });
+
+            it("ok:: serviceInstanceInfo list is fullfilled", async () => {
+                const infos:ServiceInstanceInfo[] = [{
+                    label: 'instance-1',
+                    serviceName: 'type-1',
+                    plan: 'plan-1'
+                }, {
+                    label: 'instance-2',
+                    serviceName: 'type-2',
+                    plan: 'plan-2'
+                }];
+                expect(await utils.notifyWhenServicesInfoResultIncomplete(Promise.resolve(infos))).to.be.deep.equal(infos);
+            });
+
+            it("ok:: serviceInstanceInfo list is empty", async () => {
+                const list = Promise.resolve([]);
+                expect(await utils.notifyWhenServicesInfoResultIncomplete(list)).to.be.deep.equal([]);
+            });
+
+            it("ok:: serviceInstanceInfo list is incomplete", async () => {
+                const infos:ServiceInstanceInfo[] = [{
+                    label: 'instance-1',
+                    serviceName: 'unknown',
+                    plan: 'plan-1'
+                }];
+                vscodeWindowMock.expects('showWarningMessage').withExactArgs(messages.messages.service_instances_list_incomplete(_.map(infos, 'label'))).resolves();
+                expect(await utils.notifyWhenServicesInfoResultIncomplete(Promise.resolve(infos))).to.be.deep.equal(infos);
+            });
+
+            it("ok:: serviceInstanceInfo list is incomplete more than 3 instances", async () => {
+                const infos:ServiceInstanceInfo[] = [{
+                    label: 'instance-1',
+                    serviceName: 'unknown',
+                    plan: 'plan-1'
+                }, {
+                    label: 'instance-2',
+                    serviceName: 'type-2',
+                    plan: 'unknown'
+                }, {
+                    label: 'instance-3',
+                    serviceName: 'type-3',
+                    plan: 'unknown'
+                }, {
+                    label: 'instance-4',
+                    serviceName: 'type-4',
+                    plan: 'unknown'
+                }];
+                vscodeWindowMock.expects('showWarningMessage').withExactArgs(messages.messages.service_instances_list_incomplete(_.map(infos, 'label'))).resolves();
+                expect(await utils.notifyWhenServicesInfoResultIncomplete(Promise.resolve(infos))).to.be.deep.equal(infos);
+            });
         });
     });
 });
