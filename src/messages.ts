@@ -54,5 +54,6 @@ export const messages = {
   service_unbound_successful: (service: string): string => `The ${service} service has been unbound.`,
   no_service_plan_info_found: (plan: string, service: string): string => `Could not find ${plan} service plan info for ${service} service`,
   no_service_plans_found: (service: string): string => `No service plans found for ${service} service`,
-  target_dirty_save: (name: string): string => `Target ${name} is modified. Would you like to save changes?`
+  target_dirty_save: (name: string): string => `Target ${name} is modified. Would you like to save changes?`,
+  service_instances_list_incomplete: (list: string[]): string => `Could not get the details of ${_.size(list) > 3 ? 'some service instances' : "the following service instances: '" + list.join() + "'"}. Try to verify the ${_.size(list) > 3 ? '' : 'specified '}service instances, then log in again to Cloud Foundry.`
 };
