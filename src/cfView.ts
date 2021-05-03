@@ -23,7 +23,7 @@ export class CFTargetTI extends vscode.TreeItem {
 	}
 }
 
-export class CFMessageNode extends vscode.TreeItem { 
+export class CFMessageNode extends vscode.TreeItem {
 	public iconPath = {
 		light: path.join(__dirname, '..', 'resources', 'light', 'info.svg'),
 		dark: path.join(__dirname, '..', 'resources', 'dark', 'info.svg')
@@ -70,7 +70,7 @@ export class CFApplication extends vscode.TreeItem {
 		public readonly label: string,
 		public readonly state: string,
 		public readonly parent: CFFolder
-		) {
+	) {
 		super(label, vscode.TreeItemCollapsibleState.None);
 	}
 }
@@ -87,14 +87,14 @@ export class CFFolder extends vscode.TreeItem {
 export class CFServicesFolder extends CFFolder {
 	constructor(public readonly label: string, parent: CFTargetTI) {
 		super(label, parent);
-		this.contextValue = 'services';
+		this.contextValue = `services${(parent.target.isCurrent ? '-active' : '')}`;
 	}
 }
 
 export class CFAppsFolder extends CFFolder {
 	constructor(public readonly label: string, parent: CFTargetTI) {
 		super(label, parent);
-		this.contextValue = 'apps';
+		this.contextValue = `apps${(parent.target.isCurrent ? '-active' : '')}`;
 	}
 }
 
@@ -137,8 +137,8 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 		if (parent) {
 			if (parent instanceof CFTargetTI) {
 				return [new CFServicesFolder("Services", parent), new CFAppsFolder("Applications", parent)];
-			} else if (/^(services|apps)$/.test(parent.contextValue)) {
-				if (_.get(parent, "parent.target.isCurrent")) {
+			} else if (/^(services|apps)/.test(parent.contextValue)) {
+				if (/-active$/.test(parent.contextValue)) {
 					try {
 						return parent instanceof CFAppsFolder
 							? _.map(await cfGetApps(), app => new CFApplication(app.name, _.get(app, 'state'), parent))
@@ -164,7 +164,7 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 	public getTargets(): CFTargetTI[] | undefined {
 		return this.targets;
 	}
-	
+
 	// keep temporary as a reference for future usage
 	// private subscribeOnFileEventsAndRefresh(context: vscode.ExtensionContext, configFilePath: string) {
 	// 	if (_.size(configFilePath) > 0) {

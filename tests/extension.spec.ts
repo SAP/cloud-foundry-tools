@@ -4,9 +4,9 @@ import * as _ from "lodash";
 import * as fsextra from "fs-extra";
 import * as path from "path";
 import * as nsVsMock from "./ext/mockVscode";
-import { mockVscode } from "./ext/mockUtil";
+import { mockVscode, recognisePackageJsonPath } from "./ext/mockUtil";
 
-const statusBarItem = { show: () => "" };
+const statusBarItem = { show: () => '', hide: () => '' };
 
 mockVscode(nsVsMock.testVscode, "src/extension.ts");
 mockVscode(nsVsMock.testVscode, "src/commands.ts");
@@ -27,6 +27,7 @@ describe('extension unit test', () => {
     const runConfigExtName = "sap.vscode-wing-run-config";
     let sandbox: SinonSandbox;
     let windowMock: SinonMock;
+    let workspaceMock: SinonMock;
     let viewCommandsMock: SinonMock;
     let fsExtraMock: SinonMock;
     let mockCfLocal: SinonMock;
@@ -34,6 +35,12 @@ describe('extension unit test', () => {
     let mockStatusBarItem: SinonMock;
     let extensionsMock: SinonMock;
     let loggerWrapperMock: SinonMock;
+    let isShowTarget: boolean;
+    const config = {
+        get: (key: string) => {
+            return (key === 'CloudFoundryTools.showTargetInformation') ? isShowTarget : undefined;
+        }
+    };
 
     before(() => {
         sandbox = createSandbox();
@@ -41,6 +48,7 @@ describe('extension unit test', () => {
 
     beforeEach(() => {
         windowMock = sandbox.mock(nsVsMock.testVscode.window);
+        workspaceMock = sandbox.mock(nsVsMock.testVscode.workspace);
         viewCommandsMock = sandbox.mock(cfViewCommands);
         fsExtraMock = sandbox.mock(fsextra);
         mockCfLocal = sandbox.mock(cflocal);
@@ -52,6 +60,7 @@ describe('extension unit test', () => {
 
     afterEach(() => {
         windowMock.verify();
+        workspaceMock.verify();
         viewCommandsMock.verify();
         fsExtraMock.verify();
         mockCfLocal.verify();
@@ -80,11 +89,13 @@ describe('extension unit test', () => {
         const runConfigExtName = "sap.vscode-wing-run-config";
 
         beforeEach(() => {
+            isShowTarget = true;
             windowMock.expects("createTreeView").withArgs("cfView");
             testContext = { "subscriptions": [], logUri: { fsPath: path.resolve(__dirname) } };
             loggerWrapperMock.expects("initLogger").withExactArgs(testContext).resolves();
-            mockStatusBarItem.expects("show").never();
+            mockStatusBarItem.expects("show");
             windowMock.expects("createStatusBarItem").withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100).returns(statusBarItem);
+            workspaceMock.expects('getConfiguration').returns(config);
         });
 
         it("ok:: cfConfigFilePath does not exist", async () => {
@@ -144,12 +155,15 @@ describe('extension unit test', () => {
         let mockCommands: SinonMock;
 
         beforeEach(async () => {
+            isShowTarget = false;
+            workspaceMock.expects('getConfiguration').returns(config);
             mockCommands = sandbox.mock(commands);
             testContext = { "subscriptions": [], logUri: { fsPath: path.resolve(__dirname) } };
             loggerWrapperMock.expects("initLogger").withExactArgs(testContext).resolves();
             windowMock.expects("createStatusBarItem").withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100).returns(statusBarItem);
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
             fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
+            mockStatusBarItem.expects("hide");
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns({
                 isActive: true,
                 exports: {
@@ -279,6 +293,9 @@ describe('extension unit test', () => {
         };
 
         beforeEach(() => {
+            isShowTarget = false;
+            mockStatusBarItem.expects("hide");
+            workspaceMock.expects('getConfiguration').returns(config);
             windowMock.expects("createTreeView").withArgs("cfView");
             testContext = { "subscriptions": [], logUri: { fsPath: path.resolve(__dirname) } };
             loggerWrapperMock.expects("initLogger").withExactArgs(testContext).resolves();
@@ -341,6 +358,132 @@ describe('extension unit test', () => {
                 extension.onCFConfigFileChange();
             }, 100);
             await new Promise(resolve => setTimeout(resolve, 300));
+        });
+    });
+
+    describe('callbackOnDidChangeConfiguration event', () => {
+
+        it("ok:: callbackOnDidChangeConfiguration - other section", () => {
+            const event = {
+                affectsConfiguration: (section: string) => {
+                    return section === "RunConfigurations.loggingLevel";
+                }
+            };
+            workspaceMock.expects('getConfiguration').never();
+            extension.callbackOnDidChangeConfiguration(event, undefined);
+        });
+
+        it("ok:: callbackOnDidChangeConfiguration - triggered, hide", () => {
+            const event = {
+                affectsConfiguration: (section: string) => {
+                    return section === "CloudFoundryTools.showTargetInformation";
+                }
+            };
+            workspaceMock.expects('getConfiguration').returns(config);
+            mockStatusBarItem.expects("hide");
+            extension.callbackOnDidChangeConfiguration(event, undefined);
+        });
+
+        it("ok:: callbackOnDidChangeConfiguration - triggered, show", () => {
+            const event = {
+                affectsConfiguration: (section: string) => {
+                    return section === "CloudFoundryTools.showTargetInformation";
+                }
+            };
+            isShowTarget = true;
+            workspaceMock.expects('getConfiguration').returns(config);
+            mockStatusBarItem.expects("show");
+            extension.callbackOnDidChangeConfiguration(event, undefined);
+        });
+    });
+
+    describe('Common extension package definition', () => {
+        const jsonPath = recognisePackageJsonPath(__dirname);
+        const jsonPackage = JSON.parse(fsextra.readFileSync(path.resolve(path.join(jsonPath, "package.json")), { encoding: "utf8" }));
+
+        it("ok:: configuration title", () => {
+            expect(_.get(jsonPackage, ['contributes', 'configuration', 'title'])).to.be.equal('CloudFoundryTools');
+        });
+
+        it("ok:: logging.loggingLevel desciption", () => {
+            expect(_.get(jsonPackage, ['contributes', 'configuration', 'properties', 'CloudFoundryTools.logging.loggingLevel', 'description'])).to.be.equal(
+                'The verbosity of logging. The Order is None < fatal < error < warn < info < debug < trace.'
+            );
+        });
+
+        it("ok:: logging.sourceLocationTracking desciption", () => {
+            expect(_.get(jsonPackage, ['contributes', 'configuration', 'properties', 'CloudFoundryTools.logging.sourceLocationTracking', 'description'])).to.be.equal(
+                'Should Source Code Location Info be added to log entries, DANGER - May be very slow, only use in debugging scenarios'
+            );
+        });
+
+        it("ok:: showTargetInformation desciption", () => {
+            expect(_.get(jsonPackage, ['contributes', 'configuration', 'properties', 'CloudFoundryTools.showTargetInformation', 'description'])).to.be.equal(
+                'Display the current Cloud Foundry target information in the status bar'
+            );
+        });
+
+        it("ok:: commandPalette content", () => {
+            const menus: any[] = _.get(jsonPackage, ['contributes', 'menus', 'commandPalette']);
+            for (const menu of menus) {
+                expect(['cf.login.weak', 'cf.target.delete', 'cf.targets.create', 'cf.deploy-service.api', 'cf.target.set', 'cf.services.unbind', 'cf.services.bind', 
+                    'cf.services.binding.state', 'cf.services.get-space-services', 'cf.services.get-ups-services', 'cf.services.get-services']
+                    .includes(menu.command)).to.be.true;
+                expect(menu.when).to.be.equal('false');
+            }
+        });
+
+        it("ok:: view/title content", () => {
+            const commands = _.get(jsonPackage, ['contributes', 'menus', 'view/title']);
+            expect(_.find(commands, ['command', 'cf.targets.create'])).to.be.deep.equal({
+                "command": "cf.targets.create",
+                "when": "view == cfView",
+                "group": "navigation@1"
+            });
+            expect(_.find(commands, ['command', 'cf.targets.reload'])).to.be.deep.equal({
+                "command": "cf.targets.reload",
+                "when": "view == cfView",
+                "group": "navigation@2"
+            });
+        });
+
+        it("ok:: view/item/context content", () => {
+            const commands = _.get(jsonPackage, ['contributes', 'menus', 'view/item/context']);
+            expect(_.find(commands, ['command', 'cf.services.create'])).to.be.deep.equal({
+                "command": "cf.services.create",
+                "when": "view == cfView && viewItem =~ /^services-active$/",
+                "group": "inline"
+            });
+            expect(_.find(commands, ['command', 'cf.login'])).to.be.deep.equal({
+                "command": "cf.login",
+				"when": "view == cfView && viewItem == cf-login-required",
+				"group": "inline"
+            });
+            expect(_.find(commands, ['command', 'cf.services.bind.local'])).to.be.deep.equal({
+                "command": "cf.services.bind.local",
+				"when": "view == cfView && viewItem == cf-service"
+            });
+            let command = _.find(commands, (com) => {
+                return com.command === 'cf.target.set' && com.group === 'inline';
+            });
+            expect(command).to.be.deep.equal({
+                "command": "cf.target.set",
+				"when": "view == cfView && viewItem =~ /^cf-target$|^cf-target-not-current$/",
+				"group": "inline"
+            });
+            command = _.find(commands, (com) => {
+                return com.command === 'cf.target.set' && com.group === 'appearance@1';
+            });
+            expect(command).to.be.deep.equal({
+                "command": "cf.target.set",
+				"when": "view == cfView && viewItem =~ /^cf-target$/",
+				"group": "appearance@1"
+            });
+            expect(_.find(commands, ['command', 'cf.target.delete'])).to.be.deep.equal({
+                "command": "cf.target.delete",
+				"when": "view == cfView && viewItem =~ /^cf-target(-active)?$/",
+				"group": "appearance@2"
+            });
         });
     });
 });

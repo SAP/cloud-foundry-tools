@@ -1,7 +1,7 @@
 {
 	"name": "vscode-wing-cf-tools",
 	"displayName": "Cloud Foundry Tools",
-	"version": "6.2.2",
+	"version": "6.3.0",
 	"description": "Vscode extension of Cloud Foundry tools",
 	"categories": [
 		"Other"
@@ -147,7 +147,7 @@
 			"type": "object",
 			"title": "CloudFoundryTools",
 			"properties": {
-				"CloudFoundryTools.loggingLevel": {
+				"CloudFoundryTools.logging.loggingLevel": {
 					"type": "string",
 					"enum": [
 						"off",
@@ -162,10 +162,16 @@
 					"description": "The verbosity of logging. The Order is None < fatal < error < warn < info < debug < trace.",
 					"scope": "resource"
 				},
-				"CloudFoundryTools.sourceLocationTracking": {
+				"CloudFoundryTools.logging.sourceLocationTracking": {
 					"type": "boolean",
 					"default": false,
 					"description": "Should Source Code Location Info be added to log entries, DANGER - May be very slow, only use in debugging scenarios",
+					"scope": "resource"
+				},
+				"CloudFoundryTools.showTargetInformation": {
+					"type": "boolean",
+					"default": false,
+					"description": "Display the current Cloud Foundry target information in the status bar",
 					"scope": "resource"
 				}
 			}
@@ -232,7 +238,7 @@
 			"view/item/context": [
 				{
 					"command": "cf.services.create",
-					"when": "view == cfView && viewItem == services",
+					"when": "view == cfView && viewItem =~ /^services-active$/",
 					"group": "inline"
 				},
 				{

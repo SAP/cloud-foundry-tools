@@ -7,8 +7,8 @@ import { promisify } from "util";
 /**
  * Note that the values of these configuration properties must match those defined in the package.json
  */
-const LOGGING_LEVEL_CONFIG_PROP = "CloudFoundryTools.loggingLevel";
-const SOURCE_TRACKING_CONFIG_PROP = "CloudFoundryTools.sourceLocationTracking";
+const LOGGING_LEVEL_CONFIG_PROP = "CloudFoundryTools.logging.loggingLevel";
+const SOURCE_TRACKING_CONFIG_PROP = "CloudFoundryTools.logging.sourceLocationTracking";
 
 const readFile = promisify(readFileCallback);
 // On file load we initialize our logger to `NOOP_LOGGER`

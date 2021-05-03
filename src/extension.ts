@@ -55,6 +55,21 @@ export function onCFConfigFileChange(): void {
 	});
 }
 
+function displayTargetWhenAllowed(): void {
+	if (vscode.workspace.getConfiguration().get('CloudFoundryTools.showTargetInformation')) {
+		cfStatusBarItem.show();
+	} else {
+		cfStatusBarItem.hide();
+	}
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function callbackOnDidChangeConfiguration(e: vscode.ConfigurationChangeEvent, context: vscode.ExtensionContext): void {
+	if (e.affectsConfiguration('CloudFoundryTools.showTargetInformation')) {
+		displayTargetWhenAllowed();
+	}
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<unknown> {
 	await initLogger(context);
 
@@ -86,7 +101,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<unknow
 	// cfStatusBarItem.command = {command: loginCmdId, arguments: [true], title: ""};
 	// start workarround  --> remove following workarround in future theia releases
 	context.subscriptions.push(vscode.commands.registerCommand("cf.login.weak", cmdLogin.bind(null, true)));
-	// cfStatusBarItem.command = "cf.login.weak";
+	cfStatusBarItem.command = "cf.login.weak";
 	// end workarround
 
 	void updateStatusBar();
@@ -95,7 +110,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<unknow
 		fsextra.watchFile(cfConfigFilePath, onCFConfigFileChange);
 	}
 
-	// cfStatusBarItem.show();
+	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => callbackOnDidChangeConfiguration(e, context)));
+	displayTargetWhenAllowed();
+
 	function revealTargetItem(label?: string) {
 		setTimeout(() => {
 			const treeItem = _.find(treeDataProvider.getTargets(), label ? ['label', label] : 'target.isCurrent');
