@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as path from "path";
+import { dropRight, join, size, split } from "lodash";
+import * as fsextra from "fs-extra";
 
 const Module = require("module"); // eslint-disable-line @typescript-eslint/no-var-requires
 const originalRequire = Module.prototype.require;
@@ -26,4 +28,14 @@ export function mockVscode(oVscodeMock: any, testModulePath?: string): void {
         // eslint-disable-next-line prefer-rest-params
         return originalRequire.apply(this, arguments);
     };
+}
+
+export function recognisePackageJsonPath(cwd?: string): string {
+    let parts = split(cwd || __dirname, path.sep);
+    while (size(parts)) {
+        if(fsextra.pathExistsSync(path.resolve(path.join(...parts, 'package.json')))) {
+            return join(parts, path.sep);
+        }
+        parts = dropRight(parts);
+    }
 }
