@@ -370,7 +370,7 @@
 		"sinon": "^10.0.0",
 		"temp-dir": "2.0.0",
 		"ts-loader": "^9.1.1",
-		"ts-node": "^9.1.1",
+		"ts-node": "^10.0.0",
 		"typescript": "^3.9.7",
 		"vsce": "^1.61.0",
 		"webpack": "^5.5.0",
