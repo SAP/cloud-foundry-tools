@@ -361,7 +361,7 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
             if (instanceName) {
                 const chiselTask = await checkAndCreateChiselTask(filePath.fsPath, instanceName);
                 if (chiselTask) {
-                    await deleteChiselParamsFromFile(filePath.fsPath);
+                    deleteChiselParamsFromFile(filePath.fsPath);
                 }
                 return chiselTask ? { instanceName, chiselTask } : { instanceName };
             }

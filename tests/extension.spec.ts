@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as _ from "lodash";
-import * as fsextra from "fs-extra";
+import * as fs from "fs";
 import * as path from "path";
 import * as nsVsMock from "./ext/mockVscode";
 import { mockVscode, recognisePackageJsonPath } from "./ext/mockUtil";
@@ -29,7 +29,7 @@ describe('extension unit test', () => {
     let windowMock: SinonMock;
     let workspaceMock: SinonMock;
     let viewCommandsMock: SinonMock;
-    let fsExtraMock: SinonMock;
+    let fsMock: SinonMock;
     let mockCfLocal: SinonMock;
     let mockCfLocalUnits: SinonMock;
     let mockStatusBarItem: SinonMock;
@@ -50,7 +50,7 @@ describe('extension unit test', () => {
         windowMock = sandbox.mock(nsVsMock.testVscode.window);
         workspaceMock = sandbox.mock(nsVsMock.testVscode.workspace);
         viewCommandsMock = sandbox.mock(cfViewCommands);
-        fsExtraMock = sandbox.mock(fsextra);
+        fsMock = sandbox.mock(fs);
         mockCfLocal = sandbox.mock(cflocal);
         mockCfLocalUnits = sandbox.mock(cflocalUnits);
         mockStatusBarItem = sandbox.mock(statusBarItem);
@@ -62,7 +62,7 @@ describe('extension unit test', () => {
         windowMock.verify();
         workspaceMock.verify();
         viewCommandsMock.verify();
-        fsExtraMock.verify();
+        fsMock.verify();
         mockCfLocal.verify();
         mockCfLocalUnits.verify();
         mockStatusBarItem.verify();
@@ -73,13 +73,13 @@ describe('extension unit test', () => {
 
     describe("deactivate", () => {
         it("unwatchFile called", () => {
-            fsExtraMock.expects("unwatchFile").withArgs(cfGetConfigFilePath());
+            fsMock.expects("unwatchFile").withArgs(cfGetConfigFilePath());
             extension.deactivate();
         });
 
         it("unwatchFile not called", () => {
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
-            fsExtraMock.expects("unwatchFile").never();
+            fsMock.expects("unwatchFile").never();
             extension.deactivate();
         });
     });
@@ -101,7 +101,7 @@ describe('extension unit test', () => {
         it("ok:: cfConfigFilePath does not exist", async () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
-            fsExtraMock.expects("watchFile").never();
+            fsMock.expects("watchFile").never();
             await extension.activate(testContext);
             windowMock.verify();
         });
@@ -109,7 +109,7 @@ describe('extension unit test', () => {
         it("ok:: cfConfigFilePath exists", async () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
-            fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
+            fsMock.expects("watchFile").withArgs("testCFConfigFilePath");
             await extension.activate(testContext);
         });
 
@@ -162,7 +162,7 @@ describe('extension unit test', () => {
             loggerWrapperMock.expects("initLogger").withExactArgs(testContext).resolves();
             windowMock.expects("createStatusBarItem").withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100).returns(statusBarItem);
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
-            fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
+            fsMock.expects("watchFile").withArgs("testCFConfigFilePath");
             mockStatusBarItem.expects("hide");
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns({
                 isActive: true,
@@ -301,7 +301,7 @@ describe('extension unit test', () => {
             loggerWrapperMock.expects("initLogger").withExactArgs(testContext).resolves();
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
-            fsExtraMock.expects("watchFile").withArgs("testCFConfigFilePath");
+            fsMock.expects("watchFile").withArgs("testCFConfigFilePath");
             windowMock.expects("createStatusBarItem").withExactArgs(nsVsMock.testVscode.StatusBarAlignment.Left, 100).returns(statusBarItem);
         });
 
@@ -399,7 +399,7 @@ describe('extension unit test', () => {
 
     describe('Common extension package definition', () => {
         const jsonPath = recognisePackageJsonPath(__dirname);
-        const jsonPackage = JSON.parse(fsextra.readFileSync(path.resolve(path.join(jsonPath, "package.json")), { encoding: "utf8" }));
+        const jsonPackage = JSON.parse(fs.readFileSync(path.resolve(path.join(jsonPath, "package.json")), { encoding: "utf8" }));
 
         it("ok:: configuration title", () => {
             expect(_.get(jsonPackage, ['contributes', 'configuration', 'title'])).to.be.equal('CloudFoundryTools');

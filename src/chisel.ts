@@ -66,7 +66,7 @@ function dropChiselProperties(propObj: any): Record<string, string> {
     return properties;
 }
 
-export async function deleteChiselParamsFromFile(filePath: string): Promise<boolean> {
+export function deleteChiselParamsFromFile(filePath: string): boolean {
     const envProperties = initReader(filePath);    
     if (!envProperties) {
         return false;
@@ -76,7 +76,7 @@ export async function deleteChiselParamsFromFile(filePath: string): Promise<bool
         return false;
     }
     try {
-        await writeProperties(filePath, dropChiselProperties(envProperties.getAllProperties()));
+        writeProperties(filePath, dropChiselProperties(envProperties.getAllProperties()));
         getModuleLogger(LOGGER_MODULE).debug(`deleteChiselParamsFromFile: override the paramters to ${filePath} file without chisel parameters`);
         return true;
     } catch (err) {

@@ -600,7 +600,7 @@ describe("cfViewCommands tests", () => {
                 ]
             };
             chiselMock.expects("checkAndCreateChiselTask").withExactArgs(path.fsPath, services[0].label).resolves(chiselTask);
-            chiselMock.expects("deleteChiselParamsFromFile").withExactArgs(path.fsPath).resolves();
+            chiselMock.expects("deleteChiselParamsFromFile").withExactArgs(path.fsPath).returns(undefined);
             expect(await cfViewCommands.cmdBindLocal(service, { path, ignore: true })).deep.equal({ instanceName: services[0].label, chiselTask: chiselTask });
         });
     });

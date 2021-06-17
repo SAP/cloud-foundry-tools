@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import * as fsextra from "fs-extra";
 import * as fs from 'fs';
 import { messages } from "./messages";
 import * as types from '@sap/wing-run-config-types';
@@ -267,7 +266,7 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
 		if (!_.size(ignoreFiles)) {
 			try { // .gitignore file not exists -> create one
 				const filePath = path.normalize(path.join(project.uri.fsPath, GITIGNORE));
-				fsextra.createFileSync(filePath);
+				fs.openSync(filePath, 'w');
 				ignoreFiles.push(vscode.Uri.file(filePath));
 			} catch (e) {
 				getModuleLogger(LOGGER_MODULE).error("updateGitIgnoreList: creation .gitignore file failed", { exception: toText(e) });
@@ -275,9 +274,9 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
 		}
 		for (const file of ignoreFiles) {
 			try {
-				const patterns = _.split(await fsextra.readFile(file.fsPath, UTF8), EOL);
+				const patterns = _.split(fs.readFileSync(file.fsPath, {encoding: UTF8}), EOL);
 				if (!await isPatternFound(patterns)) {
-					await fsextra.writeFile(
+					fs.writeFileSync(
 						file.fsPath,
 						_.join(_.concat(patterns, [`# auto generated wildcard`, _.replace(path.relative(project.uri.fsPath, envPath), /\\/g, "/")]), EOL),
 						{ encoding: UTF8 }
@@ -290,7 +289,7 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
 	}
 }
 
-export async function writeProperties(filePath: string, properties: Record<string, string>): Promise<void> {
+export function writeProperties(filePath: string, properties: Record<string, string>): void {
 	let text = "";
 	Object.keys(properties).forEach(key => {
 		const value = properties[key];
@@ -298,7 +297,7 @@ export async function writeProperties(filePath: string, properties: Record<strin
 			text += `${key}=${value.trim()}\n`;
 		}
 	});
-	await fsextra.outputFile(filePath, text);
+	fs.writeFileSync(filePath, text);
 }
 
 export function resolveFilterValue(value: string): string {
