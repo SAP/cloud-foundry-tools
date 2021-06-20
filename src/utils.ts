@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import * as fsextra from "fs-extra";
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import { messages } from "./messages";
 import * as types from '@sap/wing-run-config-types';
 import * as _ from 'lodash';
@@ -11,6 +10,7 @@ import { URL } from "url";
 import { EOL, platform } from "os";
 import { IServiceQuery, ServiceInstanceInfo, cfGetUpsInstances, eFilters, ServiceTypeInfo, cfGetManagedServiceInstances } from "@sap/cf-tools";
 import { getModuleLogger } from "./logger/logger-wrapper";
+import { existsSync } from "fs";
 
 export const isWindows = platform().includes("win");
 type TypeValidationResult = string | undefined | null;
@@ -52,7 +52,7 @@ export function toText(e: Error): string {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getEnvResources(envFilePath: string): Promise<any> {
 	try {
-		if (fs.existsSync(envFilePath)) {
+		if (existsSync(envFilePath)) {
 			const envProperties = PropertiesReader(envFilePath);
 			const vcapProperty: string = envProperties.getRaw(ENV_VCAP_RESOURCES);
 			if (vcapProperty) {
@@ -267,7 +267,7 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
 		if (!_.size(ignoreFiles)) {
 			try { // .gitignore file not exists -> create one
 				const filePath = path.normalize(path.join(project.uri.fsPath, GITIGNORE));
-				fsextra.createFileSync(filePath);
+				await fs.open(filePath, 'w');
 				ignoreFiles.push(vscode.Uri.file(filePath));
 			} catch (e) {
 				getModuleLogger(LOGGER_MODULE).error("updateGitIgnoreList: creation .gitignore file failed", { exception: toText(e) });
@@ -275,9 +275,9 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
 		}
 		for (const file of ignoreFiles) {
 			try {
-				const patterns = _.split(await fsextra.readFile(file.fsPath, UTF8), EOL);
+				const patterns = _.split(await fs.readFile(file.fsPath, { encoding: UTF8 }), EOL);
 				if (!await isPatternFound(patterns)) {
-					await fsextra.writeFile(
+					await fs.writeFile(
 						file.fsPath,
 						_.join(_.concat(patterns, [`# auto generated wildcard`, _.replace(path.relative(project.uri.fsPath, envPath), /\\/g, "/")]), EOL),
 						{ encoding: UTF8 }
@@ -298,7 +298,7 @@ export async function writeProperties(filePath: string, properties: Record<strin
 			text += `${key}=${value.trim()}\n`;
 		}
 	});
-	await fsextra.outputFile(filePath, text);
+	await fs.writeFile(filePath, text);
 }
 
 export function resolveFilterValue(value: string): string {
