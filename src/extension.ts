@@ -12,7 +12,7 @@ import {
 } from "./cfViewCommands";
 
 import { cfGetConfigFilePath, cfGetConfigFileField, ITarget, cfGetTarget, OK } from "@sap/cf-tools";
-import * as fsextra from "fs-extra";
+import * as fs from "fs";
 import { DependencyHandler } from "./run-configuration";
 import { IRunConfigRegistry } from "@sap/wing-run-config-types";
 import { toText } from "./utils";
@@ -107,7 +107,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<unknow
 	void updateStatusBar();
 
 	if (!_.isEmpty(cfConfigFilePath)) {
-		fsextra.watchFile(cfConfigFilePath, onCFConfigFileChange);
+		fs.watchFile(cfConfigFilePath, onCFConfigFileChange);
 	}
 
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => callbackOnDidChangeConfiguration(e, context)));
@@ -177,6 +177,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<unknow
 export function deactivate(): void {
 	const cfConfigFilePath = cfGetConfigFilePath();
 	if (cfConfigFilePath) {
-		fsextra.unwatchFile(cfConfigFilePath);
+		fs.unwatchFile(cfConfigFilePath);
 	}
 }

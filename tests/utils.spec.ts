@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect, assert } from "chai";
 import * as sinon from "sinon";
-import * as fsextra from 'fs-extra';
 import * as path from 'path';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import _ = require("lodash");
 import { stringify } from "comment-json";
 import { fail } from "assert";
@@ -20,7 +20,7 @@ import * as messages from "../src/messages";
 describe('utils unit tests', () => {
     let sandbox: sinon.SinonSandbox;
     let vscodeWorkspaceMock: sinon.SinonMock;
-    let fsExtraMock: sinon.SinonMock;
+    let fsMock: sinon.SinonMock;
 
     before(() => {
         sandbox = sinon.createSandbox();
@@ -28,12 +28,12 @@ describe('utils unit tests', () => {
 
     beforeEach(() => {
         vscodeWorkspaceMock = sandbox.mock(nsVsMock.testVscode.workspace);
-        fsExtraMock = sandbox.mock(fsextra);
+        fsMock = sandbox.mock(fs);
     });
 
     afterEach(() => {
         vscodeWorkspaceMock.verify();
-        fsExtraMock.verify();
+        fsMock.verify();
         sandbox.restore();
     });
 
@@ -61,7 +61,7 @@ describe('utils unit tests', () => {
     describe("getEnvResources", () => {
 
         it("ok:: sanity with valid VCAP_SERVICES value", async () => {
-            sandbox.stub(fsextra, "existsSync").returns(true);
+            sandbox.stub(fsSync, "existsSync").returns(true);
             const envFilePath: string = path.join(__dirname, "resources", ".testValidEnv");
             const vcapServicesObj = await utils.getEnvResources(envFilePath);
             expect(vcapServicesObj).to.not.be.empty;
@@ -69,7 +69,7 @@ describe('utils unit tests', () => {
         });
 
         it("fail:: invalid VCAP_SERVICES value in env file", async () => {
-            sandbox.stub(fsextra, "existsSync").returns(true);
+            sandbox.stub(fsSync, "existsSync").returns(true);
             const envFilePath: string = path.join(__dirname, "resources", ".testInValidVCAP");
             let vcapServicesObj;
             try {
@@ -81,13 +81,13 @@ describe('utils unit tests', () => {
         });
 
         it("ok:: '.env' file does not exist", async () => {
-            sandbox.stub(fsextra, "existsSync").returns(true);
+            sandbox.stub(fsSync, "existsSync").returns(false);
             const envFilePath: string = path.join(__dirname, "resources", ".notExists");
             expect(await utils.getEnvResources(envFilePath)).to.be.null;
         });
 
         it("ok:: '.env' file without VCAP_SERVICES key", async () => {
-            sandbox.stub(fsextra, "existsSync").returns(true);
+            sandbox.stub(fsSync, "existsSync").returns(true);
             const envFilePath: string = path.join(__dirname, "resources", ".envNoVCAP");
             expect(await utils.getEnvResources(envFilePath)).to.be.null;
         });
@@ -122,7 +122,7 @@ describe('utils unit tests', () => {
                     displayName: "bookshop-hdi-container"
                 }
             };
-            fs.chmodSync(bindContext.envPath.fsPath, 0o444);
+            fsSync.chmodSync(bindContext.envPath.fsPath, 0o444);
             try {
                 await utils.removeResourceFromEnv(bindContext);
                 fail("test should fail here");
@@ -391,10 +391,10 @@ describe('utils unit tests', () => {
             const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
             vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
             vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([gitIgnoreFile]);
-            fsExtraMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, UTF8).resolves(gitIgnoreContent);
+            fsMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, { encoding: UTF8 }).resolves(gitIgnoreContent);
             const patterns = _.split(gitIgnoreContent, EOL);
             const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);
-            fsExtraMock.expects("writeFile").withExactArgs(gitIgnoreFile.fsPath, expectedPatterns, { encoding: UTF8 }).resolves();
+            fsMock.expects("writeFile").withExactArgs(gitIgnoreFile.fsPath, expectedPatterns, { encoding: UTF8 }).resolves(undefined);
             await utils.updateGitIgnoreList(testEnv.fsPath);
         });
 
@@ -403,8 +403,8 @@ describe('utils unit tests', () => {
             const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
             vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
             vscodeWorkspaceMock.expects("findFiles").exactly(2).returns([testEnv]);
-            fsExtraMock.expects("readFile").resolves(gitIgnoreContent);
-            fsExtraMock.expects("writeFile").never();
+            fsMock.expects("readFile").resolves(gitIgnoreContent);
+            fsMock.expects("writeFile").never();
             await utils.updateGitIgnoreList(testEnv.fsPath);
         });
 
@@ -419,11 +419,11 @@ describe('utils unit tests', () => {
             const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
             vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
             vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([]);
-            fsExtraMock.expects("createFileSync").withExactArgs(path.resolve(gitIgnoreFile.fsPath)).returns(undefined);
-            fsExtraMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, UTF8).resolves(gitIgnoreContent);
+            fsMock.expects("open").withExactArgs(path.resolve(gitIgnoreFile.fsPath), 'w').resolves(undefined);
+            fsMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, { encoding: UTF8 }).resolves(gitIgnoreContent);
             const patterns = _.split(gitIgnoreContent, EOL);
             const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);
-            fsExtraMock.expects("writeFile").withExactArgs(gitIgnoreFile.fsPath, expectedPatterns, { encoding: UTF8 }).resolves();
+            fsMock.expects("writeFile").withExactArgs(gitIgnoreFile.fsPath, expectedPatterns, { encoding: UTF8 }).resolves(undefined);
             await utils.updateGitIgnoreList(testEnv.fsPath);
         });
 
@@ -431,7 +431,7 @@ describe('utils unit tests', () => {
             const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
             vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
             vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([]);
-            fsExtraMock.expects("createFileSync").withExactArgs(path.resolve(gitIgnoreFile.fsPath)).throws(new Error("access denied"));
+            fsMock.expects("open").withExactArgs(path.resolve(gitIgnoreFile.fsPath), 'w').throws(new Error("access denied"));
             await utils.updateGitIgnoreList(testEnv.fsPath);
         });
 
@@ -440,10 +440,10 @@ describe('utils unit tests', () => {
             const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
             vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
             vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([gitIgnoreFile]);
-            fsExtraMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, UTF8).resolves(gitIgnoreContent);
+            fsMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, { encoding: UTF8 }).resolves(gitIgnoreContent);
             const patterns = _.split(gitIgnoreContent, EOL);
             const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);
-            fsExtraMock.expects("writeFile").withExactArgs(gitIgnoreFile.fsPath, expectedPatterns, { encoding: UTF8 }).throws(new Error("access denied"));
+            fsMock.expects("writeFile").withExactArgs(gitIgnoreFile.fsPath, expectedPatterns, { encoding: UTF8 }).throws(new Error("access denied"));
             await utils.updateGitIgnoreList(testEnv.fsPath);
         });
 
@@ -459,7 +459,7 @@ describe('utils unit tests', () => {
             });
 
             it("ok:: serviceInstanceInfo list is fullfilled", async () => {
-                const infos:ServiceInstanceInfo[] = [{
+                const infos: ServiceInstanceInfo[] = [{
                     label: 'instance-1',
                     serviceName: 'type-1',
                     plan: 'plan-1'
@@ -477,7 +477,7 @@ describe('utils unit tests', () => {
             });
 
             it("ok:: serviceInstanceInfo list is incomplete", async () => {
-                const infos:ServiceInstanceInfo[] = [{
+                const infos: ServiceInstanceInfo[] = [{
                     label: 'instance-1',
                     serviceName: 'unknown',
                     plan: 'plan-1'
@@ -487,7 +487,7 @@ describe('utils unit tests', () => {
             });
 
             it("ok:: serviceInstanceInfo list is incomplete more than 3 instances", async () => {
-                const infos:ServiceInstanceInfo[] = [{
+                const infos: ServiceInstanceInfo[] = [{
                     label: 'instance-1',
                     serviceName: 'unknown',
                     plan: 'plan-1'
