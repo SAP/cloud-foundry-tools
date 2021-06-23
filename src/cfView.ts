@@ -4,6 +4,7 @@ import * as _ from "lodash";
 import { cfGetApps, cfGetServiceInstancesList, cfGetTargets, CFTarget } from "@sap/cf-tools";
 let cfView: CFView;
 
+export type CFTreeChildNode = CFMessageNode | CFService | CFApplication | CFFolder | CFTargetTI;
 export class CFTargetTI extends vscode.TreeItem {
 	public contextValue = `cf-target${_.includes(this.target.label, '(no targets)') ? '-notargets' : (this.target.isCurrent ? '-active' : '')}`;
 
@@ -174,5 +175,13 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 	// 		context.subscriptions.push(fsw.onDidDelete(() => this.refresh()));
 	// 	}
 	// }
+}
+
+export function getTargetRoot(node: CFTreeChildNode): CFTargetTI {
+	let item = node;
+	while ((_.get(item, 'parent'))) {
+		item = _.get(item, 'parent') as CFTreeChildNode; // walk up until target folder found
+	}
+	return item as CFTargetTI;
 }
 

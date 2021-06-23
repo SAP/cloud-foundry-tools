@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { CFView, CFService, CFTargetTI, CFTargetNotCurrent } from "./cfView";
+import { CFView, CFService, CFTargetTI, CFTargetNotCurrent, getTargetRoot } from "./cfView";
 import { messages } from "./messages";
 import * as https from 'https';
 import * as url from "url";
@@ -99,7 +99,7 @@ async function doBind(opts: BindArgs) {
     async function runWithProgress(fnc: (filePath: string, instanceNames: string[], tags?: string[], serviceKeyNames?: string[]) => Promise<void>, args: any[]) {
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification, title: messages.binding_service_to_file, cancellable: false
-        // eslint-disable-next-line prefer-spread
+            // eslint-disable-next-line prefer-spread
         }, () => fnc.apply(null, args));
         if (!opts.options?.silent) {
             void vscode.window.showInformationMessage(messages.service_bound_successful(_.join(args[1], ',')));
@@ -187,10 +187,7 @@ export async function execSaveTarget(item?: CFTargetTI, options?: CmdOptions): P
 }
 
 export async function cmdSetCurrentTarget(newTarget: CFTargetTI | CFTargetNotCurrent): Promise<unknown | undefined> {
-    let item = newTarget as CFTargetTI;
-    while ((_.get(item, 'parent'))) {
-        item = _.get(item, 'parent'); // walk up until target folder found
-    }
+    const item = getTargetRoot(newTarget);
     if (false === item?.target?.isCurrent) {
         let answer = YES;
         try {
