@@ -8,7 +8,7 @@ import * as PropertiesReader from "properties-reader";
 import { parse } from "comment-json";
 import { URL } from "url";
 import { EOL, platform } from "os";
-import { IServiceQuery, ServiceInstanceInfo, cfGetUpsInstances, eFilters, ServiceTypeInfo, cfGetManagedServiceInstances } from "@sap/cf-tools";
+import { IServiceQuery, ServiceInstanceInfo, cfGetUpsInstances, eFilters, ServiceTypeInfo, cfGetManagedServiceInstances, cfGetTarget } from "@sap/cf-tools";
 import { getModuleLogger } from "./logger/logger-wrapper";
 import { existsSync } from "fs";
 
@@ -321,4 +321,16 @@ export function notifyWhenServicesInfoResultIncomplete(list: Promise<ServiceInst
 		}
 		return infos;
 	});
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function examCFTarget(errorMessage: string, keys: string[], weak: boolean): Promise<any> {
+	const target = await cfGetTarget();
+	if (weak) {
+		return target;
+	}
+	return _.reduce(keys, (cond, key) => {
+		cond = cond && _.get(target, key);
+		return cond;
+	}, true) ? target : Promise.reject(new Error(errorMessage));
 }

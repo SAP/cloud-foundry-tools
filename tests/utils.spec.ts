@@ -13,7 +13,7 @@ import { mockVscode } from "./ext/mockUtil";
 mockVscode(nsVsMock.testVscode, "src/utils.ts");
 import * as utils from "../src/utils";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
-import { ServiceInstanceInfo, eFilters } from "@sap/cf-tools";
+import { ServiceInstanceInfo, eFilters, ITarget } from "@sap/cf-tools";
 import * as PropertiesReader from "properties-reader";
 import * as messages from "../src/messages";
 
@@ -508,5 +508,43 @@ describe('utils unit tests', () => {
                 expect(await utils.notifyWhenServicesInfoResultIncomplete(Promise.resolve(infos))).to.be.deep.equal(infos);
             });
         });
+
+        describe("verifyCFTarget", () => {
+            const target: ITarget = { "api endpoint": 'endPoint', org: 'test-org', space: 'test-space', user: 'user', "api version": '3.100.0' };
+
+            it("ok:: validate", async () => {
+                sandbox.stub(cfLocal, 'cfGetTarget').resolves(target);
+                expect(await utils.examCFTarget('', ['user'], false)).to.be.deep.equal(target);
+            });
+
+            it("error:: invalid key requested", async () => {
+                sandbox.stub(cfLocal, 'cfGetTarget').resolves(target);
+                const error = 'invalid key';
+                try {
+                    await utils.examCFTarget(error, ['user', 'wrong'], false);
+                    fail('should fail');
+                } catch (e) {
+                    expect(e.message).to.be.equal(error);
+                }
+            });
+
+            it("ok:: weak mode", async () => {
+                const t: ITarget = { "api endpoint": 'endPoint', user: 'user', "api version": '3.100.0' };
+                sandbox.stub(cfLocal, 'cfGetTarget').resolves(t);
+                expect(await utils.examCFTarget('', ['api endpoint'], true)).to.be.deep.equal(t);
+            });
+
+            it("exception:: throws error", async () => {
+                const text = 'error text';
+                sandbox.stub(cfLocal, 'cfGetTarget').throws(new Error(text));
+                try {
+                    await utils.examCFTarget('', [], false);
+                    fail('should fail');
+                } catch (e) {
+                    expect(e.message).to.be.equal(text);
+                }
+            });
+        });
+
     });
 });

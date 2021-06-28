@@ -21,7 +21,7 @@ import * as loggerWrapper from "../src/logger/logger-wrapper";
 import { cfGetConfigFilePath, ITarget, OK } from "@sap/cf-tools";
 import { expect } from "chai";
 import { createSandbox, SinonMock, SinonSandbox } from "sinon";
-import { CFTargetTI } from "../src/cfView";
+import { CFTargetTI, CFView } from "../src/cfView";
 
 describe('extension unit test', () => {
     const runConfigExtName = "sap.vscode-wing-run-config";
@@ -206,6 +206,10 @@ describe('extension unit test', () => {
             await _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'login'])();
         });
 
+        it("ok:: CFView created", () => {
+            expect(CFView.get()).to.be.ok;
+        });
+
         it("ok:: cmdLogin command triggered, canceled", async () => {
             mockCommands.expects('cmdLogin').resolves();
             await _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'login'])();
@@ -257,7 +261,7 @@ describe('extension unit test', () => {
             const cfViewMock = sandbox.mock(nsVsMock.getTestTreeView());
             sandbox.stub(nsVsMock.getTestTreeProvider(), 'getTargets').returns(targets);
             cfViewMock.expects('reveal').withExactArgs(targets[1], { select: true, focus: true, expand: true }).resolves();
-            mockCommands.expects('cmdCreateTarget').resolves(targets[1].label);
+            mockCommands.expects('cmdSelectAndSaveTarget').resolves(targets[1].label);
             _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'targets', 'create'])();
             setTimeout(() => {
                 cfViewMock.verify();
@@ -273,7 +277,7 @@ describe('extension unit test', () => {
             const cfViewMock = sandbox.mock(nsVsMock.getTestTreeView());
             sandbox.stub(nsVsMock.getTestTreeProvider(), 'getTargets').returns(targets);
             cfViewMock.expects('reveal').never();
-            mockCommands.expects('cmdCreateTarget').resolves();
+            mockCommands.expects('cmdSelectAndSaveTarget').resolves();
             _.get(nsVsMock.getTestRegisteredCommands(), ['cf', 'targets', 'create'])();
             setTimeout(() => {
                 cfViewMock.verify();

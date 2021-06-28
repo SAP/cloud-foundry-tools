@@ -16,5 +16,6 @@ describe("messages unit test", () => {
         expect(messages.service_bound_successful('planName')).to.be.ok;
         expect(messages.service_instances_list_incomplete(['s-1', 's-2'])).to.be.equal("Could not get the details of the following service instances: 's-1,s-2'. Try to verify the specified service instances, then log in again to Cloud Foundry.");
         expect(messages.service_instances_list_incomplete(['s-1', 's-2', 's-3', 's-4'])).to.be.equal('Could not get the details of some service instances. Try to verify the service instances, then log in again to Cloud Foundry.');
+        expect(messages.target_created('my-target')).to.be.ok;
     });
 });

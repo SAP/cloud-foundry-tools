@@ -3,8 +3,7 @@ import * as _ from "lodash";
 import { CFTargetNotCurrent, CFTargetTI, CFView } from "./cfView";
 import { messages } from "./messages";
 import {
-	cmdLogin, cmdCreateService, cmdCreateTarget,
-	cmdCFSetOrgSpace, cmdSelectSpace, cmdCreateUps
+	cmdLogin, cmdCreateService, cmdCFSetOrgSpace, cmdSelectSpace, cmdCreateUps, cmdSelectAndSaveTarget
 } from "./commands";
 import {
 	cmdDeployServiceAPI, cmdSetCurrentTarget, cmdDeleteTarget, cmdBindLocal, cmdReloadTargets,
@@ -131,7 +130,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<unknow
 	context.subscriptions.push(vscode.commands.registerCommand("cf.services.bind.local", cmdBindLocal));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.set.orgspace", cmdCFSetOrgSpace));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.targets.create", async () => {
-		const label = await cmdCreateTarget();
+		const label = await cmdSelectAndSaveTarget();
 		if (label) {
 			revealTargetItem(label);
 		}

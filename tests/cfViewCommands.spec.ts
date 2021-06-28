@@ -259,21 +259,31 @@ describe("cfViewCommands tests", () => {
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(cliResult.stdout).resolves();
             await cfViewCommands.cmdSetCurrentTarget(new cfView.CFTargetTI(target));
         });
-        
+
         it("ok:: 'CFTargetNotCurrent' item received", async () => {
             cliMock.expects("execute").never();
             await cfViewCommands.cmdSetCurrentTarget(
                 new cfView.CFTargetNotCurrent(
-                    new cfView.CFAppsFolder('apps', 
+                    new cfView.CFAppsFolder('apps',
                         new cfView.CFTargetTI({ label: "my Target", isDirty: false, isCurrent: true })
                     )
                 )
             );
         });
+
+        it("ok:: targets tree broken", async () => {
+            await cfViewCommands.cmdSetCurrentTarget(
+                new cfView.CFTargetNotCurrent({ label: 'label' } as cfView.CFFolder)
+            );
+        });
+
+        it("ok:: null received, targets tree broken", async () => {
+            await cfViewCommands.cmdSetCurrentTarget(undefined);
+        });
     });
 
     describe("execSetTarget scope", () => {
-        const item = new cfView.CFTargetTI({label: 'my Target', isCurrent: false, isDirty: true});
+        const item = new cfView.CFTargetTI({ label: 'my Target', isCurrent: false, isDirty: true });
 
         it("ok:: silent mode required", async () => {
             const cliResult = { exitCode: -1, stdout: "", stderr: "" };
@@ -291,7 +301,7 @@ describe("cfViewCommands tests", () => {
     });
 
     describe("execSaveTarget scope", () => {
-        const item = new cfView.CFTargetTI({label: 'my Target', isCurrent: false, isDirty: true});
+        const item = new cfView.CFTargetTI({ label: 'my Target', isCurrent: false, isDirty: true });
 
         it("ok:: error occured", async () => {
             const cliResult = { exitCode: -1, stdout: "", stderr: "" };
@@ -315,7 +325,7 @@ describe("cfViewCommands tests", () => {
 
         it("ok:: 'no-targets' node received", async () => {
             cliMock.expects("execute").never();
-            await cfViewCommands.execSaveTarget(new cfView.CFTargetTI({label: 'my (no targets)', isCurrent: false, isDirty: true}));
+            await cfViewCommands.execSaveTarget(new cfView.CFTargetTI({ label: 'my (no targets)', isCurrent: false, isDirty: true }));
         });
     });
 
@@ -652,7 +662,7 @@ describe("cfViewCommands tests", () => {
             commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves(services);
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.binding_service_to_file, cancellable: false }).resolves();
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_bound_successful(services[1].label)).never();
-            assert.deepEqual(await cfViewCommands.bindLocalService(service, { path: envPath, ignore: true }, {silent: true}), [services[1].label]);
+            assert.deepEqual(await cfViewCommands.bindLocalService(service, { path: envPath, ignore: true }, { silent: true }), [services[1].label]);
         });
 
         it("ok:: serviceInfo is not array, service selected", async () => {

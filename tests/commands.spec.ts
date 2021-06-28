@@ -8,7 +8,7 @@ import { mockVscode } from "./ext/mockUtil";
 mockVscode(nsVsMock.testVscode, "src/commands.ts");
 import * as commands from "../src/commands";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
-import { ServiceTypeInfo, ServiceInstanceInfo, Cli, CliResult, CF_PAGE_SIZE, OK } from "@sap/cf-tools";
+import { ServiceTypeInfo, ServiceInstanceInfo, Cli, CF_PAGE_SIZE, OK } from "@sap/cf-tools";
 import { messages } from "../src/messages";
 import * as cfLocalUtils from "@sap/cf-tools/out/src/utils";
 import * as cfView from "../src/cfView";
@@ -42,6 +42,7 @@ describe("commands unit tests", () => {
 
     beforeEach(() => {
         loginSpy = null;
+        sandbox.restore();
         vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
         vscodeCommandsMock = sandbox.mock(nsVsMock.testVscode.commands);
         cfViewMock = sandbox.mock(cfView.CFView);
@@ -67,6 +68,10 @@ describe("commands unit tests", () => {
 
     describe("cmdLogin", () => {
 
+        const target = new cfView.CFTargetTI({ label: 'target', isCurrent: true, isDirty: false });
+        const parent = new cfView.CFFolder('parent', target);
+        const node = new cfView.CFLoginNode(parent);
+
         it("ok:: cf endpoint is not entered", async () => {
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_cf_endpoint, value: testCFDefaultLandscape, ignoreFocusOut: true }).resolves();
             await commands.cmdLogin();
@@ -78,6 +83,49 @@ describe("commands unit tests", () => {
             cfLocalUtilsMock.expects("cfGetConfigFileField").withExactArgs("Target").resolves(ap);
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_cf_endpoint, value: ap, ignoreFocusOut: true }).resolves();
             await commands.cmdLogin();
+        });
+
+        it("ok:: triggered from targets tree", async () => {
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_user_email, ignoreFocusOut: true }).resolves();
+            const json = {
+                'Target': 'my-endPoint',
+                'SpaceFields': {
+                    'Name': 'space'
+                },
+                'OrganizationFields': {
+                    'Name': 'org'
+                }
+            };
+            cfLocalUtilsMock.expects("cfGetConfigFileJson").resolves(json);
+            await commands.cmdLogin(node as any);
+        });
+
+        it("ok:: triggered from targets tree, config file not recognized", async () => {
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_cf_endpoint, value: testCFDefaultLandscape, ignoreFocusOut: true }).resolves();
+            cfLocalUtilsMock.expects("cfGetConfigFileJson").resolves();
+            await commands.cmdLogin(node as any);
+        });
+
+        it("ok:: triggered from targets tree, setting target required, login asks nothing", async () => {
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity }).resolves();
+            const json = {
+                'Target': 'my-endPoint',
+                'SpaceFields': {
+                    'Name': 'space'
+                },
+                'OrganizationFields': {
+                    'Name': 'org'
+                }
+            };
+            cfLocalUtilsMock.expects("cfGetConfigFileJson").resolves(json);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_user_email, ignoreFocusOut: true }).resolves(testUserEmail);
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.label_enter_password, password: true, ignoreFocusOut: true }).resolves(testUserPassword);
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.loggin_in }).resolves(OK);
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.login_success).resolves();
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.set_org_space }).resolves();
+            vscodeWindowMock.expects("showInformationMessage").withArgs(messages.success_set_org_space).resolves();
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves({});
+            await commands.cmdLogin(node as any, true);
         });
     });
 
@@ -115,6 +163,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.loggin_in }).resolves(OK);
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.login_success).resolves();
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).resolves([]);
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves({ user: "bag023" });
             vscodeWindowMock.expects("showWarningMessage").withArgs(messages.no_available_orgs).resolves();
             await commands.cmdLogin(true);
         });
@@ -141,24 +190,21 @@ describe("commands unit tests", () => {
         it("ok:: logged in, but no available orgs found", async () => {
             vscodeWindowMock.restore();
             vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
-            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity }).resolves({ user: "bag023" });
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity}).resolves({ user: "bag023" });
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false}).resolves({ user: "bag023" });
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).resolves([]);
             vscodeWindowMock.expects("showWarningMessage").withArgs(messages.no_available_orgs).resolves();
             await commands.cmdLogin(true);
         });
 
         it("ok:: verifying cf connectivity - exception thrown", async () => {
-            vscodeWindowMock.restore();
-            vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
             const error = new Error('my error');
-            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity }).rejects(error);
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).rejects(error);
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_cf_endpoint, value: testCFDefaultLandscape, ignoreFocusOut: true }).resolves(testCFDefaultLandscape);
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_user_email, ignoreFocusOut: true }).resolves(testUserEmail);
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.label_enter_password, password: true, ignoreFocusOut: true }).resolves(testUserPassword);
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.loggin_in }).resolves(OK);
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.login_success).resolves();
-            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).resolves([]);
-            vscodeWindowMock.expects("showWarningMessage").withArgs(messages.no_available_orgs).resolves();
             await commands.cmdLogin(true);
         });
 
@@ -166,14 +212,10 @@ describe("commands unit tests", () => {
 
     describe("cmdCFSetOrgSpace", () => {
 
-        afterEach(() => {
-            sandbox.restore();
-        });
-
-        it("fail:: cf connectivity canceled", async () => {
+        it("fail:: cf connectivity canceled, endPoind defined", async () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves();
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).never();
-            await commands.cmdCFSetOrgSpace();
+            await commands.cmdCFSetOrgSpace({ endPoint: 'https://my.endpoint.com' });
         });
 
         it("fail:: there are no available orgs", async () => {
@@ -210,20 +252,12 @@ describe("commands unit tests", () => {
             expect(await commands.cmdCFSetOrgSpace()).to.be.undefined;
         });
 
-        it("fail:: weak=false, exception thrown through getting available orgs", async () => {
+        it("fail:: exception thrown through getting available orgs", async () => {
             const error = new Error('some');
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves({ data: {} });
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).throws(error);
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message).resolves();
             await commands.cmdCFSetOrgSpace();
-        });
-
-        it("fail:: weak=true, exception thrown through getting available orgs", async () => {
-            const error = new Error('some');
-            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).never();
-            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).throws(error);
-            vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message).resolves();
-            await commands.cmdCFSetOrgSpace(true);
         });
 
         it("ok:: org is selected, space is selected", async () => {
@@ -235,6 +269,53 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.success_set_org_space).resolves();
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.set_org_space }).resolves();
             await commands.cmdCFSetOrgSpace();
+        });
+
+        it("fail:: login retried, exception thrown through getting available orgs", async () => {
+            const endPoint = 'test';
+            const error = new Error('some');
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).throws(new Error('re-authenticate'));
+            // cmdLogin
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_user_email, ignoreFocusOut: true }).resolves('user-mail');
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.label_enter_password, password: true, ignoreFocusOut: true }).resolves('psd');
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.loggin_in }).resolves(OK);
+            //
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves({ data: {} });
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).throws(error);
+            vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message).resolves();
+            await commands.cmdCFSetOrgSpace({ endPoint });
+        });
+
+        it("fail:: login retried, canceled", async () => {
+            const endPoint = 'test';
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).throws(new Error('re-authenticate'));
+            // cmdLogin
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_user_email, ignoreFocusOut: true }).resolves('user-mail');
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.label_enter_password, password: true, ignoreFocusOut: true }).resolves(undefined);
+            //
+            await commands.cmdCFSetOrgSpace({ endPoint });
+        });
+
+        it("fail:: login retried unsuccessful, exception thrown through getting available orgs", async () => {
+            const endPoint = 'test';
+            const error = new Error('some');
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).throws(new Error('re-authenticate'));
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves({ user: "bag023" });
+            // cmdLogin
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_user_email, ignoreFocusOut: true }).resolves('user-mail');
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.label_enter_password, password: true, ignoreFocusOut: true }).resolves('psd');
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.loggin_in }).resolves();
+            //
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).throws(error);
+            vscodeWindowMock.expects("showErrorMessage").twice().resolves();
+            await commands.cmdCFSetOrgSpace({ endPoint });
+        });
+
+        it("ok:: endPoint, org, space are provided", async () => {
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves({ data: {} });
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.success_set_org_space).resolves();
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.set_org_space }).resolves();
+            await commands.cmdCFSetOrgSpace({ endPoint: 'test', org: 'org', space: 'space' });
         });
     });
 
@@ -287,45 +368,6 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("showInformationMessage").never();
             vscodeWindowMock.expects("showWarningMessage").withExactArgs(messages.no_available_orgs);
             expect(await commands.cmdSelectSpace()).to.be.undefined;
-        });
-    });
-
-    describe("cmdCreateTarget", () => {
-        const targetName = "targetName";
-        const cliResult: CliResult = {
-            stdout: "some text",
-            stderr: "",
-            exitCode: 1
-        };
-        const testArgs = ["save-target", "-f", targetName];
-
-        it("fail:: targetName not specified", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target, ignoreFocusOut: true }).resolves();
-            cliMock.expects("execute").never();
-            await commands.cmdCreateTarget();
-        });
-
-        it("fail:: targetName is selected, operation exitCode is 1, error shown", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target, ignoreFocusOut: true }).resolves(targetName);
-            cliMock.expects("execute").withExactArgs(testArgs).resolves(cliResult);
-            vscodeWindowMock.expects("showErrorMessage").withExactArgs(cliResult.stdout).resolves();
-            try {
-                await commands.cmdCreateTarget();
-                fail("test should fail");
-            } catch (error) {
-                expect(error.message).to.be.equal(cliResult.stdout);
-            }
-        });
-
-        it("ok:: targetName is selected, operation exitCode is 0", async () => {
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ placeHolder: messages.name_for_target, ignoreFocusOut: true }).resolves(targetName);
-            cliResult.exitCode = 0;
-            cliMock.expects("execute").withExactArgs(testArgs).resolves(cliResult);
-            cfViewMock.expects("get").returns({
-                refresh: () => { return; }
-            });
-            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.target_created(targetName)).resolves();
-            await commands.cmdCreateTarget();
         });
     });
 
@@ -1172,13 +1214,4 @@ describe("commands unit tests", () => {
             expect(await commands.cmdCreateUps()).to.be.equal(undefined);
         });
     });
-
-    describe("verifyLoginRetry", () => {
-
-        it("fail:: canceled", async () => {
-            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).rejects(undefined);
-            expect(await commands.verifyLoginRetry()).to.be.undefined;
-        });
-    });
-
 });

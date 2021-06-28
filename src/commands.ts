@@ -2,19 +2,21 @@ import * as vscode from "vscode";
 import {
     ServiceInfo, PlanInfo, ServiceInstanceInfo, cfLogin, cfGetAvailableOrgs, cfGetAvailableSpaces, cfSetOrgSpace, CF_PAGE_SIZE, IServiceQuery,
     Cli, CliResult, cfGetServices, cfCreateService, cfGetServicePlansList, ServiceTypeInfo, cfGetTarget, ITarget, cfCreateUpsInstance,
-    cfGetServiceInstances, eFilters, eServiceTypes, cfGetConfigFileField
+    cfGetServiceInstances, eFilters, eServiceTypes, cfGetConfigFileField, cfGetConfigFileJson, cfApi
 } from "@sap/cf-tools";
 import { messages } from "./messages";
 import { cmdReloadTargets } from "./cfViewCommands";
 import * as _ from "lodash";
 import {
     validateParams, generateParams4Service, getAllServiceInstances, DisplayServices, isRegexExpression,
-    toText, UpsServiceQueryOprions, getUpsServiceInstances, resolveFilterValue, notifyWhenServicesInfoResultIncomplete
+    toText, UpsServiceQueryOprions, getUpsServiceInstances, resolveFilterValue, notifyWhenServicesInfoResultIncomplete, examCFTarget
 } from "./utils";
 import { stringify, parse } from "comment-json";
 import { getModuleLogger } from "./logger/logger-wrapper";
+import { CFLoginNode, getTargetRoot } from "./cfView";
 
 const OK = "OK";
+const Cancel = "Cancel";
 const MORE_RESULTS = "More results...";
 export const CMD_CREATE_SERVICE = "+ Create a new service instance";
 const LOGGER_MODULE = "commands";
@@ -67,7 +69,7 @@ async function setCfTarget(message: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function runWithProgressAndLoginRetry(isCancelable: boolean, titleMessage: string, longFunction: () => Promise<any>, args?: any): Promise<any[]> {
+async function runBaseWithProgressAndLoginRetry(isCancelable: boolean, titleMessage: string, longFunction: () => Promise<any>, onError: (error: Error) => Promise<any>, args?: any, errArgs?: any): Promise<any[]> {
     while (true) { // eslint-disable-line no-constant-condition
         try {
             return await vscode.window.withProgress({
@@ -77,43 +79,88 @@ async function runWithProgressAndLoginRetry(isCancelable: boolean, titleMessage:
                 // eslint-disable-next-line prefer-spread
             }, (progress, token) => longFunction.apply(null, _.isArray(args) ? _.concat(args, token) : [args, token]));
         } catch (error) {
-            const errorMessage: string = _.get(error, "message", _.toString(error));
-            if (errorMessage.includes(messages.cf_setting_not_set) || errorMessage.includes("login") || errorMessage.includes("re-authenticate")) {
-                await setCfTarget(errorMessage);
-            } else {
-                return Promise.reject(error);
-            }
+            // eslint-disable-next-line prefer-spread
+            await onError.apply(null, _.concat([error], errArgs||[]));
         }
     }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function onErrorSetCfTarget(error: Error): Promise<any> {
+    const errorText = toText(error);
+    if (errorText.includes(messages.cf_setting_not_set) || errorText.includes("login") || errorText.includes("re-authenticate")) {
+        await setCfTarget(errorText);
+    } else {
+        return Promise.reject(error);
+    }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function runWithProgressAndLoginRetry(isCancelable: boolean, titleMessage: string, longFunction: () => Promise<any>, args?: any): Promise<any[]> {
+    return runBaseWithProgressAndLoginRetry(isCancelable, titleMessage, longFunction, onErrorSetCfTarget, args);
 }
 
 export async function verifyLoginRetry(options?: { weak?: boolean }): Promise<unknown | undefined> {
     let result: unknown;
     try {
-        result = await runWithProgressAndLoginRetry(false, messages.verify_cf_connectivity, async () => {
-            const target = await cfGetTarget();
-            return options?.weak
-                ? target
-                : (_.get(target, 'user') && _.get(target, 'org') && _.get(target, 'space') ? target : Promise.reject(new Error(messages.cf_setting_not_set)));
-        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        result = await runWithProgressAndLoginRetry(
+            false,
+            messages.verify_cf_connectivity,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            examCFTarget as () => Promise<any>,
+            [messages.cf_setting_not_set, ['user', 'org', 'space'], options?.weak]
+        );
     } catch (e) {
         getModuleLogger(LOGGER_MODULE).error("verifyLoginRetry failed", { exception: toText(e) }, { options: options });
     }
     return result;
 }
 
-export async function cmdCFSetOrgSpace(weak = false): Promise<string | undefined> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function onErrorCfLogin(error: Error, endPoint?: string): Promise<any> {
+    const errorText = toText(error);
+    if (errorText.includes("login") || errorText.includes("re-authenticate")) {
+        const result = await cmdLogin(false, false, endPoint);
+        if (_.isUndefined(result)) {
+            return Promise.reject(''); // canceled
+        }
+    } else {
+        return Promise.reject(error);
+    }
+}
+
+async function verifyLoginRetryPartial(opts?: { endPoint?: string }): Promise<unknown | undefined> {
+    let result: unknown;
+    try {
+        result = await runBaseWithProgressAndLoginRetry(
+            false,
+            messages.verify_cf_connectivity,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            examCFTarget as () => Promise<any>,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onErrorCfLogin as () => Promise<any>,
+            [messages.login, ['user'], false],
+            opts?.endPoint ? [opts.endPoint] : [] 
+        );
+    } catch (e) {
+        getModuleLogger(LOGGER_MODULE).error("verifyLoginRetryPartial failed", { exception: toText(e) });
+    }
+    return result;
+}
+
+export async function cmdCFSetOrgSpace(opts?: { endPoint?: string, org?: string, space?: string }): Promise<string | undefined> {
     try {
         let result = '';
-        if (weak || await verifyLoginRetry({ weak: true })) {
+        if (await verifyLoginRetryPartial(opts)) {
             let warningMessage;
-            const orgs = await invokeLongFunctionWithProgress(cfGetAvailableOrgs.bind(undefined), messages.getting_orgs);
+            const orgs = opts?.org ? [{ label: opts.org }] : await invokeLongFunctionWithProgress(cfGetAvailableOrgs.bind(undefined), messages.getting_orgs);
             if (_.size(orgs)) {
-                const org = await vscode.window.showQuickPick(orgs, { placeHolder: messages.select_org, canPickMany: false, matchOnDetail: true, ignoreFocusOut: true });
+                const org = opts?.org ? { label: opts.org } : await vscode.window.showQuickPick(orgs, { placeHolder: messages.select_org, canPickMany: false, matchOnDetail: true, ignoreFocusOut: true });
                 if (org) {
-                    const spaces = await invokeLongFunctionWithProgress(cfGetAvailableSpaces.bind(undefined, _.get(org, "guid")), messages.getting_spaces);
+                    const spaces = opts?.space ? [{ label: opts.space }] : await invokeLongFunctionWithProgress(cfGetAvailableSpaces.bind(undefined, _.get(org, "guid")), messages.getting_spaces);
                     if (_.size(spaces)) {
-                        const space = await vscode.window.showQuickPick(spaces, {
+                        const space = opts?.space ? { label: opts.space } : await vscode.window.showQuickPick(spaces, {
                             placeHolder: messages.select_space,
                             canPickMany: false,
                             matchOnDetail: true,
@@ -122,23 +169,23 @@ export async function cmdCFSetOrgSpace(weak = false): Promise<string | undefined
                         if (space) {
                             await invokeLongFunctionWithProgress(cfSetOrgSpace.bind(undefined, _.get(org, "label"), _.get(space, "label")), messages.set_org_space);
                             void vscode.window.showInformationMessage(messages.success_set_org_space);
-                            getModuleLogger(LOGGER_MODULE).debug("cmdCFSetOrgSpace: Organization <%s> and space <%s> have been set", _.get(org, "label"), _.get(space, "label"), { weak: weak });
+                            getModuleLogger(LOGGER_MODULE).debug("cmdCFSetOrgSpace: Organization <%s> and space <%s> have been set", _.get(org, "label"), _.get(space, "label"));
                             return OK;
                         } else {
-                            result = space; // undefined -> canceled        
+                            result = undefined; // undefined -> canceled        
                         }
                     } else {
                         result = undefined; // forced exit
                         warningMessage = messages.no_available_spaces;
-                        getModuleLogger(LOGGER_MODULE).warn("cmdCFSetOrgSpace: No available spaces found in <%s> organization", _.get(org, "label"), { weak: weak });
+                        getModuleLogger(LOGGER_MODULE).warn("cmdCFSetOrgSpace: No available spaces found in <%s> organization", _.get(org, "label"));
                     }
                 } else {
-                    result = org; // undefined -> canceled
+                    result = undefined; // undefined -> canceled
                 }
             } else {
                 result = undefined; // forced exit
                 warningMessage = messages.no_available_orgs;
-                getModuleLogger(LOGGER_MODULE).warn("cmdCFSetOrgSpace: No available organization found", { weak: weak });
+                getModuleLogger(LOGGER_MODULE).warn("cmdCFSetOrgSpace: No available organization found");
             }
             if (warningMessage) {
                 void vscode.window.showWarningMessage(warningMessage);
@@ -147,7 +194,7 @@ export async function cmdCFSetOrgSpace(weak = false): Promise<string | undefined
         return result;
     } catch (e) {
         void vscode.window.showErrorMessage(toText(e));
-        getModuleLogger(LOGGER_MODULE).error("cmdCFSetOrgSpace failed", { weak: weak }, { exception: toText(e) });
+        getModuleLogger(LOGGER_MODULE).error("cmdCFSetOrgSpace failed", { exception: toText(e) });
         return '';
     }
 }
@@ -158,9 +205,11 @@ function pickCfTargetWithProgress(): Thenable<ITarget | undefined> {
     }, () => cfGetTarget()).then((t) => t, () => undefined);
 }
 
-async function executeLogin(): Promise<string | undefined> {
+async function executeLogin(cfEndpoint?: string): Promise<string | undefined> {
     let result = '';
-    const cfEndpoint = await vscode.window.showInputBox({ prompt: messages.enter_cf_endpoint, value: await getCFDefaultLandscape(), ignoreFocusOut: true });
+    if (!cfEndpoint) {
+        cfEndpoint = await vscode.window.showInputBox({ prompt: messages.enter_cf_endpoint, value: await getCFDefaultLandscape(), ignoreFocusOut: true });
+    }
     if (cfEndpoint) {
         const userEmailName = await vscode.window.showInputBox({ prompt: messages.enter_user_email, ignoreFocusOut: true });
         if (userEmailName) {
@@ -184,14 +233,33 @@ async function executeLogin(): Promise<string | undefined> {
     return result;
 }
 
-export async function cmdLogin(weak = false, target = true): Promise<string | undefined> {
+export async function cmdLogin(weak = false, target = true, extEndPoint?: string): Promise<string | undefined> {
     try {
+        let endPoint = extEndPoint;
+        let space;
+        let org;
         let result = weak ? (_.get(await pickCfTargetWithProgress(), "user") ? OK : undefined) : undefined;
         if (!result) {
-            result = await executeLogin();
+            const node = weak as unknown;
+            if (node instanceof CFLoginNode) {
+                // attempt to login from targets tree
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                const configJson = await cfGetConfigFileJson(_.get(getTargetRoot(node), ['target', 'label']));
+                if (configJson) {
+                    endPoint = _.get(configJson, 'Target');
+                    space = _.get(configJson, ['SpaceFields', 'Name']);
+                    org = _.get(configJson, ['OrganizationFields', 'Name']);
+                }
+            }
+            result = await executeLogin(endPoint);
         }
         if (target && OK === result) {
-            result = await cmdCFSetOrgSpace(true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let options: any;
+            if (space || org || endPoint) {
+                options = { org, space, endPoint };
+            }
+            result = await cmdCFSetOrgSpace(options);
         }
         return result;
     } catch (e) {
@@ -239,13 +307,11 @@ export async function cmdSelectSpace(): Promise<string | undefined> {
     }
 }
 
-export async function cmdCreateTarget(): Promise<string | undefined> {
-    // first ask for service-name
-    const targetName = await vscode.window.showInputBox({ placeHolder: messages.name_for_target, ignoreFocusOut: true });
+async function cmdCreateTarget(): Promise<string | undefined> {
+    const targetName = await vscode.window.showInputBox({ prompt: messages.name_for_target, ignoreFocusOut: true });
     if (targetName) {
         const cliResult: CliResult = await Cli.execute(["save-target", "-f", targetName]);
         if (cliResult.exitCode !== 0) {
-            void vscode.window.showErrorMessage(cliResult.stdout);
             getModuleLogger(LOGGER_MODULE).error("cmdCreateTarget : command 'save-target -f <%s>' failed", targetName, { output: cliResult.stdout });
             return Promise.reject(new Error(cliResult.stdout));
         }
@@ -485,5 +551,47 @@ export async function updateInstanceNameAndTags(availableServices: ServiceInstan
 export function updateServicesOnCFPageSize(availableServices: ServiceInstanceInfo[]): void {
     if (_.size(availableServices) === CF_PAGE_SIZE) {
         availableServices.push({ label: MORE_RESULTS, serviceName: "more:2", alwaysShow: true });
+    }
+}
+
+export async function cmdSelectAndSaveTarget(): Promise<string | undefined> {
+    try {
+        let label;
+        if (await verifyLoginRetryPartial()) {
+            const target = await cfGetTarget(true);
+            const affairs = [
+                { id: 'save', label: messages.set_targets_save(target.org || 'undefined', target.space || 'undefined'), detail: messages.set_targets_save_details },
+                { id: 'pick-save', label: messages.set_targets_pick_save, detail: messages.set_targets_pick_save_details },
+            ];
+            let result;
+            const action = await vscode.window.showQuickPick(affairs, { placeHolder: messages.set_targets_choose_the_operation, canPickMany: false, matchOnDetail: true });
+            if (action?.id === 'pick-save') {
+                const cfEndpoint = await vscode.window.showInputBox({
+                    prompt: messages.enter_cf_endpoint,
+                    value: target["api endpoint"],
+                    ignoreFocusOut: true
+                });
+                if (cfEndpoint) {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                    target["api endpoint"] != cfEndpoint && await cfApi({ url: cfEndpoint });
+                    result = await cmdCFSetOrgSpace({ endPoint: cfEndpoint });
+                }
+            } else if (action?.id === 'save') {
+                if (!target.org || !target.space) {
+                    if (OK === await vscode.window.showWarningMessage(messages.target_setup_not_completed(target.org, target.space), OK, Cancel)) {
+                        result = OK;
+                    }
+                } else {
+                    result = OK;
+                }
+            }
+            if (OK === result) {
+                label = await cmdCreateTarget();
+            }
+        }
+        return label;
+    } catch (e) {
+        void vscode.window.showErrorMessage(toText(e));
+        getModuleLogger(LOGGER_MODULE).error(`cmdSelectAndSaveTarget exception thrown`, { error: toText(e) });
     }
 }

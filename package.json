@@ -1,7 +1,7 @@
 {
 	"name": "vscode-wing-cf-tools",
 	"displayName": "Cloud Foundry Tools",
-	"version": "6.3.1",
+	"version": "6.4.0",
 	"description": "Vscode extension of Cloud Foundry tools",
 	"categories": [
 		"Other"
@@ -62,7 +62,7 @@
 			{
 				"command": "cf.targets.create",
 				"category": "CF",
-				"title": "Create a Cloud Foundry Target",
+				"title": "Create a Cloud Foundry target",
 				"icon": {
 					"light": "resources/light/add.svg",
 					"dark": "resources/dark/add.svg"
@@ -322,7 +322,7 @@
 		}
 	},
 	"dependencies": {
-		"@sap/cf-tools": "^1.2.0",
+		"@sap/cf-tools": "^2.0.0",
 		"@sap/swa-for-sapbas-vsx": "1.2.15",
 		"@sap/wing-run-config-types": "4.2.0",
 		"@vscode-logging/wrapper": "1.0.1",
@@ -368,6 +368,7 @@
 		"webpack-cli": "^4.2.0"
 	},
 	"engines": {
+		"node": ">=14.0.0",
 		"vscode": "^1.43.0"
 	},
 	"icon": "resources/icon.png"
