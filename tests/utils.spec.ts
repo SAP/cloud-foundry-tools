@@ -2,7 +2,7 @@
 import { expect, assert } from "chai";
 import * as sinon from "sinon";
 import * as path from 'path';
-import * as fs from 'fs/promises';
+import * as fs from 'fs';
 import * as fsSync from 'fs';
 import _ = require("lodash");
 import { stringify } from "comment-json";
@@ -28,7 +28,7 @@ describe('utils unit tests', () => {
 
     beforeEach(() => {
         vscodeWorkspaceMock = sandbox.mock(nsVsMock.testVscode.workspace);
-        fsMock = sandbox.mock(fs);
+        fsMock = sandbox.mock(fs.promises);
     });
 
     afterEach(() => {

@@ -3,7 +3,7 @@ import { join } from "path";
 import * as tmpTestDir from "temp-dir";
 import * as rimraf from "rimraf";
 import * as PropertiesReader from "properties-reader";
-import { writeFile } from "fs/promises";
+import * as fs from "fs";
 import * as sinon from "sinon";
 
 import * as nsVsMock from "./ext/mockVscode";
@@ -82,7 +82,7 @@ describe("chisel unit tests", () => {
                 'CHISEL_PASSWORD= chisel-password\n' +
                 'VCAP_SERVICES= VCAP_SERVICES_VALUE';
 
-            await writeFile(envFilePath, text);
+            await fs.promises.writeFile(envFilePath, text);
             expect(await checkAndCreateChiselTask(envFilePath, serviceName)).deep.equal(expectedChiselTask);
         });
     });
@@ -107,7 +107,7 @@ describe("chisel unit tests", () => {
                 'CHISEL_PASSWORD= chisel-password\n' +
                 'VCAP_SERVICES=' + VCAP_SERVICE_WITH_ALL_CHARS + '\n' +
                 'EMPTY_VALUE=';
-            await writeFile(envFilePath, text);
+            await fs.promises.writeFile(envFilePath, text);
             expect(await deleteChiselParamsFromFile(envFilePath)).to.be.true;
             const actualProperties = PropertiesReader(envFilePath);
             expect(actualProperties.getAllProperties()).deep.equal(expectedProperties);
