@@ -39,7 +39,9 @@ This VSCode extension provides tools for easy application development with Cloud
 ### How to run locally
 * clone the repo
 * open it in a vscode
-* run the launch config 'Run Extension'
+* run the launch config 'CF Run'
+    ![image](media/run-ext.png)
+
 * see available commands via `Command palette` (with prefix `CF`)
 
 [back to top](#table-of-contents)
