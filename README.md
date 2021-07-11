@@ -40,6 +40,8 @@ This VSCode extension provides tools for easy application development with Cloud
 * clone the repo
 * open it in a vscode
 * run the launch config 'Run Extension'
+    ![image](https://user-images.githubusercontent.com/33512452/125191517-8d8a2e80-e24b-11eb-97b5-526570bbcce0.png)
+
 * see available commands via `Command palette` (with prefix `CF`)
 
 [back to top](#table-of-contents)
