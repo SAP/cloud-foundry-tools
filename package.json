@@ -345,7 +345,7 @@
 		"@types/sinon": "^10.0.0",
 		"@types/vscode": "^1.43.0",
 		"@typescript-eslint/eslint-plugin": "^4.22.0",
-		"@typescript-eslint/parser": "^4.22.0",
+		"@typescript-eslint/parser": "^4.28.4",
 		"@vscode-logging/types": "0.1.4",
 		"chai": "^4.2.0",
 		"clean-webpack-plugin": "^3.0.0",
