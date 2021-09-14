@@ -3,7 +3,7 @@ version: 2.1 # use CircleCI 2.1
 jobs: # a collection of steps
   compliance:
     docker:
-      - image: circleci/python:3.6.4
+      - image: cimg/python:3.8.1
     working_directory: ~/workdir
     steps:
       - checkout
@@ -15,7 +15,7 @@ jobs: # a collection of steps
 
   build-and-test:
     docker:
-      - image: circleci/node:14
+      - image: cimg/node:14.17
     working_directory: ~/repo
     steps:
       - checkout
@@ -55,7 +55,7 @@ jobs: # a collection of steps
   
   deploy:
     docker:
-      - image: circleci/golang:1.13
+      - image: cimg/golang:1.13
     steps:
       - attach_workspace:
           at: ./dest
