@@ -29,8 +29,8 @@ async function updateStatusBar(): Promise<boolean | undefined> {
 	let isUpdated;
 	const beforeText = _.get(cfStatusBarItem, 'text');
 	const results = await Promise.all([cfGetConfigFileField("OrganizationFields"), cfGetConfigFileField("SpaceFields")]);
-	const orgField = _.get(results, "[0].Name");
-	const spaceField = _.get(results, "[1].Name");
+	const orgField: string = _.get(results, "[0].Name");
+	const spaceField: string = _.get(results, "[1].Name");
 	const isNoTarget = _.isEmpty(orgField) && _.isEmpty(spaceField);
 	const updatedText = `${isNoTarget ? messages.not_targeted : messages.targeting(orgField, spaceField)}`;
 
@@ -78,6 +78,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<unknow
 
 	const loginCmdId = "cf.login";
 	context.subscriptions.push(vscode.commands.registerCommand(loginCmdId, (weak, target) => {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		return cmdLogin(weak, target).then((result) => {
 			if (OK === result) {
 				const active = _.find(treeDataProvider.getTargets(), 'target.isCurrent');
@@ -99,6 +100,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<unknow
 	// !!!! does not work on theia 1.5.0
 	// cfStatusBarItem.command = {command: loginCmdId, arguments: [true], title: ""};
 	// start workarround  --> remove following workarround in future theia releases
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 	context.subscriptions.push(vscode.commands.registerCommand("cf.login.weak", cmdLogin.bind(null, true)));
 	cfStatusBarItem.command = "cf.login.weak";
 	// end workarround
@@ -150,6 +152,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<unknow
 				await platformExtension.activate();
 			} catch (e) {
 				platformExtension = undefined;
+				/* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
 				getModuleLogger(LOGGER_MODULE).error("activate <%s> extension fails", runConfigExtName, { exception: toText(e) });
 			}
 		}

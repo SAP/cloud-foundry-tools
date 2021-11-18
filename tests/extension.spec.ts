@@ -102,6 +102,7 @@ describe('extension unit test', () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             fsMock.expects("watchFile").never();
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await extension.activate(testContext);
             windowMock.verify();
         });
@@ -110,6 +111,7 @@ describe('extension unit test', () => {
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(undefined);
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
             fsMock.expects("watchFile").withArgs("testCFConfigFilePath");
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await extension.activate(testContext);
         });
 
@@ -127,6 +129,7 @@ describe('extension unit test', () => {
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             mockExt.expects("activate").resolves();
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(extRun);
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await extension.activate(testContext);
             mockExt.verify();
         });
@@ -145,6 +148,7 @@ describe('extension unit test', () => {
             mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
             mockExt.expects("activate").rejects(new Error("my error"));
             extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(extRun);
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await extension.activate(testContext);
             mockExt.verify();
         });
@@ -170,6 +174,7 @@ describe('extension unit test', () => {
                     registerDependency: () => ""
                 }
             });
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await extension.activate(testContext);
         });
 
@@ -310,6 +315,7 @@ describe('extension unit test', () => {
         });
 
         it("ok:: verify callback trigger, target updated", async () => {
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await extension.activate(testContext);
             mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
             mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName2" });
@@ -321,6 +327,7 @@ describe('extension unit test', () => {
         });
 
         it("ok:: nothing updated", async () => {
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await extension.activate(testContext);
 
             setTimeout(() => {
@@ -339,6 +346,7 @@ describe('extension unit test', () => {
         });
 
         it("ok:: not targeted", async () => {
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await extension.activate(testContext);
 
             setTimeout(() => {
@@ -353,6 +361,7 @@ describe('extension unit test', () => {
         it("ok:: not logged in", async () => {
             mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "testName1" });
             mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName3" });
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await extension.activate(testContext);
 
             setTimeout(() => {
@@ -432,7 +441,7 @@ describe('extension unit test', () => {
             for (const menu of menus) {
                 expect(['cf.login.weak', 'cf.target.delete', 'cf.targets.create', 'cf.deploy-service.api', 'cf.target.set', 'cf.services.unbind', 'cf.services.bind',
                     'cf.services.binding.state', 'cf.services.get-space-services', 'cf.services.get-ups-services', 'cf.services.get-services']
-                    .includes(menu.command)).to.be.true;
+                    .includes(menu.command as string)).to.be.true;
                 expect(menu.when).to.be.equal('false');
             }
         });

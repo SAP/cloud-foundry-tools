@@ -25,7 +25,9 @@ export class DependencyHandler implements types.IDependencyHandler {
         bindState = types.BindState.cloud;
       }
     } catch (e) {
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       void vscode.window.showErrorMessage(toText(e));
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       getModuleLogger(DependencyHandler.MODULE_NAME).error("getBindState: processing failed", { exception: toText(e) });
     }
     return bindState;
@@ -45,7 +47,7 @@ export class DependencyHandler implements types.IDependencyHandler {
       let chiselTask;
       if (_.size(instanceNames)) {
         // Get metadata of service instance by service name
-        const instanceType = (await cfLocal.cfGetInstanceMetadata(instanceNames[0])).service;
+        const instanceType: string = (await cfLocal.cfGetInstanceMetadata(instanceNames[0])).service;
 
         // Create chisel task if neccessary
         if (_.get(bindContext, "depContext.data.isCreateChiselTask") || /^hana(trial)?$/.test(instanceType)) {
@@ -77,7 +79,9 @@ export class DependencyHandler implements types.IDependencyHandler {
         }, chiselTask ? { resource: { data: { chiselTask } } } : {});
       }
     } catch (e) {
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       void vscode.window.showErrorMessage(toText(e));
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       getModuleLogger(DependencyHandler.MODULE_NAME).error("bind: processing failed", { exception: toText(e) });
     }
   }
@@ -100,7 +104,9 @@ export class DependencyHandler implements types.IDependencyHandler {
         }
       });
     } catch (e) {
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       void vscode.window.showErrorMessage(toText(e));
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       getModuleLogger(DependencyHandler.MODULE_NAME).error("unbind: processing failed", { exception: toText(e) });
     }
   }

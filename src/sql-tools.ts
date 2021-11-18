@@ -24,6 +24,7 @@ export async function checkAndCreateSQLToolsSettings(filePath: string): Promise<
     const envFileContent = await dataContentAsObject(filePath);
     const vcapServicesStr = _.get(envFileContent, "VCAP_SERVICES");
     if (vcapServicesStr) {
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
         const vcapServices = parse(vcapServicesStr);
         const hanaServices = _.get(vcapServices, "hana");
         if (hanaServices) {
@@ -33,6 +34,7 @@ export async function checkAndCreateSQLToolsSettings(filePath: string): Promise<
                     "dialect": "SAPHana",
                     "database": _.get(srv, "credentials.schema"),
                     "server": _.get(srv, "credentials.host"),
+                    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
                     "port": Number.parseInt(_.get(srv, "credentials.port"), 10),
                     "username": _.get(srv, "credentials.user"),
                     "password": _.get(srv, "credentials.password"),
