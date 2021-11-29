@@ -97,12 +97,14 @@ describe("commands unit tests", () => {
                 }
             };
             cfLocalUtilsMock.expects("cfGetConfigFileJson").resolves(json);
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await commands.cmdLogin(node as any);
         });
 
         it("ok:: triggered from targets tree, config file not recognized", async () => {
             vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_cf_endpoint, value: testCFDefaultLandscape, ignoreFocusOut: true }).resolves();
             cfLocalUtilsMock.expects("cfGetConfigFileJson").resolves();
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await commands.cmdLogin(node as any);
         });
 
@@ -125,6 +127,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.set_org_space }).resolves();
             vscodeWindowMock.expects("showInformationMessage").withArgs(messages.success_set_org_space).resolves();
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves({});
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             await commands.cmdLogin(node as any, true);
         });
     });
@@ -374,13 +377,13 @@ describe("commands unit tests", () => {
     describe("updateServicesOnCFPageSize", () => {
 
         it("ok:: size not equal to cf page size", () => {
-            const availableServices: any[] = [];
+            const availableServices: ServiceInstanceInfo[] = [];
             commands.updateServicesOnCFPageSize(availableServices);
             expect(availableServices).to.be.empty;
         });
 
         it("ok:: size equal to cf page size", () => {
-            const availableServices: any[] = new Array(CF_PAGE_SIZE);
+            const availableServices: ServiceInstanceInfo[] = new Array(CF_PAGE_SIZE);
             commands.updateServicesOnCFPageSize(availableServices);
             expect(availableServices).to.have.lengthOf(CF_PAGE_SIZE + 1);
         });

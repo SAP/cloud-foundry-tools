@@ -102,8 +102,10 @@ async function doBind(opts: BindArgs) {
             // eslint-disable-next-line prefer-spread
         }, () => fnc.apply(null, args));
         if (!opts.options?.silent) {
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             void vscode.window.showInformationMessage(messages.service_bound_successful(_.join(args[1], ',')));
         }
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
         getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", `${_.join(args[1], ',')}`);
     }
     const ups = _.filter(opts.instances, ['serviceName', eServiceTypes.user_provided]);
@@ -210,7 +212,9 @@ export async function cmdSetCurrentTarget(newTarget: CFTargetTI | CFTargetNotCur
 
             return execSetTarget(item);
         } catch (e) {
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             void vscode.window.showErrorMessage(toText(e));
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             getModuleLogger(LOGGER_MODULE).error(`cmdSetCurrentTargetCommand with new target ${stringify(newTarget)} exception thrown`, { error: toText(e) });
         }
     }
@@ -365,7 +369,9 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
         }
     } catch (e) {
         if (e) { // login to cf canceled by user
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             void vscode.window.showErrorMessage(toText(e));
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             getModuleLogger(LOGGER_MODULE).error(`cmdBindLocal exception thrown`, { error: toText(e) }, { service: service }, { envPath: filePath }, { instanceName: instanceName });
         }
     }
@@ -412,7 +418,9 @@ export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath:
             }
         }
     } catch (e) {
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
         void vscode.window.showErrorMessage(toText(e));
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
         getModuleLogger(LOGGER_MODULE).error(`bindLocalService exception thrown`, { error: toText(e) }, { serviceInfos: serviceInfos }, { envPath: EnvPathHelper.getPath(envPath) });
     }
 }

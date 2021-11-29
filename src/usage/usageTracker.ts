@@ -10,8 +10,8 @@ let swaTracker: SWATracker;
 function getInstance(): SWATracker {
     if (!swaTracker) {
         swaTracker = new SWATracker(
-            jsonPackage.publisher,
-            jsonPackage.name,
+            jsonPackage.publisher as string,
+            jsonPackage.name as string,
             // callback for error, one such callback for all the errors we receive via all the track methods
             // error can be string (err.message) or number (response.statusCode)
             (error: string | number) => {
@@ -27,6 +27,7 @@ export async function trackChiselTask(eventType: string, custom_events?: string[
         try {
             getInstance().track(eventType, custom_events);
         } catch (e) {
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             getModuleLogger(LOGGER_MODULE).error("trackRun: track failed", { exception: toText(e) });
         }
     });

@@ -40,7 +40,7 @@ describe("cfView tests", () => {
             const item = new cfView.CFTargetTI({ label: 'test', isCurrent: true, isDirty: false });
             expect(item.description).to.be.equal(activePattern);
             expect(item.contextValue).to.be.equal(`${contextPattern}-active`);
-            const parts = _.split(_.get(item, 'iconPath.dark'), path.sep);
+            const parts = _.split(_.get(item, 'iconPath.dark') as string, path.sep);
             expect(_.includes(parts, 'target-a.svg')).to.be.true;
         });
 
@@ -48,7 +48,7 @@ describe("cfView tests", () => {
             const item = new cfView.CFTargetTI({ label: 'test', isCurrent: false, isDirty: true });
             expect(item.description).to.be.equal("*");
             expect(item.contextValue).to.be.equal(`${contextPattern}`);
-            const parts = _.split(_.get(item, 'iconPath.light'), path.sep);
+            const parts = _.split(_.get(item, 'iconPath.light') as string, path.sep);
             expect(_.includes(parts, 'target.svg')).to.be.true;
         });
 
@@ -57,7 +57,7 @@ describe("cfView tests", () => {
             expect(item.description).to.be.equal(`*`);
             expect(item.contextValue).to.be.equal(`${contextPattern}-notargets`);
             expect(item.tooltip).to.be.equal(item.label);
-            const parts = _.split(_.get(item, 'iconPath.dark'), path.sep);
+            const parts = _.split(_.get(item, 'iconPath.dark') as string, path.sep);
             expect(_.includes(parts, 'target-a.svg')).to.be.true;
         });
 
@@ -72,7 +72,7 @@ describe("cfView tests", () => {
             expect(item.contextValue).to.be.equal(`cf-login-required`);
             expect(item.label).to.be.equal(`Login required`);
             expect(item.tooltip).to.be.equal(`Log in to see details`);
-            const parts = _.split(_.get(item, 'iconPath.dark'), path.sep);
+            const parts = _.split(_.get(item, 'iconPath.dark') as string, path.sep);
             expect(_.includes(parts, 'info.svg')).to.be.true;
             expect(item.parent).to.be.equal(parent);
         });
@@ -83,7 +83,7 @@ describe("cfView tests", () => {
             expect(item.contextValue).to.be.equal(`cf-target-not-current`);
             expect(item.label).to.be.equal(`Target needs to be active`);
             expect(item.tooltip).to.be.equal(`Set the '${target}' as the active target to see details.`);
-            const parts = _.split(_.get(item, 'iconPath.light'), path.sep);
+            const parts = _.split(_.get(item, 'iconPath.light') as string, path.sep);
             expect(_.includes(parts, 'info.svg')).to.be.true;
             expect(item.parent).to.be.equal(parent);
         });
@@ -135,6 +135,7 @@ describe("cfView tests", () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const testContext: any = { "subscriptions": [], logUri: { fsPath: path.resolve(__dirname) } };
         beforeEach(() => {
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             instance = new cfView.CFView(testContext, '');
         });
 
@@ -204,7 +205,7 @@ describe("cfView tests", () => {
             ];
             instance.targets = _.map(targets, target => new cfView.CFTargetTI(target));
             const parent = new cfView.CFServicesFolder("Services", instance.targets[0]);
-            const expected = [new cfView.CFTargetNotCurrent(parent, _.get(parent, 'parent.target.label'))];
+            const expected = [new cfView.CFTargetNotCurrent(parent, _.get(parent, 'parent.target.label') as string)];
             expect(await instance.getChildren(parent)).to.deep.equal(expected);
         });
 

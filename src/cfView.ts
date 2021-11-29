@@ -142,12 +142,14 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 				if (/-active$/.test(parent.contextValue)) {
 					try {
 						return parent instanceof CFAppsFolder
+							/* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
 							? _.map(await cfGetApps(), app => new CFApplication(app.name, _.get(app, 'state'), parent))
 							: _.map(await cfGetServiceInstancesList(), service => new CFService(service.label, service.serviceName, parent as CFFolder));
 					} catch (e) {
 						return [new CFLoginNode(parent as CFFolder)];
 					}
 				} else {
+					/* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
 					return [new CFTargetNotCurrent(parent as CFFolder, _.get(parent, 'parent.target.label'))];
 				}
 			}

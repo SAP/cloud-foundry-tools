@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { expect, assert } from "chai";
 import * as sinon from "sinon";
 import * as path from 'path';

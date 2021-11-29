@@ -1,7 +1,7 @@
 {
 	"name": "vscode-wing-cf-tools",
 	"displayName": "Cloud Foundry Tools",
-	"version": "6.4.3",
+	"version": "6.4.4",
 	"description": "Vscode extension of Cloud Foundry tools",
 	"categories": [
 		"Other"
@@ -306,11 +306,6 @@
 	"activationEvents": [
 		"*"
 	],
-	"husky": {
-		"hooks": {
-			"commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-		}
-	},
 	"commitlint": {
 		"extends": [
 			"@commitlint/config-conventional"
@@ -322,7 +317,7 @@
 		}
 	},
 	"dependencies": {
-		"@sap/cf-tools": "^2.0.1",
+		"@sap/cf-tools": "2.0.4",
 		"@sap/swa-for-sapbas-vsx": "1.2.15",
 		"@sap/wing-run-config-types": "4.2.0",
 		"@vscode-logging/wrapper": "1.0.1",
@@ -333,8 +328,8 @@
 		"url": "0.11.0"
 	},
 	"devDependencies": {
-		"@commitlint/cli": "12.1.4",
-		"@commitlint/config-conventional": "12.1.4",
+		"@commitlint/cli": "^15.0.0",
+		"@commitlint/config-conventional": "^15.0.0",
 		"@types/chai": "^4.1.7",
 		"@types/comment-json": "2.4.2",
 		"@types/lodash": "^4.14.161",
@@ -342,24 +337,24 @@
 		"@types/node": "^14.14.6",
 		"@types/properties-reader": "2.1.0",
 		"@types/rimraf": "^3.0.0",
-		"@types/sinon": "^10.0.0",
+		"@types/sinon": "^10.0.6",
 		"@types/vscode": "^1.43.0",
-		"@typescript-eslint/eslint-plugin": "^4.22.0",
-		"@typescript-eslint/parser": "^4.22.0",
+		"@typescript-eslint/eslint-plugin": "^5.4.0",
+		"@typescript-eslint/parser": "^5.4.0",
 		"@vscode-logging/types": "0.1.4",
-		"chai": "^4.2.0",
+		"chai": "^4.3.4",
 		"clean-webpack-plugin": "^3.0.0",
 		"coveralls": "^3.1.0",
 		"cz-conventional-changelog": "3.3.0",
-		"eslint": "^7.24.0",
+		"eslint": "^8.2.0",
 		"eslint-config-prettier": "^8.2.0",
-		"husky": "4.3.8",
+		"husky": "^7.0.4",
 		"mocha": "^8.2.1",
 		"nyc": "^15.1.0",
 		"prettier": "^2.0.5",
 		"rimraf": "^3.0.2",
-		"sinon": "^10.0.0",
-		"temp-dir": "2.0.0",
+		"sinon": "^12.0.1",
+		"temp-dir": "^2.0.0",
 		"ts-loader": "^9.2.3",
 		"ts-node": "^10.0.0",
 		"typescript": "^3.9.7",

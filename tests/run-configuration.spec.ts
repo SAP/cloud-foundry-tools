@@ -147,7 +147,7 @@ describe("run-configuration tests package", () => {
         it("ok:: 'bind' - create chisel task - no depended tasks", async () => {
             const chiselTask = { label: 'chiselLabel', data: { context: "some" } };
             sandbox.stub(chisel, "checkAndCreateChiselTask")
-                .withArgs(_.get(bindContext, "envPath.fsPath"), instances.join('&'))
+                .withArgs(_.get(bindContext, "envPath.fsPath") as string, instances.join('&'))
                 .resolves(chiselTask);
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "ahana" });
@@ -167,7 +167,7 @@ describe("run-configuration tests package", () => {
         it("ok:: 'bind' - create chisel task - no depended tasks, create chisel task is not required explicitly", async () => {
             const chiselTask = { label: 'chiselLabel', data: { context: "some" } };
             sandbox.stub(chisel, "checkAndCreateChiselTask")
-                .withArgs(_.get(bindContext, "envPath.fsPath"), instances.join('&'))
+                .withArgs(_.get(bindContext, "envPath.fsPath") as string, instances.join('&'))
                 .resolves(chiselTask);
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "hanatrial" });
@@ -186,7 +186,7 @@ describe("run-configuration tests package", () => {
         it("ok:: 'bind' - create chisel task - no depended tasks, silent mode required", async () => {
             const chiselTask = { label: 'chiselLabel', data: { context: "some" } };
             sandbox.stub(chisel, "checkAndCreateChiselTask")
-                .withArgs(_.get(bindContext, "envPath.fsPath"), instances.join('&'))
+                .withArgs(_.get(bindContext, "envPath.fsPath") as string, instances.join('&'))
                 .resolves(chiselTask);
             sandbox.stub(cfViewCommands, "bindLocalService").resolves(instances);
             sandbox.stub(cfLocal, "cfGetInstanceMetadata").resolves({ serviceName: "testInstance", service: "resourceType" });
