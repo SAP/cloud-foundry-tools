@@ -20,6 +20,7 @@ const OK = "OK";
 const Cancel = "Cancel";
 const MORE_RESULTS = "More results...";
 export const CMD_CREATE_SERVICE = "+ Create a new service instance";
+export const CMD_BIND_TO_DEFAULT_SERVICE = "Bind to the default service instance: ";
 const LOGGER_MODULE = "commands";
 
 export function isCFResource(obj: unknown): boolean {
@@ -541,6 +542,20 @@ export async function updateInstanceNameAndTags(availableServices: ServiceInstan
         instanceName = await (serviceTypeInfo.name === eServiceTypes.user_provided ?
             cmdCreateUps(serviceTypeInfo) :
             cmdCreateService(serviceTypeInfo));
+    }else if(instanceName === CMD_BIND_TO_DEFAULT_SERVICE + serviceTypeInfo?.allowCreate?.name){
+        let defaultIntanceExisted = false;
+        for(const service of availableServices){
+            if(service.label === serviceTypeInfo?.allowCreate?.name){
+                    defaultIntanceExisted = true;
+                    instanceName = service.label;
+                    break;
+            }
+        }
+        if(!defaultIntanceExisted){
+            instanceName = await (serviceTypeInfo?.name === eServiceTypes.user_provided ?
+                createUpsInstance(serviceTypeInfo?.allowCreate?.name, serviceTypeInfo) : 
+                createServiceInstance(serviceTypeInfo?.allowCreate?.name,serviceTypeInfo));
+        }
     }
     if (_.size(instanceName) > 0) {
         instanceNames.push(instanceName);
