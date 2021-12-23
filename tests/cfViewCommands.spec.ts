@@ -490,7 +490,7 @@ describe("cfViewCommands tests", () => {
         it("ok:: path selected, service is ServiceTypeInfo type, no ups, no services found, creation allowed", async () => {
             const cloneService = _.merge(_.cloneDeep(service[0]), { "allowCreate": { name: "create" } });
             commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves([]);
-            commandsMock.expects("updateInstanceNameAndTags").withExactArgs([{ label: '+ Create a new service instance', serviceName: '' }], cloneService, [], []).resolves(undefined);
+            commandsMock.expects("updateInstanceNameAndTags").withExactArgs([{"label":commands.CMD_BIND_TO_DEFAULT_SERVICE + cloneService.allowCreate.name,plan:cloneService.allowCreate.plan,serviceName: ""},{ label: commands.CMD_CREATE_SERVICE, serviceName: '' }], cloneService, [], []).resolves(undefined);
             expect(await cfViewCommands.cmdBindLocal([cloneService], { path, ignore: true })).to.be.undefined;
         });
 
