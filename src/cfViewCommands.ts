@@ -12,7 +12,7 @@ import {
 import * as _ from "lodash";
 import {
     getAvailableServices, updateServicesOnCFPageSize, isServiceTypeInfoInArray, updateInstanceNameAndTags, getInstanceName, fetchServicePlanList,
-    CMD_CREATE_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances
+    CMD_CREATE_SERVICE, verifyLoginRetry, getUserProvidedServiceInstances, getServiceInstances,CMD_BIND_TO_DEFAULT_SERVICE
 } from "./commands";
 import { stringify } from "comment-json";
 import { checkAndCreateChiselTask, deleteChiselParamsFromFile } from "./chisel";
@@ -288,6 +288,9 @@ async function collectBindDetails(service: CFService | ServiceTypeInfo[], requst
                 for (const serviceTypeInfo of serviceTypeInfos) {
                     if (serviceTypeInfo.allowCreate) {  // add 'create service' menu item
                         availableServices = _.concat([{ "label": CMD_CREATE_SERVICE, serviceName: "" }], availableServices);
+                        if(!_.isEmpty(serviceTypeInfo.allowCreate.name)){// add 'Bind to the default service instance' menu item
+                            availableServices = _.concat([{"label":CMD_BIND_TO_DEFAULT_SERVICE + serviceTypeInfo.allowCreate.name, plan: serviceTypeInfo.allowCreate.plan,serviceName: serviceTypeInfo.allowCreate.serviceName}],availableServices);
+                        }
                     }
                     await updateInstanceNameAndTags(availableServices, serviceTypeInfo, instanceNames, tags);
                 }
