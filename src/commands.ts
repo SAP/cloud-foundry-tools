@@ -82,7 +82,7 @@ async function runBaseWithProgressAndLoginRetry(isCancelable: boolean, titleMess
             }, (progress, token) => longFunction.apply(null, _.isArray(args) ? _.concat(args, token) : [args, token]));
         } catch (error) {
             // eslint-disable-next-line prefer-spread
-            await onError.apply(null, _.concat([error], errArgs||[]));
+            await onError.apply(null, _.concat([error], errArgs || []));
         }
     }
 }
@@ -143,7 +143,7 @@ async function verifyLoginRetryPartial(opts?: { endPoint?: string }): Promise<un
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onErrorCfLogin as () => Promise<any>,
             [messages.login, ['user'], false],
-            opts?.endPoint ? [opts.endPoint] : [] 
+            opts?.endPoint ? [opts.endPoint] : []
         );
     } catch (e) {
         getModuleLogger(LOGGER_MODULE).error("verifyLoginRetryPartial failed", { exception: toText(e) });
@@ -542,19 +542,18 @@ export async function updateInstanceNameAndTags(availableServices: ServiceInstan
         instanceName = await (serviceTypeInfo.name === eServiceTypes.user_provided ?
             cmdCreateUps(serviceTypeInfo) :
             cmdCreateService(serviceTypeInfo));
-    }else if(instanceName === CMD_BIND_TO_DEFAULT_SERVICE + serviceTypeInfo?.allowCreate?.name){
-        let defaultIntanceExisted = false;
-        for(const service of availableServices){
-            if(service.label === serviceTypeInfo?.allowCreate?.name){
-                    defaultIntanceExisted = true;
-                    instanceName = service.label;
-                    break;
-            }
-        }
-        if(!defaultIntanceExisted){
+    } else if (instanceName === `${CMD_BIND_TO_DEFAULT_SERVICE}${serviceTypeInfo?.allowCreate?.name}`) {
+        const defaultInstance = _.find(availableServices, {
+            label: serviceTypeInfo.allowCreate.name,
+            plan: serviceTypeInfo.allowCreate.plan,
+            serviceName: serviceTypeInfo.allowCreate.serviceName
+        });
+        if (defaultInstance) {
+            instanceName = defaultInstance.label;
+        } else {
             instanceName = await (serviceTypeInfo?.name === eServiceTypes.user_provided ?
-                createUpsInstance(serviceTypeInfo?.allowCreate?.name, serviceTypeInfo) : 
-                createServiceInstance(serviceTypeInfo?.allowCreate?.name,serviceTypeInfo));
+                createUpsInstance(serviceTypeInfo?.allowCreate?.name, serviceTypeInfo) :
+                createServiceInstance(serviceTypeInfo?.allowCreate?.name, serviceTypeInfo));
         }
     }
     if (_.size(instanceName) > 0) {

@@ -975,8 +975,28 @@ describe("commands unit tests", () => {
                 }
             };
 
-            const availableServices = [{"label":commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate.name,serviceName: ""},{ "label": commands.CMD_CREATE_SERVICE, serviceName: "" },{ serviceName: "testServiceName1", "label": expectedInstanceName}];
-            const pickItems = [{description: "", "label": commands.CMD_BIND_TO_DEFAULT_SERVICE+info.allowCreate.name},{description: "", "label": commands.CMD_CREATE_SERVICE},{ description: "testServiceName1", "label": expectedInstanceName}];
+            const availableServices = [{
+                "label":commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate.name,
+                serviceName: info.allowCreate.serviceName,
+                plan: info.allowCreate.plan
+            },{ 
+                "label": commands.CMD_CREATE_SERVICE, 
+                serviceName: "" 
+            },{ 
+                serviceName: info.allowCreate.serviceName, 
+                "label": expectedInstanceName,
+                plan: info.allowCreate.plan
+            }];
+            const pickItems = [{
+                description: `${info.allowCreate.serviceName} (${info.allowCreate.plan})`, 
+                "label": commands.CMD_BIND_TO_DEFAULT_SERVICE+info.allowCreate.name
+            },{
+                description: "", 
+                "label": commands.CMD_CREATE_SERVICE
+            },{ 
+                description: `${info.allowCreate.serviceName} (${info.allowCreate.plan})`, 
+                "label": expectedInstanceName
+            }];
 
             vscodeWindowMock.expects("showQuickPick").withExactArgs(pickItems, {
                 placeHolder: "promptA",
