@@ -9,6 +9,7 @@
 # cloud-foundry-tools
 This VSCode extension provides tools for easy application development with Cloud Foundry. Its' tools contains such functionality as "Login to Cloud Foundry", "Create service", "Bind service", "Unbind service", etc. 
 
+
 ## Table of contents
 
 - [Features](#features)
@@ -63,7 +64,6 @@ This VSCode extension provides tools for easy application development with Cloud
 [back to top](#table-of-contents)
 
 ---
-
 
 ## Contributing
 Contributing information can be found in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
