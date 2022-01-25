@@ -290,6 +290,7 @@ async function collectBindDetails(service: CFService | ServiceTypeInfo[], requst
                         availableServices = _.concat([{ "label": CMD_CREATE_SERVICE, serviceName: "" }], availableServices);
                         if (_.size(availableServices) && !_.isEmpty(serviceTypeInfo.allowCreate.name)) { // add 'Bind to the default service instance' menu item
                             availableServices = _.concat([{
+                                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                                 label: `${CMD_BIND_TO_DEFAULT_SERVICE}${serviceTypeInfo.allowCreate.name}`,
                                 plan: serviceTypeInfo.allowCreate.plan,
                                 serviceName: serviceTypeInfo.allowCreate.serviceName
