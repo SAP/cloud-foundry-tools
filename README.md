@@ -65,9 +65,7 @@ This VSCode extension provides tools for easy application development with Cloud
 
 ---
 
-
 ## Contributing
 Contributing information can be found in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 [back to top](#table-of-contents)
-
