@@ -958,6 +958,139 @@ describe("commands unit tests", () => {
             const result = await commands.updateInstanceNameAndTags(availableServices, { tag: "testTag", name: "testName", plan: "testPlan", prompt: "testPrompt" }, [], []);
             expect(result).to.be.equal("More results...");
         });
+
+        it("ok:: Bind to default service, when default service instance existed.", async () => {
+            const expectedInstanceName = "defaultService";
+            const info: ServiceTypeInfo = {
+                name: "nameA",
+                plan: "planA",
+                prompt: "promptA",
+                tag: "tagA",
+                allowCreate: {
+                    serviceName: "name",
+                    plan: "planName",
+                    tag: "tagB",
+                    name: expectedInstanceName,
+                    getParams: () => Promise.resolve({ "some": { "data": "value" } })
+                }
+            };
+
+            const availableServices = [{
+                "label":commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate.name,
+                serviceName: info.allowCreate.serviceName,
+                plan: info.allowCreate.plan
+            },{ 
+                "label": commands.CMD_CREATE_SERVICE, 
+                serviceName: "" 
+            },{ 
+                serviceName: info.allowCreate.serviceName, 
+                "label": expectedInstanceName,
+                plan: info.allowCreate.plan
+            }];
+            const pickItems = [{
+                description: `${info.allowCreate.serviceName} (${info.allowCreate.plan})`, 
+                "label": commands.CMD_BIND_TO_DEFAULT_SERVICE+info.allowCreate.name
+            },{
+                description: "", 
+                "label": commands.CMD_CREATE_SERVICE
+            },{ 
+                description: `${info.allowCreate.serviceName} (${info.allowCreate.plan})`, 
+                "label": expectedInstanceName
+            }];
+
+            vscodeWindowMock.expects("showQuickPick").withExactArgs(pickItems, {
+                placeHolder: "promptA",
+                canPickMany: false,
+                matchOnDetail: true,
+                ignoreFocusOut: true
+            }).resolves(pickItems[0]);
+            const result = await commands.updateInstanceNameAndTags(availableServices, info, [], []);
+            expect(result).to.be.equal(info.allowCreate.name);
+        });
+
+        it("ok:: Bind to default service,when default service instance doesn't existed (createServiceInstance).", async () => {
+            const expectedServiceName = "nameB";
+            const expectedPlanName = "planB";
+            const expectedInstanceName = "instanceName";
+            const info: ServiceTypeInfo = {
+                name: "nameA",
+                plan: "planA",
+                prompt: "promptA",
+                tag: "tagA",
+                allowCreate: {
+                    serviceName: expectedServiceName,
+                    plan: expectedPlanName,
+                    tag: "tagB",
+                    name:expectedInstanceName,
+                    getParams: () => Promise.resolve({ "some": { "data": "value" } })
+                }
+            };
+            const plans = [{ label: expectedPlanName }];
+
+            const availableServices = [{"label":commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate.name,serviceName: ""},{ "label": commands.CMD_CREATE_SERVICE, serviceName: "" }];
+            const pickItems = [{description: "", "label": commands.CMD_BIND_TO_DEFAULT_SERVICE+info.allowCreate.name},{description: "", "label": commands.CMD_CREATE_SERVICE}];
+
+            vscodeWindowMock.expects("showQuickPick").withExactArgs(pickItems, {
+                placeHolder: "promptA",
+                canPickMany: false,
+                matchOnDetail: true,
+                ignoreFocusOut: true
+            }).resolves(pickItems[0]);
+
+            vscodeWindowMock.expects("withProgress").withArgs({
+                location: nsVsMock.testVscode.ProgressLocation.Notification,
+                title: messages.loading_services,
+                cancellable: true
+            }).resolves([{ 'label': expectedServiceName }]);
+            vscodeWindowMock.expects("withProgress").withArgs({
+                location: nsVsMock.testVscode.ProgressLocation.Notification,
+                title: messages.loading_service_plan_list,
+                cancellable: false
+            }).resolves(plans);
+
+            vscodeWindowMock.expects("withProgress").withArgs({
+                location: nsVsMock.testVscode.ProgressLocation.Notification,
+                title: messages.creating_service(expectedInstanceName, expectedServiceName, expectedPlanName),
+                cancellable: true
+            }).resolves(expectedInstanceName);
+            
+            const result = await commands.updateInstanceNameAndTags(availableServices, info, [], []);
+            expect(result).to.be.equal(info.allowCreate.name);
+        });
+
+        it("ok:: Bind to default service,when default service instance doesn't existed (createUpsInstance).", async () => {
+            const info: ServiceTypeInfo = {
+                name: "user-provided",
+                plan: "",
+                prompt: "",
+                tag: "mono",
+                allowCreate: {
+                    name: "silent"
+                }
+            };
+
+            const availableServices = [{"label":commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate.name,serviceName: ""},{ "label": commands.CMD_CREATE_SERVICE, serviceName: "" }];
+            const pickItems = [{description: "", "label": commands.CMD_BIND_TO_DEFAULT_SERVICE+info.allowCreate.name},{description: "", "label": commands.CMD_CREATE_SERVICE}];
+
+            vscodeWindowMock.expects("showQuickPick").withExactArgs(pickItems, {
+                placeHolder: "",
+                canPickMany: false,
+                matchOnDetail: true,
+                ignoreFocusOut: true
+            }).resolves(pickItems[0]);
+
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created(info.allowCreate.name)).resolves();
+            cfLocalMock.expects("cfCreateUpsInstance").withExactArgs({
+                instanceName: info.allowCreate.name,
+                credentials: {},
+                route_service_url: "",
+                syslog_drain_url: "",
+                tags: [info.tag]
+            }).resolves({ name: info.allowCreate.name, guid: 'instance-guid', type: "user-provided", relationships: {}, links: {} });
+            
+            const result = await commands.updateInstanceNameAndTags(availableServices, info, [], []);
+            expect(result).to.be.equal(info.allowCreate.name);
+        });
     });
 
     describe("fetchServicePlanList", () => {
