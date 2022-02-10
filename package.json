@@ -27,6 +27,7 @@
 		"vscode:prepublish": "npm run compile && webpack --mode production",
 		"watch": "tsc -watch -p ./",
 		"webpack": "webpack --mode development",
+		"release": "standard-version",
 		"webpack-dev": "webpack --mode development --watch"
 	},
 	"contributes": {
@@ -320,9 +321,8 @@
 		"@sap/cf-tools": "2.0.4",
 		"@sap/swa-for-sapbas-vsx": "1.2.15",
 		"@sap/wing-run-config-types": "4.2.0",
-		"@vscode-logging/wrapper": "1.0.1",
-		"comment-json": "4.1.0",
-		"generate-changelog": "^1.8.0",
+		"@vscode-logging/wrapper": "1.0.2",
+		"comment-json": "4.2.2",
 		"lodash": "4.17.21",
 		"properties-reader": "2.2.0",
 		"update": "0.7.4",
@@ -359,6 +359,7 @@
 		"ts-loader": "^9.2.3",
 		"ts-node": "^10.0.0",
 		"typescript": "^3.9.7",
+		"standard-version": "^9.3.2",
 		"vsce": "1.93.0",
 		"webpack": "^5.5.0",
 		"webpack-cli": "^4.2.0"
