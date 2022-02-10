@@ -4,7 +4,7 @@ import * as sinon from "sinon";
 import * as path from "path";
 import * as _ from "lodash";
 import * as fs from "fs";
-import { parse } from "comment-json";
+import { CommentObject, parse } from "comment-json";
 import { SWATracker } from "@sap/swa-for-sapbas-vsx";
 
 import * as nsVsMock from "../ext/mockVscode";
@@ -27,7 +27,7 @@ describe("usageTracker unit tests", () => {
     });
 
     it("ok:: init SWATracker instance", () => {
-        const jsonPackage = parse(fs.readFileSync(path.resolve(path.join(__dirname, "..", "..", "package.json")), { encoding: "utf8" }));
+        const jsonPackage = parse(fs.readFileSync(path.resolve(path.join(__dirname, "..", "..", "package.json")), { encoding: "utf8" })) as CommentObject;
         swaTracker = usageTracker.Init4Tests();
         expect(_.get(swaTracker, "vsxPackageName")).to.be.equal(jsonPackage.name);
         // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
