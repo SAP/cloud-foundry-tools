@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import * as _ from "lodash";
 import { getModuleLogger } from "./logger/logger-wrapper";
 import { toText, writeProperties } from "./utils";
@@ -14,13 +13,12 @@ enum ChiselKeys {
     TUNNEL_PARAM = "TUNNEL_PARAM"
 }
 
-function initReader(filePath: string): PropertiesReader.Reader {
+function initReader(filePath: string): PropertiesReader.Reader|undefined {
     try {
         return PropertiesReader(filePath);
     } catch (e) {
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
         getModuleLogger(LOGGER_MODULE).error("checkAndCreateChiselTask: propertiesReader : environment file is broken or not exists", { filePath: filePath }, { exception: toText(e) });
-        return undefined;
     }
 }
 

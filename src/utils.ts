@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from 'fs';
@@ -39,6 +39,7 @@ export interface ServiceQueryOptions extends BaseServiceQueryOptions {
 
 function spotRedirectUri() {
 	// expected host pattern is 'DOMAIN.PLATFORM.REG...APPNAME.cloud.sap'
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 	const host = new URL(_.get(process, 'env.WS_BASE_URL') || 'https://wingtestsubacc-workspaces-ws-gwzd6.staging-01.dev10.int.webide.cloud.sap').hostname;
 	// "https://*.cry10.int.applicationstudio.cloud.sap/**"
 	return `https://*.${_.join(_.drop(_.split(host, '.')), '.')}/**`;
@@ -55,7 +56,7 @@ export function getEnvResources(envFilePath: string): Promise<any> {
 	try {
 		if (existsSync(envFilePath)) {
 			const envProperties = PropertiesReader(envFilePath);
-			const vcapProperty: string = envProperties.getRaw(ENV_VCAP_RESOURCES);
+			const vcapProperty = envProperties.getRaw(ENV_VCAP_RESOURCES);
 			if (vcapProperty) {
 				return Promise.resolve(JSON.parse(vcapProperty));
 			} else {
@@ -67,6 +68,7 @@ export function getEnvResources(envFilePath: string): Promise<any> {
 			return Promise.resolve(null);
 		}
 	} catch (error) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		getModuleLogger(LOGGER_MODULE).error("getEnvResources: could not get the '.env' file resources", { exception: toText(error) }, { filePath: envFilePath });
 		throw error;
 	}
@@ -78,6 +80,7 @@ function findServiceByResourceNameTag(vcapServices: any, yamlResourceName: strin
 		for (const service of vcapServices[key]) {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			if (service.tags && service.tags.find((t: string) => t.startsWith(resourceTag) && t.substr(resourceTag.length) === yamlResourceName)) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 				return [key, service];
 			}
 		}
@@ -91,7 +94,7 @@ export async function removeResourceFromEnv(bindContext: types.IBindContext): Pr
 	const envFilePath: string = bindContext.envPath.fsPath;
 	const vcapServicesObj = await getEnvResources(envFilePath);
 	const bindResourceType = bindContext.depContext.type === types.DependencyType.runtimeservice ? bindContext.depContext.displayType : bindContext.depContext.type;
-	let instanceName: string;
+	let instanceName = '';
 	// If this is a tagged resource - remove by tag
 	const resourceTag: string = _.get(bindContext, "depContext.data.resourceTag");
 	const resourceName: string = _.get(bindContext, "depContext.data.resourceName");
@@ -102,7 +105,7 @@ export async function removeResourceFromEnv(bindContext: types.IBindContext): Pr
 			instanceData = keyAndService[1];
 			instanceName = instanceData.instance_name;
 
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			_.remove(vcapServicesObj[resourceTypeKey], (hanaService: any) => {
 				return hanaService.instance_name === instanceName;
 			});
@@ -165,6 +168,7 @@ function validateXsuaaTenantMode(value: string) {
 
 function validateXsuaaOauth2Configuration(value: unknown) {
 	for (const uri of _.get(value, 'redirect-uris', [])) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		if (!_.startsWith(uri, 'http') && !_.startsWith(uri, 'localhost')) {
 			throw new Error(messages.error_service_params_value_not_allowed('redirect-uris'));
 		}
@@ -188,10 +192,13 @@ function validateParamsXsuaa(value: string): TypeValidationResult {
 	let result;
 	try {
 		const data = parse(_.trim(value));
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		validateXsuaaName(_.get(data, "xsappname"));
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		validateXsuaaTenantMode(_.get(data, "tenant-mode"));
 		validateXsuaaOauth2Configuration(_.get(data, "oauth2-configuration"));
 	} catch (e) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		result = toText(e);
 	}
 	return result;
@@ -202,6 +209,7 @@ function validateParamsJson(value: string): TypeValidationResult {
 	try {
 		parse(_.trim(value));
 	} catch (e) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		result = toText(e);
 	}
 	return result;
@@ -225,7 +233,7 @@ async function doGetUpsServiceInstances(query?: IServiceQuery, filterCredTag?: s
 	const ups2Show = pattern ? upsServices.filter(service => {
 		// cretentials.tags can be 'string', 'string array' or 'array of objects' only
 		const tags = _.isString(service.credentials?.tags) ? [service.credentials.tags] : service.credentials?.tags;
-		return _.find(tags, (tag) => new RegExp(pattern).test(tag));
+		return _.find(tags, (tag: string) => new RegExp(pattern).test(tag));
 	}) : upsServices;
 	return ups2Show;
 }
@@ -238,7 +246,7 @@ export async function getAllServiceInstances(opts?: DisplayServices): Promise<Se
 	let ups2Show: ServiceInstanceInfo[] = [];
 	if (opts?.ups?.isShow || opts?.ups?.tag) {
 		const copyQuery = _.cloneDeep(opts.query);
-		_.remove(copyQuery?.filters, (item) => {
+		_.remove(copyQuery?.filters||[], (item) => {
 			return !_.includes([eFilters.names, eFilters.space_guids, eFilters.organization_guids, eFilters.oder_by,
 			eFilters.page, eFilters.per_page, eFilters.updated_ats, eFilters.created_ats], item.key);
 		});
@@ -254,7 +262,7 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
 	const project = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(envPath));
 	if (project) {
 		const isNotEmptyPattern = (value: string): boolean => {
-			return _.size(value) && !/^\s*#/.test(value);
+			return _.size(value) > 0 && !/^\s*#/.test(value);
 		};
 		const isPatternFound = async (patterns: string[]): Promise<boolean> => {
 			for (const pattern of patterns) {
@@ -271,6 +279,7 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
 				await fs.promises.open(filePath, 'w');
 				ignoreFiles.push(vscode.Uri.file(filePath));
 			} catch (e) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				getModuleLogger(LOGGER_MODULE).error("updateGitIgnoreList: creation .gitignore file failed", { exception: toText(e) });
 			}
 		}
@@ -285,6 +294,7 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
 					);
 				}
 			} catch (e) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				getModuleLogger(LOGGER_MODULE).error("updateGitIgnoreList: update .gitignore file failed", { exception: toText(e) }, { filePath: file });
 			}
 		}
@@ -302,21 +312,21 @@ export async function writeProperties(filePath: string, properties: Record<strin
 	await fs.promises.writeFile(filePath, text);
 }
 
-export function resolveFilterValue(value: string): string {
+export function resolveFilterValue(value: string|undefined): string {
 	// allowed patterns: 'hana'|' "hana ", " xsuaa"'|'["xsuaa", "hana"]'
 	// eslint-disable-next-line @typescript-eslint/unbound-method
 	return _.join(_.map(_.isString(value) ? _.split(value, ',') : value, _.trim));
 }
 
 export function notifyWhenServicesInfoResultIncomplete(list: Promise<ServiceInstanceInfo[]>): Promise<ServiceInstanceInfo[]> {
-	const isUnknown = (value: string) => 'unknown' === value;
+	const isUnknown = (value: string|undefined) => 'unknown' === value;
 	return list.then(infos => {
 		const results = _.reduce(infos, (res, info) => {
 			if (isUnknown(info.serviceName) || isUnknown(info.plan)) {
 				res.push(info.label);
 			}
 			return res;
-		}, []);
+		}, <string[]>[]);
 		if (_.size(results)) {
 			void vscode.window.showWarningMessage(messages.service_instances_list_incomplete(results));
 		}

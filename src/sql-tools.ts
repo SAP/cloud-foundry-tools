@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import { dataContentAsObject } from "@sap/cf-tools";
 import * as _ from "lodash";
@@ -10,7 +10,6 @@ function saveSettings(filePath: string, configuration: any) {
     const sqltoolsSettings = vscode.workspace.getConfiguration("sqltools", vscode.Uri.file(filePath));
     const connections: any[] = sqltoolsSettings.get(CONNECTIONS) || [];
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const existingConnIndex = connections.findIndex((conn: any) => conn.name === configuration.name);
     if (existingConnIndex >= 0) {
         connections[existingConnIndex] = configuration;
@@ -41,7 +40,7 @@ export async function checkAndCreateSQLToolsSettings(filePath: string): Promise<
                     "connectionTimeout": 30
                 };
                 saveSettings(filePath, conn);
-                return srv.name;
+                return srv.name as string;
             });
             return serviceNames.join(',');
         }

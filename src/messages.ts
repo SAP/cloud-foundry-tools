@@ -60,6 +60,6 @@ export const messages = {
   no_service_plans_found: (service: string): string => `Could not find a service plan for the ${service} service`,
   target_dirty_save: (name: string): string => `The ${name} target has been modified. Would you like to save the changes?`,
   service_instances_list_incomplete: (list: string[]): string => `Could not get the details of ${_.size(list) > 3 ? 'some service instances' : "the following service instances: '" + list.join() + "'"}. Try to verify the ${_.size(list) > 3 ? '' : 'specified '}service instances, then log in again to Cloud Foundry.`,
-  target_setup_not_completed: (org: string, space: string): string => `The CF target definition is incomplete - org='${org}', space='${space}'. Do you want to continue?`,
+  target_setup_not_completed: (org: string|undefined, space: string|undefined): string => `The CF target definition is incomplete - org='${org}', space='${space}'. Do you want to continue?`,
   set_targets_save: (org: string, space: string): string => `Save current target (${org}/${space})`,
 };

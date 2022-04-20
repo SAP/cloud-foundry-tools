@@ -1,18 +1,11 @@
 {
 	"compilerOptions": {
-		"allowJs": false,
+		"composite": true,
 		"lib": [
-			"es6"
+			"es7"
 		],
-		"listEmittedFiles": false,
-		"listFiles": false,
 		"module": "commonjs",
-		"noFallthroughCasesInSwitch": true,
-		"noImplicitAny": true,
-		"noImplicitThis": true,
 		"outDir": "./out",
-		"removeComments": true,
-		"experimentalDecorators": true,
 		"rootDir": ".",
 		"rootDirs": [
 			"./src",
@@ -20,10 +13,11 @@
 		],
 		"skipLibCheck": true,
 		"sourceMap": true,
-		"target": "es6",
-		"traceResolution": false,
+		"target": "es2017",
 		"declaration": true,
-		"alwaysStrict": true
+		"forceConsistentCasingInFileNames": true,
+    	"strict": true,
+    	"useUnknownInCatchVariables": false
 	},
 	"include": [
 		"./src/**/*",

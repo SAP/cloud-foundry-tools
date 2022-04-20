@@ -1,7 +1,6 @@
 import { SWATracker } from "@sap/swa-for-sapbas-vsx";
 import { getModuleLogger } from "../logger/logger-wrapper";
 import { toText } from "../utils";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const jsonPackage = require("./../../package.json");
 const LOGGER_MODULE = "usageTracker";
 

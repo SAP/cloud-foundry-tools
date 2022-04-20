@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { ExtensionContext, window } from "vscode";
 import { readFile as readFileCallback } from "fs";
 import { resolve } from "path";
