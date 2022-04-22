@@ -22,6 +22,7 @@ import { cfGetConfigFilePath, ITarget, OK } from "@sap/cf-tools";
 import { expect } from "chai";
 import { createSandbox, SinonMock, SinonSandbox } from "sinon";
 import { CFTargetTI, CFView } from "../src/cfView";
+import type { ExtensionContext } from "vscode";
 
 describe('extension unit test', () => {
     const runConfigExtName = "sap.vscode-wing-run-config";
@@ -383,7 +384,7 @@ describe('extension unit test', () => {
                 }
             };
             workspaceMock.expects('getConfiguration').never();
-            extension.callbackOnDidChangeConfiguration(event, undefined);
+            extension.callbackOnDidChangeConfiguration(event, undefined as unknown as ExtensionContext);
         });
 
         it("ok:: callbackOnDidChangeConfiguration - triggered, hide", () => {
@@ -394,7 +395,7 @@ describe('extension unit test', () => {
             };
             workspaceMock.expects('getConfiguration').returns(config);
             mockStatusBarItem.expects("hide");
-            extension.callbackOnDidChangeConfiguration(event, undefined);
+            extension.callbackOnDidChangeConfiguration(event, undefined as unknown as ExtensionContext);
         });
 
         it("ok:: callbackOnDidChangeConfiguration - triggered, show", () => {
@@ -406,13 +407,13 @@ describe('extension unit test', () => {
             isShowTarget = true;
             workspaceMock.expects('getConfiguration').returns(config);
             mockStatusBarItem.expects("show");
-            extension.callbackOnDidChangeConfiguration(event, undefined);
+            extension.callbackOnDidChangeConfiguration(event, undefined as unknown as ExtensionContext);
         });
     });
 
     describe('Common extension package definition', () => {
         const jsonPath = recognisePackageJsonPath(__dirname);
-        const jsonPackage = JSON.parse(fs.readFileSync(path.resolve(path.join(jsonPath, "package.json")), { encoding: "utf8" }));
+        const jsonPackage = JSON.parse(fs.readFileSync(path.resolve(path.join(jsonPath as string, "package.json")), { encoding: "utf8" }));
 
         it("ok:: configuration title", () => {
             expect(_.get(jsonPackage, ['contributes', 'configuration', 'title'])).to.be.equal('CloudFoundryTools');

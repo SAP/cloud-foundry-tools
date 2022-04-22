@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect } from "chai";
 import * as _ from "lodash";
-import { createSandbox, SinonMock, SinonSandbox, SinonSpy } from "sinon";
+import { createSandbox, SinonMock, SinonSandbox } from "sinon";
 import * as nsVsMock from "./ext/mockVscode";
 import { mockVscode } from "./ext/mockUtil";
 
@@ -15,6 +14,7 @@ import * as cfView from "../src/cfView";
 import { fail } from "assert";
 import { validateParams } from "../src/utils";
 import { stringify } from "comment-json";
+import type { CancellationToken, Progress } from "vscode";
 
 describe("commands unit tests", () => {
     let sandbox: SinonSandbox;
@@ -28,7 +28,6 @@ describe("commands unit tests", () => {
     const testUserEmail = "user@test.com";
     const testUserPassword = "userPassword";
     let originalCFDefaultLandscape: string;
-    let loginSpy: SinonSpy;
     const orgs: any[] = [{ label: "devx", guid: "1" }, { label: "devx2", guid: "2" }, { label: "HRTT", guid: "3" }, { label: "SAP_CoCo_Messaging", guid: "4" }];
     const spaces: any[] = [{ label: "ArchTeam" }, { label: "platform2" }];
 
@@ -41,7 +40,6 @@ describe("commands unit tests", () => {
     });
 
     beforeEach(() => {
-        loginSpy = null;
         sandbox.restore();
         vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
         vscodeCommandsMock = sandbox.mock(nsVsMock.testVscode.commands);
@@ -61,9 +59,6 @@ describe("commands unit tests", () => {
         cfLocalUtilsMock.verify();
         cfViewMock.verify();
         _.set(process, "env.CF_API_ENDPOINT", originalCFDefaultLandscape);
-        if (loginSpy) {
-            loginSpy.restore();
-        }
     });
 
     describe("cmdLogin", () => {
@@ -193,8 +188,8 @@ describe("commands unit tests", () => {
         it("ok:: logged in, but no available orgs found", async () => {
             vscodeWindowMock.restore();
             vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
-            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity}).resolves({ user: "bag023" });
-            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false}).resolves({ user: "bag023" });
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity }).resolves({ user: "bag023" });
+            vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves({ user: "bag023" });
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Window, title: messages.getting_orgs }).resolves([]);
             vscodeWindowMock.expects("showWarningMessage").withArgs(messages.no_available_orgs).resolves();
             await commands.cmdLogin(true);
@@ -561,8 +556,8 @@ describe("commands unit tests", () => {
             };
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(messages.no_services_instances_found_for_type(info.name));
             vscodeWindowMock.expects("showInputBox").withExactArgs({
-                value: info.allowCreate.name,
-                prompt: info.allowCreate.namePrompt || messages.enter_service_name,
+                value: info.allowCreate?.name,
+                prompt: info.allowCreate?.namePrompt || messages.enter_service_name,
                 ignoreFocusOut: true
             }).resolves("instanceName");
             vscodeWindowMock.expects("withProgress").withArgs({
@@ -693,7 +688,7 @@ describe("commands unit tests", () => {
             const error = new Error("testError");
             cfLocalMock.expects("cfCreateService").throws(error);
             try {
-                await commands.onCreateService({ guid: "", label: "", description: "" }, "testInstance", undefined, undefined, undefined, undefined);
+                await commands.onCreateService({ guid: "", label: "", description: "" }, "testInstance", undefined, undefined, undefined as unknown as Progress<{ message?: string; increment?: number }>, undefined as unknown as CancellationToken);
                 fail("test should not reach here");
             } catch (e) {
                 expect(_.get(e, 'message')).to.be.equal(error.message);
@@ -717,7 +712,7 @@ describe("commands unit tests", () => {
                 metadata: {}
             });
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created("testInstance")).resolves();
-            await commands.onCreateService({ guid: "guid", label: "label", description: "" }, "testInstance", params, tags, undefined, undefined);
+            await commands.onCreateService({ guid: "guid", label: "label", description: "" }, "testInstance", params, tags, undefined as unknown as Progress<{ message?: string; increment?: number }>, undefined as unknown as CancellationToken);
         });
     });
 
@@ -919,7 +914,7 @@ describe("commands unit tests", () => {
         it("ok:: availableServices is empty", async () => {
             vscodeWindowMock.expects("showQuickPick").never();
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(messages.no_services_instances_found).resolves();
-            const result = await commands.updateInstanceNameAndTags([], null, [], []);
+            const result = await commands.updateInstanceNameAndTags([], undefined, [], []);
             expect(result).to.be.undefined;
         });
 
@@ -927,7 +922,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("showQuickPick").never();
             const name = 'absent_service';
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(messages.no_services_instances_found_for_type(name)).resolves();
-            const result = await commands.updateInstanceNameAndTags([], { name, plan: '', tag: '', prompt: null }, [], []);
+            const result = await commands.updateInstanceNameAndTags([], { name, plan: '', tag: '', prompt: '' }, [], []);
             expect(result).to.be.undefined;
         });
 
@@ -976,25 +971,25 @@ describe("commands unit tests", () => {
             };
 
             const availableServices = [{
-                "label":commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate.name,
-                serviceName: info.allowCreate.serviceName,
-                plan: info.allowCreate.plan
-            },{ 
-                "label": commands.CMD_CREATE_SERVICE, 
-                serviceName: "" 
-            },{ 
-                serviceName: info.allowCreate.serviceName, 
+                "label": commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name!,
+                serviceName: info.allowCreate!.serviceName!,
+                plan: info.allowCreate!.plan
+            }, {
+                "label": commands.CMD_CREATE_SERVICE,
+                serviceName: ""
+            }, {
+                serviceName: info.allowCreate!.serviceName!,
                 "label": expectedInstanceName,
-                plan: info.allowCreate.plan
+                plan: info.allowCreate!.plan!
             }];
             const pickItems = [{
-                description: `${info.allowCreate.serviceName} (${info.allowCreate.plan})`, 
-                "label": commands.CMD_BIND_TO_DEFAULT_SERVICE+info.allowCreate.name
-            },{
-                description: "", 
+                description: `${info.allowCreate!.serviceName} (${info.allowCreate!.plan})`,
+                "label": commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name!
+            }, {
+                description: "",
                 "label": commands.CMD_CREATE_SERVICE
-            },{ 
-                description: `${info.allowCreate.serviceName} (${info.allowCreate.plan})`, 
+            }, {
+                description: `${info.allowCreate!.serviceName} (${info.allowCreate!.plan})`,
                 "label": expectedInstanceName
             }];
 
@@ -1005,7 +1000,7 @@ describe("commands unit tests", () => {
                 ignoreFocusOut: true
             }).resolves(pickItems[0]);
             const result = await commands.updateInstanceNameAndTags(availableServices, info, [], []);
-            expect(result).to.be.equal(info.allowCreate.name);
+            expect(result).to.be.equal(info.allowCreate!.name);
         });
 
         it("ok:: Bind to default service,when default service instance doesn't existed (createServiceInstance).", async () => {
@@ -1021,14 +1016,14 @@ describe("commands unit tests", () => {
                     serviceName: expectedServiceName,
                     plan: expectedPlanName,
                     tag: "tagB",
-                    name:expectedInstanceName,
+                    name: expectedInstanceName,
                     getParams: () => Promise.resolve({ "some": { "data": "value" } })
                 }
             };
             const plans = [{ label: expectedPlanName }];
 
-            const availableServices = [{"label":commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate.name,serviceName: ""},{ "label": commands.CMD_CREATE_SERVICE, serviceName: "" }];
-            const pickItems = [{description: "", "label": commands.CMD_BIND_TO_DEFAULT_SERVICE+info.allowCreate.name},{description: "", "label": commands.CMD_CREATE_SERVICE}];
+            const availableServices = [{ "label": commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name!, serviceName: "" }, { "label": commands.CMD_CREATE_SERVICE, serviceName: "" }];
+            const pickItems = [{ description: "", "label": commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name! }, { description: "", "label": commands.CMD_CREATE_SERVICE }];
 
             vscodeWindowMock.expects("showQuickPick").withExactArgs(pickItems, {
                 placeHolder: "promptA",
@@ -1053,9 +1048,9 @@ describe("commands unit tests", () => {
                 title: messages.creating_service(expectedInstanceName, expectedServiceName, expectedPlanName),
                 cancellable: true
             }).resolves(expectedInstanceName);
-            
+
             const result = await commands.updateInstanceNameAndTags(availableServices, info, [], []);
-            expect(result).to.be.equal(info.allowCreate.name);
+            expect(result).to.be.equal(info.allowCreate!.name);
         });
 
         it("ok:: Bind to default service,when default service instance doesn't existed (createUpsInstance).", async () => {
@@ -1069,8 +1064,8 @@ describe("commands unit tests", () => {
                 }
             };
 
-            const availableServices = [{"label":commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate.name,serviceName: ""},{ "label": commands.CMD_CREATE_SERVICE, serviceName: "" }];
-            const pickItems = [{description: "", "label": commands.CMD_BIND_TO_DEFAULT_SERVICE+info.allowCreate.name},{description: "", "label": commands.CMD_CREATE_SERVICE}];
+            const availableServices = [{ "label": commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name!, serviceName: "" }, { "label": commands.CMD_CREATE_SERVICE, serviceName: "" }];
+            const pickItems = [{ description: "", "label": commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name! }, { description: "", "label": commands.CMD_CREATE_SERVICE }];
 
             vscodeWindowMock.expects("showQuickPick").withExactArgs(pickItems, {
                 placeHolder: "",
@@ -1079,17 +1074,17 @@ describe("commands unit tests", () => {
                 ignoreFocusOut: true
             }).resolves(pickItems[0]);
 
-            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created(info.allowCreate.name)).resolves();
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created(info.allowCreate!.name!)).resolves();
             cfLocalMock.expects("cfCreateUpsInstance").withExactArgs({
-                instanceName: info.allowCreate.name,
+                instanceName: info.allowCreate!.name,
                 credentials: {},
                 route_service_url: "",
                 syslog_drain_url: "",
                 tags: [info.tag]
-            }).resolves({ name: info.allowCreate.name, guid: 'instance-guid', type: "user-provided", relationships: {}, links: {} });
-            
+            }).resolves({ name: info.allowCreate!.name, guid: 'instance-guid', type: "user-provided", relationships: {}, links: {} });
+
             const result = await commands.updateInstanceNameAndTags(availableServices, info, [], []);
-            expect(result).to.be.equal(info.allowCreate.name);
+            expect(result).to.be.equal(info.allowCreate!.name);
         });
     });
 
@@ -1166,7 +1161,7 @@ describe("commands unit tests", () => {
 
         it("fail:: no avialable services", async () => {
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(messages.no_services_instances_found).resolves();
-            const result = await commands.getInstanceName(undefined);
+            const result = await commands.getInstanceName(undefined as unknown as ServiceInstanceInfo[]);
             expect(result).to.undefined;
         });
     });
@@ -1295,16 +1290,16 @@ describe("commands unit tests", () => {
                     name: "silent"
                 }
             };
-            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true, value: info.allowCreate.name }).resolves(info.allowCreate.name);
-            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created(info.allowCreate.name)).resolves();
+            vscodeWindowMock.expects("showInputBox").withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true, value: info.allowCreate!.name }).resolves(info.allowCreate!.name);
+            vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created(info.allowCreate!.name!)).resolves();
             cfLocalMock.expects("cfCreateUpsInstance").withExactArgs({
-                instanceName: info.allowCreate.name,
+                instanceName: info.allowCreate!.name,
                 credentials: {},
                 route_service_url: "",
                 syslog_drain_url: "",
                 tags: [info.tag]
-            }).resolves({ name: info.allowCreate.name, guid: 'instance-guid', type: "user-provided", relationships: {}, links: {} });
-            expect(await commands.cmdCreateUps(info)).to.be.equal(info.allowCreate.name);
+            }).resolves({ name: info.allowCreate!.name, guid: 'instance-guid', type: "user-provided", relationships: {}, links: {} });
+            expect(await commands.cmdCreateUps(info)).to.be.equal(info.allowCreate!.name);
         });
 
         it("ok:: tags provided", async () => {

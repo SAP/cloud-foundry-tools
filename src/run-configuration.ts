@@ -3,6 +3,7 @@ import * as cfViewCommands from './cfViewCommands';
 import { getEnvResources, removeResourceFromEnv, toText } from './utils';
 import { checkAndCreateChiselTask } from './chisel';
 import * as _ from 'lodash';
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from 'vscode';
 import * as cfLocal from '@sap/cf-tools';
 import { messages } from './messages';
@@ -43,18 +44,18 @@ export class DependencyHandler implements types.IDependencyHandler {
       prompt: ""
     }];
     try {
-      const instanceNames: string[] = await cfViewCommands.bindLocalService(serviceType, bindContext.envPath, options);
+      const instanceNames = await cfViewCommands.bindLocalService(serviceType, bindContext.envPath, options);
       let chiselTask;
       if (_.size(instanceNames)) {
         // Get metadata of service instance by service name
-        const instanceType: string = (await cfLocal.cfGetInstanceMetadata(instanceNames[0])).service;
+        const instanceType: string = (await cfLocal.cfGetInstanceMetadata(instanceNames![0])).service;
 
         // Create chisel task if neccessary
         if (_.get(bindContext, "depContext.data.isCreateChiselTask") || /^hana(trial)?$/.test(instanceType)) {
           void trackChiselTask("Chisel Task", ["CF tools"]);
 
           // Create it in dependent task
-          const chiselTaskNameSuffix = instanceNames.join("&");
+          const chiselTaskNameSuffix = instanceNames!.join("&");
           chiselTask = await checkAndCreateChiselTask(bindContext.envPath?.fsPath, chiselTaskNameSuffix);
           if (chiselTask) {
             if (!options?.silent) {
@@ -73,7 +74,7 @@ export class DependencyHandler implements types.IDependencyHandler {
         return _.merge({
           configData: bindContext.configData,
           resource: {
-            name: instanceNames[0],
+            name: instanceNames![0],
             type: instanceType || ""
           }
         }, chiselTask ? { resource: { data: { chiselTask } } } : {});

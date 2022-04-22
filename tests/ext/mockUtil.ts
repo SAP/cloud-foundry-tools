@@ -1,3 +1,4 @@
+/* eslint-disable prefer-rest-params */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as path from "path";
@@ -22,15 +23,16 @@ export function mockVscode(oVscodeMock: any, testModulePath?: string): void {
 
     Module.prototype.require = function (request: any) {
         if (request === "vscode") {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return oVscodeMock;
         }
 
-        // eslint-disable-next-line prefer-rest-params
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return originalRequire.apply(this, arguments);
     };
 }
 
-export function recognisePackageJsonPath(cwd?: string): string {
+export function recognisePackageJsonPath(cwd?: string): string|undefined {
     let parts = split(cwd || __dirname, path.sep);
     while (size(parts)) {
         if (existsSync(path.resolve(path.join(...parts, 'package.json')))) {

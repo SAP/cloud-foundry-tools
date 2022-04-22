@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import * as path from "path";
 import { CFView, CFService, CFTargetTI, CFTargetNotCurrent, getTargetRoot } from "./cfView";
@@ -96,7 +97,10 @@ type BindArgs = {
 
 async function doBind(opts: BindArgs) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async function runWithProgress(fnc: (filePath: string, instanceNames: string[], tags?: string[], serviceKeyNames?: string[]) => Promise<void>, args: any[]) {
+    async function runWithProgress(
+        fnc: (filePath: string, instanceNames: string[], tags?: string[], serviceKeyNames?: string[], sserviceKeyParams?: unknown[]) => Promise<void>, 
+        args: [filePath: string, instanceNames: string[], tags?: string[], serviceKeyNames?: string[], sserviceKeyParams?: unknown[]]
+    ) {
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification, title: messages.binding_service_to_file, cancellable: false
             // eslint-disable-next-line prefer-spread
@@ -152,7 +156,7 @@ export async function cfDeployServiceAPI(urlPath: string): Promise<string> {
     throw new Error(messages.no_cf_api_endpoint);
 }
 
-export async function cmdDeployServiceAPI(servicePath: string, message: string): Promise<string> {
+export async function cmdDeployServiceAPI(servicePath: string, message: string): Promise<string|undefined> {
     if (await verifyLoginRetry()) {
         return vscode.window.withProgress<string>({
             location: vscode.ProgressLocation.Notification,
@@ -188,13 +192,13 @@ export async function execSaveTarget(item?: CFTargetTI, options?: CmdOptions): P
     }
 }
 
-export async function cmdSetCurrentTarget(newTarget: CFTargetTI | CFTargetNotCurrent): Promise<unknown | undefined> {
+export async function cmdSetCurrentTarget(newTarget: CFTargetTI | CFTargetNotCurrent | undefined): Promise<unknown | undefined> {
     const item = getTargetRoot(newTarget);
     if (false === item?.target?.isCurrent) {
         let answer = YES;
         try {
             const currTarget = CFView.get().getCurrentTarget();
-            if (_.get(currTarget, "isDirty", false)) {
+            if (currTarget?.isDirty) {
                 answer = await vscode.window.showWarningMessage(messages.target_dirty_save(currTarget.label), YES, NO, CANCEL).then(selection => {
                     if (selection === YES) {
                         return execSaveTarget().then(() => selection);
@@ -245,24 +249,24 @@ export async function cmdGetSpaceServices(query?: IServiceQuery, progressTitle?:
     return getAvailableServices({ query, ups: { isShow: true } }, progressTitle);
 }
 
-async function composeQueryToObtainInstances(serviceInfos: ServiceTypeInfo[]): Promise<IServiceQuery> {
+async function composeQueryToObtainInstances(serviceInfos: ServiceTypeInfo[]): Promise<IServiceQuery|undefined> {
     let query;
     if (_.get(serviceInfos, ['0', 'plan'])) {
-        query = padQuery(query, [{ key: eFilters.service_plan_names, value: resolveFilterValue(serviceInfos[0].plan) }]);
+        query = padQuery(query as unknown as IServiceQuery, [{ key: eFilters.service_plan_names, value: resolveFilterValue(serviceInfos[0].plan) }]);
     }
     if (/*!_.size(plans) &&*/ _.get(serviceInfos, '[0].name')) {
         if (eServiceTypes.user_provided === serviceInfos[0].name) {
-            query = padQuery(query, [{ key: eFilters.service_plan_names, value: 'nothing-to-show' }]); // tricky - to show the only user-provided instances
+            query = padQuery(query as unknown as IServiceQuery, [{ key: eFilters.service_plan_names, value: 'nothing-to-show' }]); // tricky - to show the only user-provided instances
         } else {
             const guids = _.map(await fetchServicePlanList({ filters: [{ key: eFilters.service_offering_names, value: resolveFilterValue(serviceInfos[0].name) }] }), 'guid');
-            query = padQuery(query, [{ key: eFilters.service_plan_guids, value: _.join(guids) }]);
+            query = padQuery(query as unknown as IServiceQuery, [{ key: eFilters.service_plan_guids, value: _.join(guids) }]);
         }
     }
     return query;
 }
 
-async function collectBindDetails(service: CFService | ServiceTypeInfo[], requstedInstance?: string): Promise<BindDetails> {
-    let details: BindDetails;
+async function collectBindDetails(service: CFService | ServiceTypeInfo[], requstedInstance?: string): Promise<BindDetails|undefined> {
+    let details;
 
     if (_.get(service, "contextValue") === "cf-service" && _.get(service, "label")) {
         details = { instances: [{ label: (service as CFService).label, serviceName: (service as CFService).type || "unknown" }] };
@@ -293,7 +297,7 @@ async function collectBindDetails(service: CFService | ServiceTypeInfo[], requst
                                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                                 label: `${CMD_BIND_TO_DEFAULT_SERVICE}${serviceTypeInfo.allowCreate.name}`,
                                 plan: serviceTypeInfo.allowCreate.plan,
-                                serviceName: serviceTypeInfo.allowCreate.serviceName
+                                serviceName: serviceTypeInfo.allowCreate.serviceName ?? ''
                             }], availableServices);
                         }
                     }
@@ -337,7 +341,7 @@ class EnvPathHelper {
         return _.get(env, "fsPath") ? env as vscode.Uri : (_.get(env, "path") ? env.path as vscode.Uri : vscode.Uri.file(""));
     }
     static getIgnore(env: vscode.Uri | TEnvPath): boolean {
-        return _.get(env, "ignore") || false;
+        return (_.get(env, "ignore") as boolean) || false;
     }
     static isPathEmpty(value: vscode.Uri): boolean {
         return value.scheme === 'file' && value.fsPath === (isWindows ? '\\' : '/');
@@ -353,7 +357,7 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
             // aborted
             return;
         }
-        filePath = vscode.Uri.file(path.join(uriArray[0].fsPath, ".env"));
+        filePath = vscode.Uri.file(path.join(uriArray![0].fsPath, ".env"));
     }
     try {
         const bindDetails = await collectBindDetails(service, instanceName);
@@ -386,7 +390,7 @@ export async function cmdBindLocal(service: CFService | ServiceTypeInfo[], envPa
     return;
 }
 
-export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath, opts?: CmdOptions): Promise<string[]> {
+export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath: vscode.Uri | TEnvPath, opts?: CmdOptions): Promise<string[]|undefined> {
     try {
         const filePath = EnvPathHelper.getPath(envPath);
         if (EnvPathHelper.isPathEmpty(filePath)) {
@@ -413,7 +417,7 @@ export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath:
             const instances = _.reduce(instanceNames, (result, name) => {
                 result.push(_.find(availableServices, ['label', name]));
                 return result;
-            }, []);
+            }, <(ServiceInstanceInfo|undefined)[]>[]);
             if (_.size(instanceNames) > 0) {
                 await doBind({ instances: _.compact(instances), envPath: { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, tags: _.compact(tags), options: opts });
                 return instanceNames;
@@ -421,7 +425,8 @@ export async function bindLocalService(serviceInfos: ServiceTypeInfo[], envPath:
         } else {
             const instanceName = await getInstanceName(availableServices);
             if (instanceName) {
-                await doBind({ instances: [_.find(availableServices, ['label', instanceName])], envPath: { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, options: opts });
+                const service = _.find(availableServices, ['label', instanceName]);
+                await doBind({ instances: service ? [service] : [], envPath: { path: filePath, ignore: EnvPathHelper.getIgnore(envPath) }, options: opts });
                 return [instanceName];
             }
         }
@@ -438,11 +443,11 @@ export async function cmdGetUpsServiceInstances(options?: UpsServiceQueryOprions
 }
 
 export async function cmdGetServiceInstances(serviceQueryOptions?: ServiceQueryOptions, progressTitle?: string): Promise<ServiceInstanceInfo[]> {
-    let query: IServiceQuery;
+    let query;
     if (serviceQueryOptions) {
         // prepare a query to filter the service list by service plan (e.g.: hdi-shared)
         // filter the list by service type name (e.g.: hana, hanatrial)
-        const serviceInfo = { name: serviceQueryOptions.name, plan: serviceQueryOptions.plan, tag: serviceQueryOptions.tag, prompt: "" };
+        const serviceInfo = { name: serviceQueryOptions.name||"", plan: serviceQueryOptions.plan||"", tag: serviceQueryOptions.tag||"", prompt: "" };
         query = await composeQueryToObtainInstances([serviceInfo]);
     }
     return getServiceInstances(query, progressTitle);

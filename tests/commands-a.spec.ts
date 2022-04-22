@@ -59,7 +59,7 @@ describe("commands unit tests", () => {
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.verify_cf_connectivity, cancellable: false }).resolves({});
             cfLocalMock.expects("cfGetTarget").resolves(target);
             const affairs = [
-                { id: 'save', label: messages.set_targets_save(target.org, target.space), detail: messages.set_targets_save_details },
+                { id: 'save', label: messages.set_targets_save(target.org!, target.space!), detail: messages.set_targets_save_details },
                 { id: 'pick-save', label: messages.set_targets_pick_save, detail: messages.set_targets_pick_save_details },
             ];
             vscodeWindowMock.expects("showQuickPick").withExactArgs(affairs, { placeHolder: messages.set_targets_choose_the_operation, canPickMany: false, matchOnDetail: true }).resolves();

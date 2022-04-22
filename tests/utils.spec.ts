@@ -3,7 +3,9 @@
 import { expect, assert } from "chai";
 import * as sinon from "sinon";
 import * as path from 'path';
+// eslint-disable-next-line import/no-duplicates
 import * as fs from 'fs';
+// eslint-disable-next-line import/no-duplicates
 import * as fsSync from 'fs';
 import _ = require("lodash");
 import { stringify } from "comment-json";

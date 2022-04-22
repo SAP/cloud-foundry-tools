@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import * as _ from "lodash";
 import { CFTargetNotCurrent, CFTargetTI, CFView } from "./cfView";
@@ -145,7 +146,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<unknow
 	context.subscriptions.push(vscode.commands.registerCommand("cf.services.get-ups-services", cmdGetUpsServiceInstances));
 	context.subscriptions.push(vscode.commands.registerCommand("cf.services.get-services", cmdGetServiceInstances));
 
-	let platformExtension: vscode.Extension<IRunConfigRegistry> = vscode.extensions.getExtension<IRunConfigRegistry>(runConfigExtName);
+	let platformExtension = vscode.extensions.getExtension<IRunConfigRegistry>(runConfigExtName);
 	if (platformExtension) {
 		if (!platformExtension.isActive) {
 			try {

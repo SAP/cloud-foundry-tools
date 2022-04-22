@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import * as path from "path";
 
@@ -23,15 +24,17 @@ class DependencyContext implements IDependencyContext {
 }
 
 export class RunConfigContext implements IRunConfigContext {
-    public iconBuffer: Buffer = null;
+    public iconBuffer: Buffer;
     public displayName = "CF Tools Example";
     public groupName = this.appId;
     public envPath: vscode.Uri = vscode.Uri.file(path.join("C:", "Users", "your-i-number", "devx-wing", "test-run-config", "env", ".env"));
-    public path: vscode.Uri = null;
+    public path: vscode.Uri;
     public dependencies = [new DependencyContext()];
 
     constructor(private readonly id: string, private readonly appId: string) {
         this.groupName = appId;
+        this.path = vscode.Uri.file('');
+        this.iconBuffer = Buffer.alloc(1);
     }
 }
 

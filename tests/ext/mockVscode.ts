@@ -1,10 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import * as _ from "lodash";
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import * as path from "path";
 import { platform } from "os";
@@ -52,11 +49,12 @@ class Uri {
     public readonly query: string;
     public readonly fragment: string;
     public readonly fsPath: string;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private constructor(scheme: string, authority: string, testpath: string, query: string, fragment: string) {
-        this.fsPath = testpath; this.scheme = scheme;
+        this.fsPath = testpath; this.scheme = scheme; this.path = ''; this.authority = ''; this.query = ''; this.fragment = '';
     }
     public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
-        return new Uri("", "", change.path, "", "");
+        return new Uri("", "", change.path||'', "", "");
     }
     public toString(skipEncoding?: boolean): string { return ""; }
     public toJSON(): any { return {}; }
@@ -66,7 +64,7 @@ class RelativePattern {
     base: string;
     pattern: string;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(base: any, pattern: string) { return; }
+    constructor(base: any, pattern: string) { this.base = base; this.pattern = pattern; }
 }
 
 function _path2Uri(extPath: string): { uri: Uri; name: string; index: number } {
@@ -136,15 +134,18 @@ export const testVscode = {
         findFiles: () => Promise.reject()
     },
     TreeItem: class MockTreeItem {
-        public readonly label: string;
+        public readonly label?: string;
+        public contextValue?: string;
         constructor(label?: string) {
-            this.label = label;
+            if (label) {
+                this.label = label;
+            }
         }
     },
     Position: class MockPossition {
         public readonly line: number;
         public readonly character: number;
-        constructor(line: number, character: number) { return; }
+        constructor(line: number, character: number) { this.line =line; this.character = character; }
     },
     Selection: class MockSelection {
         constructor(anchor: vscode.Position, active: vscode.Position) { return; }
@@ -165,7 +166,7 @@ export const testVscode = {
         static readonly Folder: vscode.ThemeIcon;
         readonly id: string;
         readonly color?: vscode.ThemeColor;
-        constructor(id: string, color?: vscode.ThemeColor) { return; }
+        constructor(id: string, color?: vscode.ThemeColor) { this.id = id; }
     }
 };
 

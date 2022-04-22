@@ -82,6 +82,7 @@ describe("cfViewCommands tests", () => {
         const errorText = "my error";
         const result = {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             on: (type: string, callback: any) => callback(new Error(errorText))
         };
         const urlPath = "url/path";
@@ -467,7 +468,7 @@ describe("cfViewCommands tests", () => {
 
         it("ok:: path selected, service is CFService type", async () => {
             const emptyPath = nsVsMock.testVscode.Uri.file("");
-            nsVsMock.testVscode.workspace.workspaceFolders = undefined;
+            sandbox.stub(nsVsMock.testVscode.workspace, 'workspaceFolders').value(undefined);
             vscodeWindowMock.expects("showOpenDialog").withExactArgs({
                 "openLabel": "Select folder for .env file",
                 "canSelectFiles": false,
@@ -490,7 +491,14 @@ describe("cfViewCommands tests", () => {
         it("ok:: path selected, service is ServiceTypeInfo type, no ups, no services found, creation allowed", async () => {
             const cloneService = _.merge(_.cloneDeep(service[0]), { "allowCreate": { name: "create" } });
             commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves([]);
-            commandsMock.expects("updateInstanceNameAndTags").withExactArgs([{"label":commands.CMD_BIND_TO_DEFAULT_SERVICE + cloneService.allowCreate.name,plan:cloneService.allowCreate.plan,serviceName: cloneService.allowCreate.serviceName},{ label: commands.CMD_CREATE_SERVICE, serviceName: '' }], cloneService, [], []).resolves(undefined);
+            commandsMock.expects("updateInstanceNameAndTags").withExactArgs([{
+                "label": commands.CMD_BIND_TO_DEFAULT_SERVICE + cloneService.allowCreate.name, plan: cloneService.allowCreate.plan,
+                serviceName: cloneService.allowCreate.serviceName ?? ''
+            }, {
+                label: commands.CMD_CREATE_SERVICE, serviceName: ''
+            }],
+                cloneService, [], []
+            ).resolves(undefined);
             expect(await cfViewCommands.cmdBindLocal([cloneService], { path, ignore: true })).to.be.undefined;
         });
 
@@ -540,7 +548,7 @@ describe("cfViewCommands tests", () => {
 
         it("ok:: path selected, service is not ServiceTypeInfo type, no ups, services found, type selected", async () => {
             service[0].plan = plans[0].label;
-            delete service[0].name;
+            delete (service[0] as any).name;
             opts.query = { filters: [{ key: eFilters.service_plan_names, value: service[0].plan }], per_page: CF_PAGE_SIZE };
             commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves(services);
             commandsMock.expects("getInstanceName").withExactArgs(services).resolves(services[0].label);
@@ -551,7 +559,7 @@ describe("cfViewCommands tests", () => {
 
         it("ok:: path selected, service is not ServiceTypeInfo type, no ups, services found, type selection canceled", async () => {
             service[0].plan = plans[0].label;
-            delete service[0].name;
+            delete (service[0] as any).name;
             opts.query = { filters: [{ key: eFilters.service_plan_names, value: service[0].plan }], per_page: CF_PAGE_SIZE };
             commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves(services);
             commandsMock.expects("getInstanceName").withExactArgs(services).resolves();
@@ -671,13 +679,13 @@ describe("cfViewCommands tests", () => {
             commandsMock.expects("getInstanceName").withExactArgs(services).resolves(services[1].label);
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.binding_service_to_file, cancellable: false }).resolves();
             vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_bound_successful(services[1].label)).resolves();
-            delete service[0].name;
+            delete (service[0] as any).name;
             assert.deepEqual(await cfViewCommands.bindLocalService(service, envPath), [services[1].label]);
         });
 
         it("ok:: serviceInfo is not array, select service canceled", async () => {
             const service: ServiceTypeInfo[] = [{ name: "", plan: "hdi-shared", prompt: "", tag: "" }];
-            delete service[0].name;
+            delete (service[0] as any).name;
             commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves(services);
             commandsMock.expects("getInstanceName").withExactArgs(services).resolves();
             expect(await cfViewCommands.bindLocalService(service, envPath)).to.be.undefined;
@@ -703,7 +711,7 @@ describe("cfViewCommands tests", () => {
             const error = new Error("error");
             vscodeWindowMock.expects("withProgress").withArgs({ location: nsVsMock.testVscode.ProgressLocation.Notification, title: messages.binding_service_to_file, cancellable: false }).rejects(error);
             vscodeWindowMock.expects("showErrorMessage").withExactArgs(error.message).resolves();
-            delete service[0].name;
+            delete (service[0] as any).name;
             await cfViewCommands.bindLocalService(service, envPath);
         });
 

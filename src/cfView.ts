@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import * as path from "path";
 import * as _ from "lodash";
@@ -19,6 +20,9 @@ export class CFTargetTI extends vscode.TreeItem {
 		};
 	}
 
+	// https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-0.html#properties-overriding-accessors-and-vice-versa-is-an-error
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment 
+	// @ts-ignore
 	get description(): string {
 		return `${_.includes(this.contextValue, '-active') ? "(Active Target)" : ""}${(this.target.isDirty ? "*" : "")}`;
 	}
@@ -120,15 +124,15 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 	}
 
 	public getParent(element: vscode.TreeItem): vscode.ProviderResult<vscode.TreeItem> {
-		return _.get(element, 'parent');
+		return _.get(element, 'parent') as vscode.TreeItem;
 	}
 
 	public getTreeItem(element: vscode.TreeItem): Promise<vscode.TreeItem> {
-		if (/^cf-(service|application)$/.test(element.contextValue)) {
+		if (/^cf-(service|application)$/.test(element.contextValue||"")) {
 			const item = _.cloneDeep(element);
 			item.label = element.contextValue === 'cf-application'
-				? `${element.label.toString()} (${(element as CFApplication).state})`
-				: `${element.label.toString()} (${(element as CFService).type})`;
+				? `${element.label!.toString()} (${(element as CFApplication).state})`
+				: `${element.label!.toString()} (${(element as CFService).type})`;
 			return Promise.resolve(item);
 		}
 		return Promise.resolve(element);
@@ -138,8 +142,8 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 		if (parent) {
 			if (parent instanceof CFTargetTI) {
 				return [new CFServicesFolder("Services", parent), new CFAppsFolder("Applications", parent)];
-			} else if (/^(services|apps)/.test(parent.contextValue)) {
-				if (/-active$/.test(parent.contextValue)) {
+			} else if (/^(services|apps)/.test(parent.contextValue||"")) {
+				if (/-active$/.test(parent.contextValue||"")) {
 					try {
 						return parent instanceof CFAppsFolder
 							/* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
@@ -179,7 +183,7 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
 	// }
 }
 
-export function getTargetRoot(node: CFTreeChildNode): CFTargetTI {
+export function getTargetRoot(node: CFTreeChildNode|undefined): CFTargetTI {
 	let item = node;
 	while ((_.get(item, 'parent'))) {
 		item = _.get(item, 'parent') as CFTreeChildNode; // walk up until target folder found

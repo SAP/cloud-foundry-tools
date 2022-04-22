@@ -9,6 +9,8 @@ mockVscode(nsVsMock.testVscode, "src/cfView.ts");
 import * as cfView from "../src/cfView";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
 import { createSandbox, SinonMock, SinonSandbox } from "sinon";
+// eslint-disable-next-line import/no-unresolved
+import type { TreeItem } from "vscode";
 
 describe("cfView tests", () => {
     let sandbox: SinonSandbox;
@@ -179,13 +181,22 @@ describe("cfView tests", () => {
             expect(instance.getParent(item)).to.be.equal(folder);
         });
 
+        it("ok:: verify CFFolder contextValue is not defined", async () => {
+            const name = 'test-app';
+            const item = new cfView.CFFolder (name, root);
+            const viewItem = await instance.getTreeItem(item);
+            expect(viewItem.label).to.be.equal(`${name}`);
+            expect(viewItem.tooltip).to.be.equal(`${name}`);
+            expect(instance.getParent(item)).to.be.equal(root);
+        });
+
         it("ok:: verify getChildren - root", async () => {
             const targets = [
                 { label: 't-1', isCurrent: false, isDirty: false },
                 { label: 't-2', isCurrent: true, isDirty: false }
             ];
             cfLocalMock.expects('cfGetTargets').resolves(targets);
-            expect(await instance.getChildren(undefined)).to.deep.equal(_.map(targets, target => new cfView.CFTargetTI(target)));
+            expect(await instance.getChildren(undefined as unknown as TreeItem)).to.deep.equal(_.map(targets, target => new cfView.CFTargetTI(target)));
         });
 
         it("ok:: verify getChildren - target, not active", async () => {
