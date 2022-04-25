@@ -7,7 +7,6 @@ import * as types from '@sap/wing-run-config-types';
 import * as _ from 'lodash';
 import * as PropertiesReader from "properties-reader";
 import { parse } from "comment-json";
-import { URL } from "url";
 import { EOL, platform } from "os";
 import { IServiceQuery, ServiceInstanceInfo, cfGetUpsInstances, eFilters, ServiceTypeInfo, cfGetManagedServiceInstances, cfGetTarget } from "@sap/cf-tools";
 import { getModuleLogger } from "./logger/logger-wrapper";
