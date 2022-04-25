@@ -4,7 +4,6 @@ import * as path from "path";
 import { CFView, CFService, CFTargetTI, CFTargetNotCurrent, getTargetRoot } from "./cfView";
 import { messages } from "./messages";
 import * as https from 'https';
-import * as url from "url";
 import { updateGitIgnoreList, isWindows, toText, UpsServiceQueryOprions, ServiceQueryOptions, resolveFilterValue } from "./utils";
 import {
     DEFAULT_TARGET, ServiceInstanceInfo, IServiceQuery, eFilters, Cli, cfGetConfigFileField,
@@ -138,14 +137,14 @@ export async function cfDeployServiceAPI(urlPath: string): Promise<string> {
 
         const accessToken = (await cfGetAuthToken()).replace("\n", "").replace("\n", ""); // lgtm [js/incomplete-sanitization]
 
-        const urlObj = url.parse(deployServiceUrl);
+        const urlObj = new URL(deployServiceUrl);
 
         const options = {
             protocol: urlObj.protocol,
             host: urlObj.host,
             port: urlObj.port ? urlObj.port : urlObj.protocol === "https:" ? 443 : 80,
             method: "get",
-            path: urlPath ? urlPath : urlObj.path,
+            path: urlPath ? urlPath : urlObj.pathname,
             headers: { Authorization: accessToken }
         };
 

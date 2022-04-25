@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect, assert } from "chai";
 import * as _ from "lodash";
-import * as url from "url";
 import * as nsVsMock from "./ext/mockVscode";
 import { mockVscode } from "./ext/mockUtil";
 
@@ -89,13 +88,13 @@ describe("cfViewCommands tests", () => {
 
         it("exception:: https get on - error", async () => {
             const ap = "https://api.cf.sap.hana.ondemand.com";
-            const target = url.parse(_.replace(ap, "api.cf", "deploy-service.cfapps"));
+            const target = new URL(_.replace(ap, "api.cf", "deploy-service.cfapps"));
             const options = {
                 protocol: target.protocol,
                 host: target.host,
                 port: 443,
                 method: "get",
-                path: target.path,
+                path: target.pathname,
                 headers: { Authorization: testToken.replace("\n", "").replace("\n", "") }
             };
             cfLocalUtilsMock.expects("cfGetConfigFileField").withExactArgs("Target").resolves(ap);
@@ -111,7 +110,7 @@ describe("cfViewCommands tests", () => {
 
         it("exception:: https get on - error, url parse data", async () => {
             const ap = "https://api.cf.sap.hana.ondemand.com:8090";
-            const target = url.parse(_.replace(ap, "api.cf", "deploy-service.cfapps"));
+            const target = new URL(_.replace(ap, "api.cf", "deploy-service.cfapps"));
             const options = {
                 protocol: target.protocol,
                 host: target.host,
@@ -133,7 +132,7 @@ describe("cfViewCommands tests", () => {
 
         it("exception:: https get on - error, url parse data, default port", async () => {
             const ap = "http://api.cf.sap.hana.ondemand.com";
-            const target = url.parse(_.replace(ap, "api.cf", "deploy-service.cfapps"));
+            const target = new URL(_.replace(ap, "api.cf", "deploy-service.cfapps"));
             const options = {
                 protocol: target.protocol,
                 host: target.host,

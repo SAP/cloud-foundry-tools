@@ -325,9 +325,7 @@
 		"@vscode-logging/types": "0.1.4",
 		"comment-json": "4.2.2",
 		"lodash": "4.17.21",
-		"properties-reader": "2.2.0",
-		"update": "0.7.4",
-		"url": "0.11.0"
+		"properties-reader": "2.2.0"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^16.2.3",
