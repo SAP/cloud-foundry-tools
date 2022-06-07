@@ -1,61 +1,68 @@
-/** @type {import("eslint").Linter.Config} */
 module.exports = {
-  "root": true,
-  "plugins": ["@typescript-eslint"],
-  "env": {
-    "browser": true,
-    "mocha": true,
-    "commonjs": true,
-    "node": true
+  // Common settings for JS Files.
+  extends: ["plugin:eslint-comments/recommended", "prettier"],
+  env: {
+    commonjs: true,
+    mocha: true,
+    node: true,
   },
-  // Based on https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin#recommended-configs
-  "extends": [
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking",
-    "plugin:import/recommended",
-    "plugin:import/typescript",
-    // prettier must be last because it turns off previous rules
-    "prettier"
-  ],
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "project": ["./tsconfig.json"],
-    "tsconfigRootDir": "."
+  rules: {
+    // TODO "eslint-comments/require-description": ["error", { ignore: [] }],
+    "eslint-comments/require-description": "off",
   },
-  "rules": {
-    "semi": "error",
-    "no-extra-semi": "error",
-    "no-eval": "error",
-    "@typescript-eslint/no-use-before-define": [
-      "error",
-      // These can be safely used before they are defined due to function hoisting in EcmaScript
-      { "functions": false, "classes": false },
-    ],
-    "@typescript-eslint/ban-ts-comment": [
-      "error",
-      {
-        // We only allow ts-expect-error comments to enforce removal
-        // of outdated suppression comments when the underlying issue has been resolved.
-        // https://devblogs.microsoft.com/typescript/announcing-typescript-3-9/#what-about-ts-ignore
-        "ts-expect-error": "allow-with-description",
-        "ts-ignore": true,
-        "ts-nocheck": true,
-        "ts-check": true,
+  overrides: [
+    {
+      // For pure-java script sub-packages and general scripts (in any package).
+      files: ["*.js"],
+      extends: ["eslint:recommended"],
+      parserOptions: {
+        // The `ecmaVersion` should align to the supported features of our target runtimes (browsers / nodejs / others)
+        // Consult with: https://kangax.github.io/compat-table/es2016plus/
+        ecmaVersion: 2017,
       },
-    ],
-    // Too many false positives from `restrict-template-expressions`, see:
-    //  - https://github.com/typescript-eslint/typescript-eslint/issues/2261
-    "@typescript-eslint/restrict-template-expressions": ["off"],
-    // TODO: These rules should be enabled once the source code has been improved
-    "@typescript-eslint/no-unsafe-assignment": ["off"],
-    "@typescript-eslint/no-unsafe-member-access": ["off"],
-    "@typescript-eslint/no-unsafe-call": ["off"],
-    "import/no-extraneous-dependencies": [
-      "error",
-      { "devDependencies": ["**/*.spec.ts"], "optionalDependencies": false, "peerDependencies": false },
-    ],
-    // note you must disable the base rule as it can report incorrect errors
-    "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": ["warn"]
-  }
-}
+    },
+    {
+      // For sub-packages using TypeScript (libraries/VSCode Exts) && TypeScript definitions (d.ts)
+      files: ["*.ts"],
+      plugins: ["@typescript-eslint"],
+      parser: "@typescript-eslint/parser",
+      parserOptions: {
+        project: ["./tsconfig.base.json", "./tsconfig.json"],
+      },
+      extends: [
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+      ],
+      rules: {
+        semi: "error",
+        "no-extra-semi": "error",
+        "no-eval": "error",
+        // TODO review each exclusion and fix issues if needed
+        "@typescript-eslint/interface-name-prefix": "off",
+        "@typescript-eslint/camelcase": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-floating-promises": "error",
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/restrict-template-expressions": "off",
+        "@typescript-eslint/unbound-method": "off",
+        "@typescript-eslint/no-unused-vars": "error",
+        "no-async-promise-executor": "off",
+        "no-irregular-whitespace": "off",
+        "prefer-rest-params": "off",
+        "prefer-spread": "off",
+      },
+    },
+    {
+      // For Vue frontend sub-packages.
+      files: ["*.vue"],
+      parser: "vue-eslint-parser",
+      // Using the smaller vue rule subset (essential) to avoid including formatting rules
+      // as formatting as handled by prettier **directly**.
+      extends: ["plugin:vue/essential"],
+    },
+  ],
+};

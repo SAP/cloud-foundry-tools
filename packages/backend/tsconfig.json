@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["es7"],
+    "module": "commonjs",
+    "outDir": "./out",
+    "rootDir": ".",
+    "rootDirs": ["./src", "./tests"],
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "target": "es2017",
+    "declaration": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "useUnknownInCatchVariables": false
+  },
+  "include": ["./src/**/*", "./tests/**/*"]
+}
