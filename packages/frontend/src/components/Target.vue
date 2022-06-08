@@ -1,19 +1,22 @@
 <template>
   <div class="loggedIn" id="targetDiv">
-    Cloud Foundry Target
-    <div>Organization and space are set</div>
+    <vscode-divider role="separator" aria-orientation="horizontal" orientation="horizontal"></vscode-divider>
     <br /><br />
-
-    Enter Cloud Foundry Organization<br />
+    <div style="font-weight: bold; width: 13%; float: left">Cloud Foundry Target</div>
+    <div :style="{ display: orgAndSpaceSetVisibility }" style="width: 23%; float: left">
+      Organization and space are set
+    </div>
+    <br /><br />
+    <span style="color: var(--vscode-foreground, #cccccc)">Select Cloud Foundry Organization </span
+    ><span class="text-danger" style="color: red">*</span><br />
     <vscode-dropdown position="below" @change="changeOrg">
       <vscode-option v-for="o in orgs" :key="o.guid" :value="o.guid" :selected="o.selected">{{
         o.label
       }}</vscode-option>
     </vscode-dropdown>
-
     <br /><br />
-
-    Enter Cloud Foundry Space<br />
+    <span style="color: var(--vscode-foreground, #cccccc)">Select Cloud Foundry Space </span
+    ><span class="text-danger" style="color: red">*</span><br />
     <vscode-dropdown position="below" @change="changeSpace">
       <vscode-option v-for="s in spaces" :key="s.guid" :value="s.guid" :selected="s.selected">{{
         s.label
@@ -33,51 +36,59 @@ provideVSCodeDesignSystem().register(vsCodeOption());
 
 export default {
   name: "Target",
-  props: ["target", "rpc"],
+  props: ["target", "rpc", "isLoggedIn"],
   data() {
     return {
-      isLoggedIn: "",
+      areOrgAndSpaceSet: "",
       orgs: [],
       spaces: [],
       selectedOrg: {},
       selectedSpace: {},
     };
   },
-  mounted() {
-    this.rpc.invoke("getSelectedTarget").then((target) => {
-      this.rpc.invoke("getOrgs").then((orgs) => {
-        this.selectedOrg = undefined;
-        this.selectedSpace = undefined;
-
-        let orgsWithSelected = orgs.map((org) => {
-          if (org.label === target.org) {
-            this.selectedOrg = { label: org.label, guid: org.guid };
-          }
-          return {
-            guid: org.guid,
-            label: org.label,
-            selected: org.label === target.org,
-          };
-        });
-        this.orgs = orgsWithSelected;
-
-        if (!this.selectedOrg || !this.selectedOrg.guid) {
-          if (orgs && orgs[0]) {
-            this.selectedOrg = { label: orgs[0].label, guid: orgs[0].guid };
-          }
-        }
-        if (this.selectedOrg && this.selectedOrg.guid) {
-          this.selectSpace(target.space);
-        }
-      });
-    });
+  watch: {
+    isLoggedIn(newVal) {
+      if (newVal) this.getOrgAndSpace();
+    },
   },
   computed: {
     loggedInVisibility() {
       return !this.isLoggedIn ? "none" : "";
     },
+    orgAndSpaceSetVisibility() {
+      return !this.areOrgAndSpaceSet ? "none" : "";
+    },
   },
   methods: {
+    getOrgAndSpace() {
+      this.rpc.invoke("getSelectedTarget").then((target) => {
+        this.rpc.invoke("getOrgs").then((orgs) => {
+          this.selectedOrg = undefined;
+          this.selectedSpace = undefined;
+
+          let orgsWithSelected = orgs.map((org) => {
+            if (org.label === target.org) {
+              this.selectedOrg = { label: org.label, guid: org.guid };
+            }
+            return {
+              guid: org.guid,
+              label: org.label,
+              selected: org.label === target.org,
+            };
+          });
+          this.orgs = orgsWithSelected;
+
+          if (!this.selectedOrg || !this.selectedOrg.guid) {
+            if (orgs && orgs[0]) {
+              this.selectedOrg = { label: orgs[0].label, guid: orgs[0].guid };
+            }
+          }
+          if (this.selectedOrg && this.selectedOrg.guid) {
+            this.selectSpace(target.space);
+          }
+        });
+      });
+    },
     selectSpace(targetSpace) {
       this.rpc.invoke("getSpaces", [this.selectedOrg.guid]).then((spaces) => {
         let spacesWithSelected = spaces.map((space) => {
@@ -112,6 +123,7 @@ export default {
       const space = this.selectedSpace.label;
 
       this.rpc.invoke("applyTarget", [org, space]).then(() => {
+        this.areOrgAndSpaceSet = true;
         console.log("update target display");
       });
     },

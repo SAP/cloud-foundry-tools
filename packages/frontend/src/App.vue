@@ -11,7 +11,7 @@
         <Signin :target="initialTarget" :rpc="rpc" @updateIsLoggedIn="updateIsLoggedIn" />
 
         <div :style="{ display: targetVisibility }">
-          <Target :target="initialTarget" :rpc="rpc" />
+          <Target :target="initialTarget" :rpc="rpc" :isLoggedIn="isLoggedIn" />
         </div>
       </div>
     </div>

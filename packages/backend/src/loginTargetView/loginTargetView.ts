@@ -39,7 +39,7 @@ export function openLoginView(endpoint?: string, org?: string, space?: string): 
     space: space,
   };
 
-  const panel = vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Login", vscode.ViewColumn.Beside, {
+  const panel = vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", vscode.ViewColumn.Beside, {
     enableScripts: true,
     localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],
   });

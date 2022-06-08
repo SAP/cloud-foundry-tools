@@ -1,7 +1,10 @@
 <template>
   <div>
-    <h1 wrapping-type="Normal">Login to Cloud Foundry</h1>
-    Enter Cloud Foundry parameters in order to login to Cloud Foundry enviroment
+    <h1 wrapping-type="Normal">Cloud Foundry Sign In and Targets</h1>
+    <span style="color: var(--vscode-foreground, #cccccc)"
+      >Provide your Cloud Foundry parameters to sign in to the Cloud Foundry enviroment</span
+    >
+    <br />
     <vscode-divider role="separator"></vscode-divider>
     <br />
   </div>
