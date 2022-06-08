@@ -132,6 +132,7 @@ async function logoutClick() {
   try {
     await invokeLongFunctionWithProgressForm(cfLogout);
     currentTarget = undefined;
+    void vscode.window.showInformationMessage(messages.logout_success);
     getModuleLogger(LOGGER_MODULE).debug("executeLogout: logout succeeded");
   } catch (error) {
     getModuleLogger(LOGGER_MODULE).error("executeLogout: logout error", error);
@@ -175,6 +176,7 @@ async function getSpaces(org: string): Promise<Space[]> {
 async function applyTarget(org: string, space: string) {
   try {
     await invokeLongFunctionWithProgressForm(cfSetOrgSpace, org, space);
+    void vscode.window.showInformationMessage(messages.success_set_org_space);
     getModuleLogger(LOGGER_MODULE).debug("executeSetOrgSpace: set org & spaces succeeded");
   } catch (error) {
     getModuleLogger(LOGGER_MODULE).error("executeSetOrgSpace: set org & spaces failed", error);

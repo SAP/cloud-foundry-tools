@@ -58,7 +58,7 @@
           ref="username"
           :value="username"
           size="50"
-          placeholder="E-mail address"
+          placeholder="E-mail address or Company ID"
           style="color: var(--vscode-foreground, #cccccc)"
           >Enter your Username <span class="text-danger" style="color: red">*</span></vscode-text-field
         >
@@ -145,7 +145,10 @@ export default {
       this.endpoint = val.target.value;
     },
     paste() {
-      navigator.clipboard.readText().then((clipText) => (this.passcode = clipText));
+      navigator.clipboard.readText().then((clipText) => {
+        this.passcode = clipText;
+        if (clipText != "") this.disableButton = false;
+      });
     },
     setSSO(val) {
       this.ssoOrCredentials = val.target.value;
