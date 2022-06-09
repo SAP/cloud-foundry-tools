@@ -44,6 +44,7 @@ export const messages = {
   set_targets_pick_save_details: `Create and save a new target`,
   set_targets_choose_the_operation: `Save your current target or specify a new one`,
   no_services_instance_byname_found: (name: string): string => `Could not find the ${name} service instance`,
+  login_failed: `Authentication failed.`,
   authentication_failed: (result: string): string => `Authentication failed: ${result}`,
   targeting: (orgField: string, spaceField: string): string => `Targeting CF ${orgField}/${spaceField}`,
   service_created: (instanceName: string): string => `The ${instanceName} service has been created.`,

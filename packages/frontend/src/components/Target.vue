@@ -4,7 +4,8 @@
     <br /><br />
     <div style="font-weight: bold; width: 13%; float: left">Cloud Foundry Target</div>
     <div :style="{ display: orgAndSpaceSetVisibility }" style="width: 23%; float: left">
-      Organization and space are set
+      <v-mdi name="mdi-check-circle-outline" size="15" fill="green"></v-mdi>
+      Organization and space are set.
     </div>
     <br /><br />
     <span style="color: var(--vscode-foreground, #cccccc)">Select Cloud Foundry Organization </span

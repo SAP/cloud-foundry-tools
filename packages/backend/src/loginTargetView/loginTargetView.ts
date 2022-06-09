@@ -120,7 +120,8 @@ function calculatePasscodeUrl(endpoint: string): string {
 async function loginClick(payload: SSOLoginOptions | CredentialsLoginOptions) {
   const result: string = await invokeLongFunctionWithProgressForm(cfLogin, payload);
   if (OK !== result) {
-    throw new Error(messages.authentication_failed(result));
+    void vscode.window.showErrorMessage(messages.login_failed);
+    return false;
   }
   void vscode.window.showInformationMessage(messages.login_success);
   getModuleLogger(LOGGER_MODULE).debug("executeLogin: login succeeded");

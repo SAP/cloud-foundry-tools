@@ -2,6 +2,7 @@
   <div>
     <div style="font-weight: bold; width: 13%; float: left">Cloud Foundry Sign-in</div>
     <div :style="{ display: loggedInVisibility }" style="width: 23%; float: left">
+      <v-mdi name="mdi-check-circle-outline" size="15" fill="green"></v-mdi>
       You are signed in to Cloud Foundry
     </div>
     <br /><br />
@@ -28,6 +29,19 @@
       <br /><br />
 
       <span style="color: var(--vscode-foreground, #cccccc)">Select authentication method </span>
+
+      <v-mdi
+        name="mdi-help-circle-outline"
+        size="15"
+        fill="#4f9cea"
+        v-tooltip="{
+          content:
+            ' Single sign-on (SSO) is a token-based authentication method<br />  in which an SSO token is passed in an HTTP header or cookie',
+          placement: 'right',
+          class: 'tooltip-custom',
+        }"
+      >
+      </v-mdi>
       <vscode-radio-group orientation="horizontal" :value="ssoOrCredentials" @change="setSSO">
         <vscode-radio id="radioCredentials" value="Credentials">Credentials </vscode-radio>
         <vscode-radio id="radioSSO" value="SSO">SSO Passcode </vscode-radio>
@@ -37,6 +51,18 @@
 
       <div id="sso-div" :style="{ display: ssoVisibility }">
         <vscode-link :href="target.passcodeUrl">Open a new browser page to generate your SSO passcode </vscode-link>
+        <v-mdi
+          name="mdi-help-circle-outline"
+          size="15"
+          fill="#4f9cea"
+          v-tooltip="{
+            content:
+              ' Your SSO passcode is generated in a seperate browser page.<br />  Copy it and paste it back in SAP Business Application Studio.',
+            placement: 'right',
+            class: 'tooltip-custom',
+          }"
+        >
+        </v-mdi>
         <br /><br />
 
         <vscode-text-field
@@ -73,7 +99,11 @@
           >Enter your password <span class="text-danger" style="color: red">*</span></vscode-text-field
         >
       </div>
-
+      <br />
+      <span :style="{ display: authFailedVisibility }" style="color: #b80000">
+        <v-mdi name="mdi-close-circle-outline" size="15" fill="#b80404"></v-mdi>
+        Authentication failed. Please try again.
+      </span>
       <br /><br />
       <vscode-button @click="SigninClicked" v-bind:disabled="disableButton">Sign-in</vscode-button>
     </div>
@@ -104,6 +134,7 @@ export default {
     return {
       disableButton: true,
       isLoggedIn: "",
+      authFailed: "",
       ssoOrCredentials: "Credentials",
       endpoint: "",
       passcode: "",
@@ -121,6 +152,9 @@ export default {
     },
   },
   computed: {
+    authFailedVisibility() {
+      return !this.authFailed ? "none" : "";
+    },
     loggedInVisibility() {
       return !this.isLoggedIn ? "none" : "";
     },
@@ -167,11 +201,13 @@ export default {
 
       this.rpc.invoke("loginClick", [payload]).then((res) => {
         if (res) {
+          this.authFailed = "";
           this.isLoggedIn = true;
         } else {
-          // TODO: login failed
+          this.authFailed = true;
         }
       });
+      //   if (!this.isLoggedIn) this.authFailed = true;
     },
     SignoutClicked() {
       let payload = {};
