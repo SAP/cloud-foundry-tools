@@ -3,9 +3,9 @@
     <vscode-divider role="separator" aria-orientation="horizontal" orientation="horizontal"></vscode-divider>
     <br /><br />
     <div style="font-weight: bold; width: 13%; float: left">Cloud Foundry Target</div>
-    <div :style="{ display: orgAndSpaceSetVisibility }" style="width: 23%; float: left">
+    <div :style="{ display: orgAndSpaceSetVisibility }" style="width: 30%; float: left">
       <v-mdi name="mdi-check-circle-outline" size="15" fill="green"></v-mdi>
-      Organization and space are set.
+      Target is set to: {{ currentOrg }} org and {{ currentSpace }} space.
     </div>
     <br /><br />
     <span style="color: var(--vscode-foreground, #cccccc)">Select Cloud Foundry Organization </span
@@ -25,7 +25,7 @@
     </vscode-dropdown>
     <br /><br />
 
-    <vscode-button @click="setTarget">Apply</vscode-button>
+    <vscode-button @click="setTarget" v-bind:disabled="disableApplyButton">Apply</vscode-button>
   </div>
 </template>
 <script>
@@ -41,10 +41,13 @@ export default {
   data() {
     return {
       areOrgAndSpaceSet: "",
+      disableApplyButton: true,
       orgs: [],
       spaces: [],
       selectedOrg: {},
       selectedSpace: {},
+      currentOrg: undefined,
+      currentSpace: undefined,
     };
   },
   watch: {
@@ -64,8 +67,7 @@ export default {
     getOrgAndSpace() {
       this.rpc.invoke("getSelectedTarget").then((target) => {
         this.rpc.invoke("getOrgs").then((orgs) => {
-          this.selectedOrg = undefined;
-          this.selectedSpace = undefined;
+          this.disableApplyButton = true;
 
           let orgsWithSelected = orgs.map((org) => {
             if (org.label === target.org) {
@@ -77,11 +79,11 @@ export default {
               selected: org.label === target.org,
             };
           });
-          this.orgs = orgsWithSelected;
+          this.orgs = [{ label: "--- Select Org ---", guid: "0" }].concat(orgsWithSelected);
 
           if (!this.selectedOrg || !this.selectedOrg.guid) {
-            if (orgs && orgs[0]) {
-              this.selectedOrg = { label: orgs[0].label, guid: orgs[0].guid };
+            if (this.orgs && this.orgs[0]) {
+              this.selectedOrg = { label: this.orgs[0].label, guid: this.orgs[0].guid };
             }
           }
           if (this.selectedOrg && this.selectedOrg.guid) {
@@ -100,21 +102,29 @@ export default {
           };
         });
 
-        this.spaces = spacesWithSelected;
+        this.spaces = [{ label: "--- Select Space ---", guid: "0" }].concat(spacesWithSelected);
+
         if (!this.selectedSpace || !this.selectedSpace.guid) {
           this.selectedSpace = {
-            label: spaces[0].label,
-            guid: spaces[0].guid,
+            label: this.spaces[0].label,
+            guid: this.spaces[0].guid,
           };
         }
       });
+      this.statusApplyButton();
     },
     changeOrg(val) {
       this.selectedOrg = this.orgs.find((org) => org.guid === val.target.value);
       this.selectSpace(undefined);
+      this.statusApplyButton();
     },
     changeSpace(val) {
       this.selectedSpace = this.spaces.find((space) => space.guid === val.target.value);
+      this.statusApplyButton();
+    },
+    statusApplyButton() {
+      if (this.selectedOrg.guid != "0" && this.selectedSpace.guid != "0") this.disableApplyButton = false;
+      else this.disableApplyButton = true;
     },
     setEndpoint(val) {
       this.endpoint = val.target.value;
@@ -125,6 +135,8 @@ export default {
 
       this.rpc.invoke("applyTarget", [org, space]).then(() => {
         this.areOrgAndSpaceSet = true;
+        this.currentOrg = org;
+        this.currentSpace = space;
         console.log("update target display");
       });
     },

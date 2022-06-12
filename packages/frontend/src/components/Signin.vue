@@ -1,34 +1,30 @@
 <template>
   <div>
-    <div style="font-weight: bold; width: 13%; float: left">Cloud Foundry Sign-in</div>
-    <div :style="{ display: loggedInVisibility }" style="width: 23%; float: left">
+    <div class="cloud-foundry-title">Cloud Foundry Sign-in</div>
+    <div :style="{ display: loggedInVisibility }" class="logged-in-visibility">
       <v-mdi name="mdi-check-circle-outline" size="15" fill="green"></v-mdi>
       You are signed in to Cloud Foundry
     </div>
     <br /><br />
 
     <div :style="{ display: loggedInVisibility }">
-      <span style="color: var(--vscode-foreground, #767676)">Cloud Foundry Endpoint</span>
+      <span class="cloud-foundry-endpoint">Cloud Foundry Endpoint</span>
       <br />
       <div>{{ endpoint }}</div>
       <br /><br />
-      <vscode-button style="background-color: #444" @click="SignoutClicked">Sign-out</vscode-button>
+      <vscode-button class="sign-out-button" @click="SignoutClicked">Sign-out</vscode-button>
     </div>
 
     <!-- authentication area -->
     <div :style="{ display: notLoggedInVisibility }" id="authenticationDiv">
       <br />
-      <vscode-text-field
-        size="50"
-        :value="this.target.defaultEndpoint"
-        @input="setEndpoint"
-        style="color: var(--vscode-foreground, #cccccc)"
-        >Enter Cloud Foundry Endpoint <span class="text-danger" style="color: red">*</span></vscode-text-field
+      <vscode-text-field size="50" :value="this.target.defaultEndpoint" @input="setEndpoint" class="cccccc-field"
+        >Enter Cloud Foundry Endpoint <span class="text-danger">*</span></vscode-text-field
       >
 
       <br /><br />
 
-      <span style="color: var(--vscode-foreground, #cccccc)">Select authentication method </span>
+      <span class="cccccc-field">Select authentication method </span>
 
       <v-mdi
         name="mdi-help-circle-outline"
@@ -36,7 +32,7 @@
         fill="#4f9cea"
         v-tooltip="{
           content:
-            ' Single sign-on (SSO) is a token-based authentication method<br />  in which an SSO token is passed in an HTTP header or cookie',
+            ' Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header or cookie.',
           placement: 'right',
           class: 'tooltip-custom',
         }"
@@ -57,7 +53,7 @@
           fill="#4f9cea"
           v-tooltip="{
             content:
-              ' Your SSO passcode is generated in a seperate browser page.<br />  Copy it and paste it back in SAP Business Application Studio.',
+              ' Your SSO passcode is generated in a seperate browser page. <br />Copy it and paste it back in SAP Business Application Studio.',
             placement: 'right',
             class: 'tooltip-custom',
           }"
@@ -69,34 +65,37 @@
           size="50"
           placeholder="Enter your passcode"
           v-on:keyup="btnStatus"
-          ref="passcode"
+          v-model="passcode"
+          @input="(p) => (passcode = p.target.value)"
           :value="passcode"
-          style="color: var(--vscode-foreground, #cccccc)"
+          class="cccccc-field"
         >
           Enter your SSO Passcode
-          <span class="text-danger" style="color: red">*</span>
+          <span class="text-danger">*</span>
           <span slot="end" class="codicon codicon-clippy" @click="paste"></span>
         </vscode-text-field>
       </div>
       <div id="credentials-div" :style="{ display: credentialsVisibility }">
         <vscode-text-field
           v-on:keyup="btnStatus"
-          ref="username"
+          v-model="username"
           :value="username"
+          @input="(u) => (username = u.target.value)"
           size="50"
           placeholder="E-mail address or Company ID"
-          style="color: var(--vscode-foreground, #cccccc)"
-          >Enter your Username <span class="text-danger" style="color: red">*</span></vscode-text-field
+          class="cccccc-field"
+          >Enter your Username <span class="text-danger">*</span></vscode-text-field
         >
         <br /><br />
         <vscode-text-field
           v-on:keyup="btnStatus"
-          ref="password"
+          v-model="password"
           :value="password"
+          @input="(p) => (password = p.target.value)"
           type="password"
           size="50"
-          style="color: var(--vscode-foreground, #cccccc)"
-          >Enter your password <span class="text-danger" style="color: red">*</span></vscode-text-field
+          class="cccccc-field"
+          >Enter your password <span class="text-danger">*</span></vscode-text-field
         >
       </div>
       <br />
@@ -170,9 +169,9 @@ export default {
   },
   methods: {
     btnStatus() {
-      if (this.ssoOrCredentials == "Credentials" && this.$refs.username.value != "" && this.$refs.password.value != "")
+      if (this.ssoOrCredentials == "Credentials" && this.username != "" && this.password != "")
         this.disableButton = false;
-      else if (this.ssoOrCredentials == "SSO" && this.$refs.passcode.value != "") this.disableButton = false;
+      else if (this.ssoOrCredentials == "SSO" && this.passcode != "") this.disableButton = false;
       else this.disableButton = true;
     },
     setEndpoint(val) {
@@ -181,7 +180,7 @@ export default {
     paste() {
       navigator.clipboard.readText().then((clipText) => {
         this.passcode = clipText;
-        if (clipText != "") this.disableButton = false;
+        this.btnStatus();
       });
     },
     setSSO(val) {
@@ -192,11 +191,10 @@ export default {
       let payload = {};
       payload.endpoint = this.endpoint !== "" ? this.endpoint : this.target.defaultEndpoint;
       if (this.ssoOrCredentials === "SSO") {
-        this.passcode = this.$refs.passcode.value;
         payload.ssoPasscode = this.passcode;
       } else {
-        payload.user = this.$refs.username.value;
-        payload.password = this.$refs.password.value;
+        payload.user = this.username;
+        payload.password = this.password;
       }
 
       this.rpc.invoke("loginClick", [payload]).then((res) => {
@@ -207,7 +205,6 @@ export default {
           this.authFailed = true;
         }
       });
-      //   if (!this.isLoggedIn) this.authFailed = true;
     },
     SignoutClicked() {
       let payload = {};
@@ -223,4 +220,36 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+.cloud-foundry-title {
+  font-weight: bold;
+  width: 13%;
+  float: left;
+}
+.logged-in-visibility {
+  width: 23%;
+  float: left;
+}
+.cloud-foundry-endpoint {
+  color: var(--vscode-foreground, #767676);
+}
+.sign-out-button {
+  background-color: #444;
+}
+.text-danger {
+  color: red;
+}
+.cccccc-field {
+  color: var(--vscode-foreground, #cccccc);
+}
+.tooltip .tooltip-inner {
+  width: 284px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 10px 10px 20px 10px;
+  /* border: 1px solid #BFBFBF; */
+  border-radius: 6px;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+}
+</style>
