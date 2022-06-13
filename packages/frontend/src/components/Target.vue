@@ -79,7 +79,7 @@ export default {
               selected: org.label === target.org,
             };
           });
-          this.orgs = [{ label: "--- Select Org ---", guid: "0" }].concat(orgsWithSelected);
+          this.orgs = [{ label: "--- Select Org ---", guid: "0", selected: true }].concat(orgsWithSelected);
 
           if (!this.selectedOrg || !this.selectedOrg.guid) {
             if (this.orgs && this.orgs[0]) {
@@ -102,9 +102,9 @@ export default {
           };
         });
 
-        this.spaces = [{ label: "--- Select Space ---", guid: "0" }].concat(spacesWithSelected);
+        this.spaces = [{ label: "--- Select Space ---", guid: "0", selected: true }].concat(spacesWithSelected);
 
-        if (!this.selectedSpace || !this.selectedSpace.guid) {
+        if (targetSpace == undefined || !this.selectedSpace || !this.selectedSpace.guid) {
           this.selectedSpace = {
             label: this.spaces[0].label,
             guid: this.spaces[0].guid,

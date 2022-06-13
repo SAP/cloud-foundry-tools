@@ -35,6 +35,7 @@
             ' Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header or cookie.',
           placement: 'right',
           class: 'tooltip-custom',
+          size: '10%',
         }"
       >
       </v-mdi>
@@ -56,6 +57,7 @@
               ' Your SSO passcode is generated in a seperate browser page. <br />Copy it and paste it back in SAP Business Application Studio.',
             placement: 'right',
             class: 'tooltip-custom',
+            size: '10%',
           }"
         >
         </v-mdi>
