@@ -2,34 +2,42 @@
   <div>
     <div class="cloud-foundry-title">Cloud Foundry Sign-in</div>
     <div :style="{ display: loggedInVisibility }" class="logged-in-visibility">
-      <v-mdi name="mdi-check-circle-outline" size="15" fill="green"></v-mdi>
+      <v-mdi
+        name="mdi-check-circle-outline"
+        size="15"
+        fill="var(--vscode-notebookStatusSuccessIcon-foreground, #388a34)"
+      ></v-mdi>
       You are signed in to Cloud Foundry
     </div>
     <br /><br />
 
     <div :style="{ display: loggedInVisibility }">
-      <span class="cloud-foundry-endpoint">Cloud Foundry Endpoint</span>
+      <span class="subtitle-color-field">Cloud Foundry Endpoint</span>
       <br />
-      <div>{{ endpoint }}</div>
+      <div class="mt-8">{{ endpoint }}</div>
       <br /><br />
-      <vscode-button class="sign-out-button" @click="SignoutClicked">Sign-out</vscode-button>
+      <vscode-button class="sign-out-button" @click="SignoutClicked">Sign out</vscode-button>
     </div>
 
     <!-- authentication area -->
     <div :style="{ display: notLoggedInVisibility }" id="authenticationDiv">
       <br />
-      <vscode-text-field size="50" :value="this.target.defaultEndpoint" @input="setEndpoint" class="cccccc-field"
-        >Enter Cloud Foundry Endpoint <span class="text-danger">*</span></vscode-text-field
-      >
-
+      <span class="subtitle-color-field">Enter Cloud Foundry Endpoint </span><span class="text-danger">*</span>
+      <br />
+      <vscode-text-field
+        class="pt-8"
+        size="50"
+        :value="this.target.defaultEndpoint"
+        @input="setEndpoint"
+      ></vscode-text-field>
       <br /><br />
 
-      <span class="cccccc-field">Select authentication method </span>
+      <span class="subtitle-color-field">Select authentication method </span>
 
       <v-mdi
         name="mdi-help-circle-outline"
         size="15"
-        fill="#4f9cea"
+        fill="var(--vscode-inputValidation-infoBorder, #4f9cea)"
         v-tooltip="{
           content:
             ' Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header or cookie.',
@@ -44,14 +52,14 @@
         <vscode-radio id="radioSSO" value="SSO">SSO Passcode </vscode-radio>
       </vscode-radio-group>
 
-      <br /><br />
-
       <div id="sso-div" :style="{ display: ssoVisibility }">
-        <vscode-link :href="target.passcodeUrl">Open a new browser page to generate your SSO passcode </vscode-link>
+        <vscode-link class="pr-4" :href="target.passcodeUrl"
+          >Open a new browser page to generate your SSO passcode
+        </vscode-link>
         <v-mdi
           name="mdi-help-circle-outline"
           size="15"
-          fill="#4f9cea"
+          fill="var(--vscode-inputValidation-infoBorder, #4f9cea)"
           v-tooltip="{
             content:
               ' Your SSO passcode is generated in a seperate browser page. <br />Copy it and paste it back in SAP Business Application Studio.',
@@ -61,52 +69,57 @@
           }"
         >
         </v-mdi>
-        <br /><br />
+        <br /><br /><br />
 
+        <span class="subtitle-color-field">Enter your SSO Passcode </span><span class="text-danger">*</span>
+        <br />
         <vscode-text-field
+          class="pt-8"
           size="50"
           placeholder="Enter your passcode"
           v-on:keyup="btnStatus"
           v-model="passcode"
           @input="(p) => (passcode = p.target.value)"
           :value="passcode"
-          class="cccccc-field"
         >
-          Enter your SSO Passcode
-          <span class="text-danger">*</span>
           <span slot="end" class="codicon codicon-clippy" @click="paste"></span>
         </vscode-text-field>
       </div>
+      <br />
+
       <div id="credentials-div" :style="{ display: credentialsVisibility }">
+        <span class="subtitle-color-field">Enter your Username </span><span class="text-danger">*</span>
+        <br />
         <vscode-text-field
+          class="pt-8"
           v-on:keyup="btnStatus"
           v-model="username"
           :value="username"
           @input="(u) => (username = u.target.value)"
           size="50"
           placeholder="E-mail address or Company ID"
-          class="cccccc-field"
-          >Enter your Username <span class="text-danger">*</span></vscode-text-field
-        >
+        ></vscode-text-field>
         <br /><br />
+
+        <span class="subtitle-color-field">Enter your password </span><span class="text-danger">*</span>
+        <br />
         <vscode-text-field
+          class="pt-8"
           v-on:keyup="btnStatus"
           v-model="password"
           :value="password"
           @input="(p) => (password = p.target.value)"
           type="password"
           size="50"
-          class="cccccc-field"
-          >Enter your password <span class="text-danger">*</span></vscode-text-field
-        >
+        ></vscode-text-field>
       </div>
       <br />
-      <span :style="{ display: authFailedVisibility }" style="color: #b80000">
-        <v-mdi name="mdi-close-circle-outline" size="15" fill="#b80404"></v-mdi>
+      <span :style="{ display: authFailedVisibility }" style="color: var(--vscode-errorForeground, #b80000)">
+        <v-mdi name="mdi-close-circle-outline" size="15" fill="var(--vscode-errorForeground, #b80000)"></v-mdi>
         Authentication failed. Please try again.
       </span>
       <br /><br />
-      <vscode-button @click="SigninClicked" v-bind:disabled="disableButton">Sign-in</vscode-button>
+      <vscode-button @click="SigninClicked" v-bind:disabled="disableButton">Sign in</vscode-button>
     </div>
 
     <br /><br />
@@ -225,15 +238,12 @@ export default {
 <style>
 .cloud-foundry-title {
   font-weight: bold;
-  width: 13%;
+  width: 11%;
   float: left;
 }
 .logged-in-visibility {
   width: 23%;
   float: left;
-}
-.cloud-foundry-endpoint {
-  color: var(--vscode-foreground, #767676);
 }
 .sign-out-button {
   background-color: #444;
@@ -241,8 +251,8 @@ export default {
 .text-danger {
   color: red;
 }
-.cccccc-field {
-  color: var(--vscode-foreground, #cccccc);
+.subtitle-color-field {
+  color: var(--vscode-editorCodeLens-foreground, #999999);
 }
 .tooltip .tooltip-inner {
   width: 284px;
@@ -250,8 +260,14 @@ export default {
   color: #fff;
   text-align: center;
   padding: 10px 10px 20px 10px;
-  /* border: 1px solid #BFBFBF; */
   border-radius: 6px;
   box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+  text-align: left;
+}
+.pr-4 {
+  padding-right: 4px;
+}
+.pt-8 {
+  padding-top: 8px;
 }
 </style>

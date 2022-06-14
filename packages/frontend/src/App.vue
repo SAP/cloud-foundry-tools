@@ -1,12 +1,12 @@
 <template>
   <v-app id="app">
-    <Header />
+    <Header class="app" />
 
     <div :style="{ display: progressVisibility }">
       <vscode-progress-ring></vscode-progress-ring>
     </div>
 
-    <div :style="{ display: formVisibility }">
+    <div class="app" :style="{ display: formVisibility }">
       <div style="visibility: none">
         <Signin :target="initialTarget" :rpc="rpc" @updateIsLoggedIn="updateIsLoggedIn" />
 
@@ -131,4 +131,8 @@ export default {
   },
 };
 </script>
-<style scoped></style>
+<style scoped>
+.app {
+  padding-left: 16px;
+}
+</style>

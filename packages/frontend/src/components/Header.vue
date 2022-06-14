@@ -1,9 +1,10 @@
 <template>
   <div>
     <h1 wrapping-type="Normal">Cloud Foundry Sign In and Targets</h1>
-    <span style="color: var(--vscode-foreground, #cccccc)"
-      >Provide your Cloud Foundry parameters to sign in to the Cloud Foundry enviroment</span
+    <span class="subtitle-field">
+      Provide your Cloud Foundry parameters to sign in to the Cloud Foundry enviroment</span
     >
+    <br />
     <br />
     <vscode-divider role="separator"></vscode-divider>
     <br />
@@ -19,3 +20,10 @@ export default {
   props: [],
 };
 </script>
+
+<style>
+.subtitle-field {
+  color: var(--vscode-editorCodeLens-foreground, #999999);
+  margin-bottom: 16px;
+}
+</style>

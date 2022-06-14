@@ -2,30 +2,34 @@
   <div class="loggedIn" id="targetDiv">
     <vscode-divider role="separator" aria-orientation="horizontal" orientation="horizontal"></vscode-divider>
     <br /><br />
-    <div style="font-weight: bold; width: 13%; float: left">Cloud Foundry Target</div>
+    <div style="font-weight: bold; width: 11%; float: left">Cloud Foundry Target</div>
     <div :style="{ display: orgAndSpaceSetVisibility }" style="width: 30%; float: left">
-      <v-mdi name="mdi-check-circle-outline" size="15" fill="green"></v-mdi>
+      <v-mdi
+        name="mdi-check-circle-outline"
+        size="15"
+        fill="var(--vscode-notebookStatusSuccessIcon-foreground, #388a34)"
+      ></v-mdi>
       Target is set to: {{ currentOrg }} org and {{ currentSpace }} space.
     </div>
     <br /><br />
-    <span style="color: var(--vscode-foreground, #cccccc)">Select Cloud Foundry Organization </span
+    <span class="subtitle-color-field">Select Cloud Foundry Organization </span
     ><span class="text-danger" style="color: red">*</span><br />
-    <vscode-dropdown position="below" @change="changeOrg">
+    <vscode-dropdown class="mt-8" position="below" style="width: 300px" @change="changeOrg">
       <vscode-option v-for="o in orgs" :key="o.guid" :value="o.guid" :selected="o.selected">{{
         o.label
       }}</vscode-option>
     </vscode-dropdown>
     <br /><br />
-    <span style="color: var(--vscode-foreground, #cccccc)">Select Cloud Foundry Space </span
+    <span class="subtitle-color-field">Select Cloud Foundry Space </span
     ><span class="text-danger" style="color: red">*</span><br />
-    <vscode-dropdown position="below" @change="changeSpace">
+    <vscode-dropdown class="mt-8" position="below" style="width: 300px" @change="changeSpace">
       <vscode-option v-for="s in spaces" :key="s.guid" :value="s.guid" :selected="s.selected">{{
         s.label
       }}</vscode-option>
     </vscode-dropdown>
     <br /><br />
 
-    <vscode-button @click="setTarget" v-bind:disabled="disableApplyButton">Apply</vscode-button>
+    <vscode-button class="mt-8" @click="setTarget" v-bind:disabled="disableApplyButton">Apply</vscode-button>
   </div>
 </template>
 <script>
@@ -79,7 +83,7 @@ export default {
               selected: org.label === target.org,
             };
           });
-          this.orgs = [{ label: "--- Select Org ---", guid: "0", selected: true }].concat(orgsWithSelected);
+          this.orgs = [{ label: " ", guid: "0", selected: true }].concat(orgsWithSelected);
 
           if (!this.selectedOrg || !this.selectedOrg.guid) {
             if (this.orgs && this.orgs[0]) {
@@ -101,8 +105,7 @@ export default {
             selected: targetSpace ? space.label === targetSpace : false,
           };
         });
-
-        this.spaces = [{ label: "--- Select Space ---", guid: "0", selected: true }].concat(spacesWithSelected);
+        this.spaces = [{ label: " ", guid: "0", selected: true }].concat(spacesWithSelected);
 
         if (targetSpace == undefined || !this.selectedSpace || !this.selectedSpace.guid) {
           this.selectedSpace = {
@@ -123,7 +126,8 @@ export default {
       this.statusApplyButton();
     },
     statusApplyButton() {
-      if (this.selectedOrg.guid != "0" && this.selectedSpace.guid != "0") this.disableApplyButton = false;
+      if (this.selectedSpace.label == this.currentSpace) this.disableApplyButton = true;
+      else if (this.selectedOrg.guid != "0" && this.selectedSpace.guid != "0") this.disableApplyButton = false;
       else this.disableApplyButton = true;
     },
     setEndpoint(val) {
@@ -137,9 +141,19 @@ export default {
         this.areOrgAndSpaceSet = true;
         this.currentOrg = org;
         this.currentSpace = space;
+        this.disableApplyButton = true;
         console.log("update target display");
       });
     },
   },
 };
 </script>
+
+<style>
+.subtitle-color-field {
+  color: var(--vscode-editorCodeLens-foreground, #999999);
+}
+.mt-8 {
+  margin-top: 8px;
+}
+</style>
