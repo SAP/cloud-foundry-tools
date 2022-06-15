@@ -58,14 +58,14 @@ export class DependencyHandler implements types.IDependencyHandler {
       let chiselTask;
       if (_.size(instanceNames)) {
         // Get metadata of service instance by service name
-        const instanceType: string = (await cfLocal.cfGetInstanceMetadata(instanceNames![0])).service;
+        const instanceType: string = (await cfLocal.cfGetInstanceMetadata(_.get(instanceNames, "[0]"))).service;
 
         // Create chisel task if neccessary
         if (_.get(bindContext, "depContext.data.isCreateChiselTask") || /^hana(trial)?$/.test(instanceType)) {
           void trackChiselTask("Chisel Task", ["CF tools"]);
 
           // Create it in dependent task
-          const chiselTaskNameSuffix = instanceNames!.join("&");
+          const chiselTaskNameSuffix = instanceNames?.join("&") || "";
           chiselTask = await checkAndCreateChiselTask(bindContext.envPath?.fsPath, chiselTaskNameSuffix);
           if (chiselTask) {
             if (!options?.silent) {
@@ -90,7 +90,7 @@ export class DependencyHandler implements types.IDependencyHandler {
           {
             configData: bindContext.configData,
             resource: {
-              name: instanceNames![0],
+              name: _.get(instanceNames, "[0]"),
               type: instanceType || "",
             },
           },

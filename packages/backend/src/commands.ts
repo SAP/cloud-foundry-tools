@@ -690,7 +690,7 @@ async function checkForMoreServices(
       return false;
     }
     // it is more:<next page>
-    const nextPage = Number.parseInt(lastElem!.serviceName.split(":")[1], 10);
+    const nextPage = Number.parseInt(_.get(lastElem, 'serviceName.split(":")[1]'), 10);
 
     const nextAvailableServices = await getAvailableServices({
       query: { page: nextPage },
@@ -749,7 +749,7 @@ export async function updateInstanceNameAndTags(
     }
   }
   if (_.size(instanceName) > 0) {
-    instanceNames.push(instanceName!);
+    instanceNames.push(_.get(instanceName, ""));
     serviceTypeInfo?.tag && tags.push(serviceTypeInfo.tag);
   }
   return instanceName;

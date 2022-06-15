@@ -1721,33 +1721,37 @@ describe("commands unit tests", () => {
         },
       };
 
+      let infoName = info?.allowCreate?.name || "";
+      let infoServiceName = info?.allowCreate?.serviceName || "";
+      let infoPlan = info?.allowCreate?.plan || "";
+
       const availableServices = [
         {
-          label: commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name!,
-          serviceName: info.allowCreate!.serviceName!,
-          plan: info.allowCreate!.plan,
+          label: commands.CMD_BIND_TO_DEFAULT_SERVICE + infoName,
+          serviceName: infoServiceName,
+          plan: infoPlan,
         },
         {
           label: commands.CMD_CREATE_SERVICE,
           serviceName: "",
         },
         {
-          serviceName: info.allowCreate!.serviceName!,
+          serviceName: infoServiceName,
           label: expectedInstanceName,
-          plan: info.allowCreate!.plan!,
+          plan: infoPlan,
         },
       ];
       const pickItems = [
         {
-          description: `${info.allowCreate!.serviceName} (${info.allowCreate!.plan})`,
-          label: commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name!,
+          description: `${infoServiceName} (${infoPlan})`,
+          label: commands.CMD_BIND_TO_DEFAULT_SERVICE + infoName,
         },
         {
           description: "",
           label: commands.CMD_CREATE_SERVICE,
         },
         {
-          description: `${info.allowCreate!.serviceName} (${info.allowCreate!.plan})`,
+          description: `${infoServiceName} (${infoPlan})`,
           label: expectedInstanceName,
         },
       ];
@@ -1762,7 +1766,7 @@ describe("commands unit tests", () => {
         })
         .resolves(pickItems[0]);
       const result = await commands.updateInstanceNameAndTags(availableServices, info, [], []);
-      expect(result).to.be.equal(info.allowCreate!.name);
+      expect(result).to.be.equal(infoName);
     });
 
     it("ok:: Bind to default service,when default service instance doesn't existed (createServiceInstance).", async () => {
@@ -1784,12 +1788,13 @@ describe("commands unit tests", () => {
       };
       const plans = [{ label: expectedPlanName }];
 
+      let infoName = info?.allowCreate?.name || "";
       const availableServices = [
-        { label: commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name!, serviceName: "" },
+        { label: commands.CMD_BIND_TO_DEFAULT_SERVICE + infoName, serviceName: "" },
         { label: commands.CMD_CREATE_SERVICE, serviceName: "" },
       ];
       const pickItems = [
-        { description: "", label: commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name! },
+        { description: "", label: commands.CMD_BIND_TO_DEFAULT_SERVICE + infoName },
         { description: "", label: commands.CMD_CREATE_SERVICE },
       ];
 
@@ -1830,7 +1835,7 @@ describe("commands unit tests", () => {
         .resolves(expectedInstanceName);
 
       const result = await commands.updateInstanceNameAndTags(availableServices, info, [], []);
-      expect(result).to.be.equal(info.allowCreate!.name);
+      expect(result).to.be.equal(infoName);
     });
 
     it("ok:: Bind to default service,when default service instance doesn't existed (createUpsInstance).", async () => {
@@ -1844,12 +1849,13 @@ describe("commands unit tests", () => {
         },
       };
 
+      let infoName = info?.allowCreate?.name || "";
       const availableServices = [
-        { label: commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name!, serviceName: "" },
+        { label: commands.CMD_BIND_TO_DEFAULT_SERVICE + infoName, serviceName: "" },
         { label: commands.CMD_CREATE_SERVICE, serviceName: "" },
       ];
       const pickItems = [
-        { description: "", label: commands.CMD_BIND_TO_DEFAULT_SERVICE + info.allowCreate!.name! },
+        { description: "", label: commands.CMD_BIND_TO_DEFAULT_SERVICE + infoName },
         { description: "", label: commands.CMD_CREATE_SERVICE },
       ];
 
@@ -1863,21 +1869,18 @@ describe("commands unit tests", () => {
         })
         .resolves(pickItems[0]);
 
-      vscodeWindowMock
-        .expects("showInformationMessage")
-        .withExactArgs(messages.service_created(info.allowCreate!.name!))
-        .resolves();
+      vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created(infoName)).resolves();
       cfLocalMock
         .expects("cfCreateUpsInstance")
         .withExactArgs({
-          instanceName: info.allowCreate!.name,
+          instanceName: infoName,
           credentials: {},
           route_service_url: "",
           syslog_drain_url: "",
           tags: [info.tag],
         })
         .resolves({
-          name: info.allowCreate!.name,
+          name: infoName,
           guid: "instance-guid",
           type: "user-provided",
           relationships: {},
@@ -1885,7 +1888,7 @@ describe("commands unit tests", () => {
         });
 
       const result = await commands.updateInstanceNameAndTags(availableServices, info, [], []);
-      expect(result).to.be.equal(info.allowCreate!.name);
+      expect(result).to.be.equal(infoName);
     });
   });
 
@@ -2318,31 +2321,29 @@ describe("commands unit tests", () => {
           name: "silent",
         },
       };
+      let infoName = info?.allowCreate?.name || "";
       vscodeWindowMock
         .expects("showInputBox")
-        .withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true, value: info.allowCreate!.name })
-        .resolves(info.allowCreate!.name);
-      vscodeWindowMock
-        .expects("showInformationMessage")
-        .withExactArgs(messages.service_created(info.allowCreate!.name!))
-        .resolves();
+        .withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true, value: infoName })
+        .resolves(infoName);
+      vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.service_created(infoName)).resolves();
       cfLocalMock
         .expects("cfCreateUpsInstance")
         .withExactArgs({
-          instanceName: info.allowCreate!.name,
+          instanceName: infoName,
           credentials: {},
           route_service_url: "",
           syslog_drain_url: "",
           tags: [info.tag],
         })
         .resolves({
-          name: info.allowCreate!.name,
+          name: infoName,
           guid: "instance-guid",
           type: "user-provided",
           relationships: {},
           links: {},
         });
-      expect(await commands.cmdCreateUps(info)).to.be.equal(info.allowCreate!.name);
+      expect(await commands.cmdCreateUps(info)).to.be.equal(infoName);
     });
 
     it("ok:: tags provided", async () => {

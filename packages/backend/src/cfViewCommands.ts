@@ -485,7 +485,7 @@ export async function cmdBindLocal(
       // aborted
       return;
     }
-    filePath = vscode.Uri.file(path.join(uriArray![0].fsPath, ".env"));
+    filePath = vscode.Uri.file(path.join(_.get(uriArray, "[0].fsPath", ""), ".env"));
   }
   try {
     const bindDetails = await collectBindDetails(service, instanceName);

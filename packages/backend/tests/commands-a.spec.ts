@@ -82,10 +82,12 @@ describe("commands unit tests", () => {
         })
         .resolves({});
       cfLocalMock.expects("cfGetTarget").resolves(target);
+      let org = target.org || "";
+      let space = target.space || "";
       const affairs = [
         {
           id: "save",
-          label: messages.set_targets_save(target.org!, target.space!),
+          label: messages.set_targets_save(org, space),
           detail: messages.set_targets_save_details,
         },
         { id: "pick-save", label: messages.set_targets_pick_save, detail: messages.set_targets_pick_save_details },

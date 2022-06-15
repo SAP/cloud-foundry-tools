@@ -23,7 +23,8 @@
   "scripts": {
     "release:version": "lerna version",
     "release:publish": "lerna publish from-git --yes",
-    "ci": "npm-run-all coverage:clean format:validate lint:validate legal:* ci:subpackages coverage:merge",
+    "ci": "npm-run-all coverage:clean ci:subpackages",
+    "ci-tmp": "npm-run-all coverage:clean format:validate lint:validate legal:* ci:subpackages coverage:merge",
     "ci:subpackages": "lerna run ci",
     "compile": "lerna run clean && tsc --build",
     "compile:watch": "lerna run clean && tsc --build --watch",
