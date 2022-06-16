@@ -97,7 +97,7 @@
           :value="username"
           @input="(u) => (username = u.target.value)"
           size="50"
-          placeholder="E-mail address or Company ID"
+          placeholder="User ID"
         ></vscode-text-field>
         <br /><br />
 
@@ -266,6 +266,7 @@ export default {
 }
 .pr-4 {
   padding-right: 4px;
+  padding-top: 16px;
 }
 .pt-8 {
   padding-top: 8px;

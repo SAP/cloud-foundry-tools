@@ -58,7 +58,7 @@ export class DependencyHandler implements types.IDependencyHandler {
       let chiselTask;
       if (_.size(instanceNames)) {
         // Get metadata of service instance by service name
-        const instanceType: string = (await cfLocal.cfGetInstanceMetadata(_.get(instanceNames, "[0]"))).service;
+        const instanceType: string = (await cfLocal.cfGetInstanceMetadata(instanceNames![0])).service;
 
         // Create chisel task if neccessary
         if (_.get(bindContext, "depContext.data.isCreateChiselTask") || /^hana(trial)?$/.test(instanceType)) {

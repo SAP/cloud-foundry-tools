@@ -45,8 +45,7 @@
         "${workspaceFolder}/packages/backend/**",
         "${workspaceFolder}/**",
         "!**/node_modules/**"
-      ],
-      "preLaunchTask": "watch backend (webpack)"
+      ]
     },
     {
       "name": "Test extension",

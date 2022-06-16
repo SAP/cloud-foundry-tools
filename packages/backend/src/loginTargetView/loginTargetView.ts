@@ -31,7 +31,12 @@ let initTarget: { endpoint: string | undefined; org?: string | undefined; space?
 
 const LOGGER_MODULE = "loginTargetView";
 
-export function openLoginView(endpoint?: string, org?: string, space?: string): Promise<string | undefined> {
+export function openLoginView(
+  endpoint?: string,
+  org?: string,
+  space?: string,
+  isSplit?: boolean
+): Promise<string | undefined> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initTarget = {
     endpoint: endpoint,
@@ -39,7 +44,8 @@ export function openLoginView(endpoint?: string, org?: string, space?: string): 
     space: space,
   };
 
-  const panel = vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", vscode.ViewColumn.Beside, {
+  let split = isSplit ? vscode.ViewColumn.Beside : vscode.ViewColumn.One;
+  const panel = vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", split, {
     enableScripts: true,
     localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],
   });

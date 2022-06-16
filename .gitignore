@@ -71,4 +71,5 @@ tsconfig.tsbuildinfo
 *.vsix
 
 # generated artifacts
+out
 dist

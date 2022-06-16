@@ -297,7 +297,12 @@ function pickCfTargetWithProgress(): Thenable<ITarget | undefined> {
     );
 }
 
-export async function cmdLogin(weak = false, target = true, extEndPoint?: string): Promise<string | undefined> {
+export async function cmdLogin(
+  weak = false,
+  target = true,
+  extEndPoint?: string,
+  isSplit?: boolean
+): Promise<string | undefined> {
   try {
     let endpoint = extEndPoint;
     let space;
@@ -318,7 +323,7 @@ export async function cmdLogin(weak = false, target = true, extEndPoint?: string
       }
     }
 
-    result = await openLoginView(endpoint, org, space);
+    result = await openLoginView(endpoint, org, space, isSplit);
 
     return result;
   } catch (e) {

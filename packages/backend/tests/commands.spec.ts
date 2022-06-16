@@ -1721,9 +1721,9 @@ describe("commands unit tests", () => {
         },
       };
 
-      let infoName = info?.allowCreate?.name || "";
-      let infoServiceName = info?.allowCreate?.serviceName || "";
-      let infoPlan = info?.allowCreate?.plan || "";
+      const infoName = info?.allowCreate?.name || "";
+      const infoServiceName = info?.allowCreate?.serviceName || "";
+      const infoPlan = info?.allowCreate?.plan || "";
 
       const availableServices = [
         {
@@ -1788,7 +1788,7 @@ describe("commands unit tests", () => {
       };
       const plans = [{ label: expectedPlanName }];
 
-      let infoName = info?.allowCreate?.name || "";
+      const infoName = info?.allowCreate?.name || "";
       const availableServices = [
         { label: commands.CMD_BIND_TO_DEFAULT_SERVICE + infoName, serviceName: "" },
         { label: commands.CMD_CREATE_SERVICE, serviceName: "" },
@@ -1849,7 +1849,7 @@ describe("commands unit tests", () => {
         },
       };
 
-      let infoName = info?.allowCreate?.name || "";
+      const infoName = info?.allowCreate?.name || "";
       const availableServices = [
         { label: commands.CMD_BIND_TO_DEFAULT_SERVICE + infoName, serviceName: "" },
         { label: commands.CMD_CREATE_SERVICE, serviceName: "" },
@@ -2321,7 +2321,7 @@ describe("commands unit tests", () => {
           name: "silent",
         },
       };
-      let infoName = info?.allowCreate?.name || "";
+      const infoName = info?.allowCreate?.name || "";
       vscodeWindowMock
         .expects("showInputBox")
         .withExactArgs({ prompt: messages.enter_service_name, ignoreFocusOut: true, value: infoName })

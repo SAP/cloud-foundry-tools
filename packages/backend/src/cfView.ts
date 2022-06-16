@@ -131,8 +131,8 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
       const item = _.cloneDeep(element);
       item.label =
         element.contextValue === "cf-application"
-          ? `${element?.label?.toString()} (${(element as CFApplication).state})`
-          : `${element?.label?.toString()} (${(element as CFService).type})`;
+          ? `${element.label!.toString()} (${(element as CFApplication).state})`
+          : `${element.label!.toString()} (${(element as CFService).type})`;
       return Promise.resolve(item);
     }
     return Promise.resolve(element);

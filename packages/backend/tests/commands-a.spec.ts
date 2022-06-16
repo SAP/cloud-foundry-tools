@@ -82,8 +82,8 @@ describe("commands unit tests", () => {
         })
         .resolves({});
       cfLocalMock.expects("cfGetTarget").resolves(target);
-      let org = target.org || "";
-      let space = target.space || "";
+      const org = target.org || "";
+      const space = target.space || "";
       const affairs = [
         {
           id: "save",
