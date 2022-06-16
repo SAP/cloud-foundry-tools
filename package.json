@@ -17,7 +17,11 @@
       "**/material-design-icons-iconfont",
       "**/material-design-icons-iconfont/**",
       "**/@sap-devx",
-      "**/@sap-devx/**"
+      "**/@sap-devx/**",
+      "**/@sap",
+      "**/@sap/**",
+      "**/@vscode-logging",
+      "**/@vscode-logging/**"
     ]
   },
   "scripts": {
@@ -67,6 +71,7 @@
     "@types/chai": "4.2.14",
     "@types/mocha": "8.2.0",
     "@types/rimraf": "3.0.0",
+    "@types/lodash": "4.14.182",
     "@typescript-eslint/eslint-plugin": "4.15.0",
     "@typescript-eslint/parser": "4.14.0",
     "chai": "4.2.0",

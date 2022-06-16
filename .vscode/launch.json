@@ -41,6 +41,11 @@
       "env": { "CF_API_ENDPOINT": "https://api.cf.sap.hana.ondemand.com" },
       "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/backend"],
       "outFiles": ["${workspaceFolder}/packages/backend/dist/**/*.js"],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/packages/backend/**",
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
       "preLaunchTask": "watch backend (webpack)"
     },
     {
