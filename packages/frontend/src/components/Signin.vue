@@ -1,13 +1,13 @@
 <template>
   <div>
-    <div class="cloud-foundry-title">Cloud Foundry Sign-in</div>
+    <div class="cloud-foundry-title">Cloud Foundry Sign In</div>
     <div :style="{ display: loggedInVisibility }" class="logged-in-visibility">
       <v-mdi
         name="mdi-check-circle-outline"
-        size="15"
+        size="16"
         fill="var(--vscode-notebookStatusSuccessIcon-foreground, #388a34)"
       ></v-mdi>
-      You are signed in to Cloud Foundry
+      You are signed in to Cloud Foundry.
     </div>
     <br /><br />
 
@@ -36,7 +36,8 @@
 
       <v-mdi
         name="mdi-help-circle-outline"
-        size="15"
+        align-self=""
+        size="16"
         fill="var(--vscode-inputValidation-infoBorder, #4f9cea)"
         v-tooltip="{
           content:
@@ -58,7 +59,7 @@
         </vscode-link>
         <v-mdi
           name="mdi-help-circle-outline"
-          size="15"
+          size="16"
           fill="var(--vscode-inputValidation-infoBorder, #4f9cea)"
           v-tooltip="{
             content:
@@ -99,6 +100,14 @@
           size="50"
           placeholder="User ID"
         ></vscode-text-field>
+        <!-- <input class="pt-8"
+          v-on:keyup="btnStatus"
+          v-model="username"
+          :value="username"
+          @input="(u) => (username = u.target.value)"
+          size="50"
+          placeholder="User ID"
+        ></input> -->
         <br /><br />
 
         <span class="subtitle-color-field">Enter your password </span><span class="text-danger">*</span>
@@ -115,10 +124,10 @@
       </div>
       <br />
       <span :style="{ display: authFailedVisibility }" style="color: var(--vscode-errorForeground, #b80000)">
-        <v-mdi name="mdi-close-circle-outline" size="15" fill="var(--vscode-errorForeground, #b80000)"></v-mdi>
+        <v-mdi name="mdi-close-circle-outline" size="16" fill="var(--vscode-errorForeground, #b80000)"></v-mdi>
         Authentication failed. Please try again.
       </span>
-      <br /><br />
+      <br />
       <vscode-button @click="SigninClicked" v-bind:disabled="disableButton">Sign in</vscode-button>
     </div>
 
@@ -226,8 +235,6 @@ export default {
       this.rpc.invoke("logoutClick", [payload]).then((res) => {
         if (res) {
           this.isLoggedIn = false;
-        } else {
-          // TODO show error in logout
         }
       });
     },
@@ -238,11 +245,10 @@ export default {
 <style>
 .cloud-foundry-title {
   font-weight: bold;
-  width: 11%;
   float: left;
+  padding-right: 16px;
 }
 .logged-in-visibility {
-  width: 23%;
   float: left;
 }
 .sign-out-button {
@@ -253,6 +259,10 @@ export default {
 }
 .subtitle-color-field {
   color: var(--vscode-editorCodeLens-foreground, #999999);
+}
+/* mdi-icon */
+svg.mdi-icon {
+  vertical-align: bottom;
 }
 .tooltip .tooltip-inner {
   width: 284px;
@@ -270,5 +280,9 @@ export default {
 }
 .pt-8 {
   padding-top: 8px;
+  /* font-style: italic; */
 }
+/* ::placeholder {
+  font-style: italic;
+} */
 </style>

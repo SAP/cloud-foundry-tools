@@ -2,27 +2,25 @@
   <div class="loggedIn" id="targetDiv">
     <vscode-divider role="separator" aria-orientation="horizontal" orientation="horizontal"></vscode-divider>
     <br /><br />
-    <div style="font-weight: bold; width: 11%; float: left">Cloud Foundry Target</div>
-    <div :style="{ display: orgAndSpaceSetVisibility }" style="width: 30%; float: left">
+    <div class="cloud-foundry-target">Cloud Foundry Target</div>
+    <div :style="{ display: orgAndSpaceSetVisibility }" class="org-and-space-visibility">
       <v-mdi
         name="mdi-check-circle-outline"
-        size="15"
+        size="16"
         fill="var(--vscode-notebookStatusSuccessIcon-foreground, #388a34)"
       ></v-mdi>
       Target is set to: {{ currentOrg }} org and {{ currentSpace }} space.
     </div>
     <br /><br />
-    <span class="subtitle-color-field">Select Cloud Foundry Organization </span
-    ><span class="text-danger" style="color: red">*</span><br />
-    <vscode-dropdown class="mt-8" position="below" style="width: 300px" @change="changeOrg">
+    <span class="subtitle-color-field">Select Cloud Foundry Organization </span><span class="text-danger">*</span><br />
+    <vscode-dropdown class="mt-8 dropdown" position="below" @change="changeOrg">
       <vscode-option v-for="o in orgs" :key="o.guid" :value="o.guid" :selected="o.selected">{{
         o.label
       }}</vscode-option>
     </vscode-dropdown>
     <br /><br />
-    <span class="subtitle-color-field">Select Cloud Foundry Space </span
-    ><span class="text-danger" style="color: red">*</span><br />
-    <vscode-dropdown class="mt-8" position="below" style="width: 300px" @change="changeSpace">
+    <span class="subtitle-color-field">Select Cloud Foundry Space </span><span class="text-danger">*</span><br />
+    <vscode-dropdown class="mt-8 dropdown" position="below" @change="changeSpace">
       <vscode-option v-for="s in spaces" :key="s.guid" :value="s.guid" :selected="s.selected">{{
         s.label
       }}</vscode-option>
@@ -155,5 +153,19 @@ export default {
 }
 .mt-8 {
   margin-top: 8px;
+}
+.cloud-foundry-target {
+  font-weight: bold;
+  padding-right: 16px;
+  float: left;
+}
+.org-and-space-visibility {
+  float: left;
+}
+.text-danger {
+  color: red;
+}
+.dropdown {
+  width: 300px;
 }
 </style>
