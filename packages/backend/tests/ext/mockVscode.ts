@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import * as _ from "lodash";
-// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import * as path from "path";
 import { platform } from "os";
@@ -64,6 +61,7 @@ class Uri {
   public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
     return new Uri("", "", change.path || "", "", "");
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public toString(skipEncoding?: boolean): string {
     return "";
   }
@@ -116,26 +114,32 @@ export const testVscode = {
     executeCommand: () => Promise.reject(),
   },
   window: {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     showTextDocument: (resourcePath: vscode.Uri) => {
       return;
     },
     showInformationMessage: () => Promise.resolve(),
     showInputBox: () => Promise.resolve(),
     showErrorMessage: () => Promise.reject(),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     registerTreeDataProvider: (id: string, provider: any) => {
       return;
     },
     showQuickPick: () => Promise.resolve(selectedQuickPicks),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     showWarningMessage: (message: string) => {
       return;
     },
     withProgress: (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       options: vscode.ProgressOptions,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       task: (
         progress: vscode.Progress<{ message?: string; increment?: number }>,
         token: vscode.CancellationToken
       ) => Thenable<any>
     ) => Promise.resolve(),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     createTreeView: (id: string, options: any) => {
       treeProvider = options.treeDataProvider;
       privateOnDidChangeTreeData = treeProvider.privateOnDidChangeTreeData;
@@ -147,6 +151,7 @@ export const testVscode = {
       return treeView;
     },
     showOpenDialog: () => Promise.reject(),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     createOutputChannel: (name: string) => {
       return;
     },
@@ -162,6 +167,7 @@ export const testVscode = {
     onDidChangeConfiguration: () => {
       return;
     },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onDidChangeTextDocument: (listener: any) => {
       return;
     },
@@ -193,11 +199,13 @@ export const testVscode = {
     }
   },
   Selection: class MockSelection {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(anchor: vscode.Position, active: vscode.Position) {
       return;
     }
   },
   Range: class MockRange {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(begin: number, end: number) {
       return;
     }
@@ -219,6 +227,7 @@ export const testVscode = {
     static readonly Folder: vscode.ThemeIcon;
     readonly id: string;
     readonly color?: vscode.ThemeColor;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(id: string, color?: vscode.ThemeColor) {
       this.id = id;
     }

@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import { dataContentAsObject } from "@sap/cf-tools";
 import * as _ from "lodash";

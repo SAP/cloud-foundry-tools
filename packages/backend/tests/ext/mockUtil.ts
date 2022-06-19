@@ -1,6 +1,3 @@
-/* eslint-disable prefer-rest-params */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as path from "path";
 import { dropRight, join, size, split } from "lodash";
 import { existsSync } from "fs";

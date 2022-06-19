@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import * as path from "path";
 import * as _ from "lodash";
@@ -131,8 +130,8 @@ export class CFView implements vscode.TreeDataProvider<vscode.TreeItem> {
       const item = _.cloneDeep(element);
       item.label =
         element.contextValue === "cf-application"
-          ? `${element.label!.toString()} (${(element as CFApplication).state})`
-          : `${element.label!.toString()} (${(element as CFService).type})`;
+          ? `${element.label?.toString()} (${(element as CFApplication).state})`
+          : `${element.label?.toString()} (${(element as CFService).type})`;
       return Promise.resolve(item);
     }
     return Promise.resolve(element);

@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import * as extension from "../extension";
 import * as path from "path";
@@ -44,7 +43,7 @@ export function openLoginView(
     space: space,
   };
 
-  let split = isSplit ? vscode.ViewColumn.Beside : vscode.ViewColumn.One;
+  const split = isSplit ? vscode.ViewColumn.Beside : vscode.ViewColumn.One;
   const panel = vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", split, {
     enableScripts: true,
     localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],

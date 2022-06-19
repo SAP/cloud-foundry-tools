@@ -33,6 +33,9 @@ coverage
 # Dependency directories
 node_modules/
 
+# resources
+packages/backend/resources/web/
+
 # Optional npm cache directory
 .npm
 package-lock.json

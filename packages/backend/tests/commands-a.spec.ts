@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect } from "chai";
 import { createSandbox, SinonMock, SinonSandbox } from "sinon";
 import * as nsVsMock from "./ext/mockVscode";

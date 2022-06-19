@@ -9,7 +9,6 @@ mockVscode(nsVsMock.testVscode, "src/cfView.ts");
 import * as cfView from "../src/cfView";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
 import { createSandbox, SinonMock, SinonSandbox } from "sinon";
-// eslint-disable-next-line import/no-unresolved
 import type { TreeItem } from "vscode";
 
 describe("cfView tests", () => {

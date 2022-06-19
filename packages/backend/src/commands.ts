@@ -1,8 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import {
   ServiceInfo,

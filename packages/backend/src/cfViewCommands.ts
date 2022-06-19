@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 import * as vscode from "vscode";
 import * as path from "path";
 import { CFView, CFService, CFTargetTI, CFTargetNotCurrent, getTargetRoot } from "./cfView";
@@ -299,6 +298,7 @@ export async function cmdSetCurrentTarget(
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       getModuleLogger(LOGGER_MODULE).error(
         `cmdSetCurrentTargetCommand with new target ${stringify(newTarget)} exception thrown`,
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
         { error: toText(e) }
       );
     }
@@ -485,7 +485,8 @@ export async function cmdBindLocal(
       // aborted
       return;
     }
-    filePath = vscode.Uri.file(path.join(uriArray![0].fsPath, ".env"));
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+    filePath = vscode.Uri.file(path.join(_.get(uriArray, "[0].fsPath"), ".env"));
   }
   try {
     const bindDetails = await collectBindDetails(service, instanceName);
