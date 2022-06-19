@@ -21,7 +21,7 @@ function initReader(filePath: string): PropertiesReader.Reader | undefined {
     getModuleLogger(LOGGER_MODULE).error(
       "checkAndCreateChiselTask: propertiesReader : environment file is broken or not exists",
       { filePath: filePath },
-      { exception: toText(e) }
+      { exception: toText(new Error(e?.message as string)) }
     );
   }
 }
@@ -94,7 +94,7 @@ export async function deleteChiselParamsFromFile(filePath: string): Promise<bool
       LOGGER_MODULE
     ).error(
       `deleteChiselParamsFromFile: failed to override the paramters to ${filePath} file without chisel parameters`,
-      { exception: toText(err) }
+      { exception: toText(new Error(err?.message as string)) }
     );
     return false;
   }

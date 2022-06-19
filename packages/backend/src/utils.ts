@@ -45,11 +45,10 @@ export interface ServiceQueryOptions extends BaseServiceQueryOptions {
 
 function spotRedirectUri() {
   // expected host pattern is 'DOMAIN.PLATFORM.REG...APPNAME.cloud.sap'
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  const host = new URL(
+  const urlInput: string =
     _.get(process, "env.WS_BASE_URL") ||
-      "https://wingtestsubacc-workspaces-ws-gwzd6.staging-01.dev10.int.webide.cloud.sap"
-  ).hostname;
+    "https://wingtestsubacc-workspaces-ws-gwzd6.staging-01.dev10.int.webide.cloud.sap";
+  const host = new URL(urlInput).hostname;
   // "https://*.cry10.int.applicationstudio.cloud.sap/**"
   return `https://*.${_.join(_.drop(_.split(host, ".")), ".")}/**`;
 }
@@ -86,7 +85,7 @@ export function getEnvResources(envFilePath: string): Promise<any> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     getModuleLogger(LOGGER_MODULE).error(
       "getEnvResources: could not get the '.env' file resources",
-      { exception: toText(error) },
+      { exception: toText(new Error(error?.message as string)) },
       { filePath: envFilePath }
     );
     throw error;
@@ -336,7 +335,7 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
       } catch (e) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         getModuleLogger(LOGGER_MODULE).error("updateGitIgnoreList: creation .gitignore file failed", {
-          exception: toText(e),
+          exception: toText(new Error(e?.message as string)),
         });
       }
     }
@@ -360,7 +359,7 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         getModuleLogger(LOGGER_MODULE).error(
           "updateGitIgnoreList: update .gitignore file failed",
-          { exception: toText(e) },
+          { exception: toText(new Error(e?.message as string)) },
           { filePath: file }
         );
       }

@@ -197,7 +197,7 @@ export async function cmdCFSetOrgSpace(opts?: {
   try {
     let result: string | undefined = "";
     if (await verifyLoginRetryPartial(opts)) {
-      let warningMessage;
+      let warningMessage: string = "";
       const orgs = opts?.org
         ? [{ label: opts.org }]
         : await invokeLongFunctionWithProgress(cfGetAvailableOrgs.bind(undefined), messages.getting_orgs);
@@ -206,7 +206,7 @@ export async function cmdCFSetOrgSpace(opts?: {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const org = opts?.org
           ? { label: opts.org }
-          : await vscode.window.showQuickPick(orgs, {
+          : await vscode.window.showQuickPick(orgs as readonly string[] | Thenable<readonly string[]>, {
               placeHolder: messages.select_org,
               canPickMany: false,
               matchOnDetail: true,
@@ -225,7 +225,7 @@ export async function cmdCFSetOrgSpace(opts?: {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             const space = opts?.space
               ? { label: opts.space }
-              : await vscode.window.showQuickPick(spaces, {
+              : await vscode.window.showQuickPick(spaces as readonly string[] | Thenable<readonly string[]>, {
                   placeHolder: messages.select_space,
                   canPickMany: false,
                   matchOnDetail: true,
@@ -299,9 +299,9 @@ export async function cmdLogin(
   isSplit?: boolean
 ): Promise<string | undefined> {
   try {
-    let endpoint = extEndPoint;
-    let space;
-    let org;
+    let endpoint: string | undefined = extEndPoint;
+    let space: string = "";
+    let org: string = "";
 
     let result = weak ? (_.get(await pickCfTargetWithProgress(), "user") ? OK : undefined) : undefined;
     if (target || !result) {
@@ -333,7 +333,7 @@ export async function cmdLogin(
 export async function cmdSelectSpace(): Promise<string | undefined> {
   try {
     let result: string | undefined = "";
-    let warningMessage;
+    let warningMessage: string = "";
     const spaces = await runWithProgressAndLoginRetry(false, messages.getting_spaces, cfGetAvailableSpaces);
     if (_.size(spaces)) {
       const space = await vscode.window.showQuickPick(spaces, {
@@ -622,7 +622,7 @@ export function getAvailableServices(opts?: DisplayServices, progressTitle?: str
 }
 
 export async function getServiceInstances(
-  query?: IServiceQuery,
+  query?: IServiceQuery | undefined,
   progressTitle?: string
 ): Promise<ServiceInstanceInfo[]> {
   return notifyWhenServicesInfoResultIncomplete(
@@ -690,7 +690,7 @@ async function checkForMoreServices(
       return false;
     }
     // it is more:<next page>
-    const nextPage = Number.parseInt(_.get(lastElem, 'serviceName.split(":")[1]'), 10);
+    const nextPage = Number.parseInt(_.get(lastElem, 'serviceName.split(":")[1]') as string, 10);
 
     const nextAvailableServices = await getAvailableServices({
       query: { page: nextPage },
@@ -749,7 +749,7 @@ export async function updateInstanceNameAndTags(
     }
   }
   if (_.size(instanceName) > 0) {
-    instanceNames.push(_.get(instanceName, ""));
+    instanceNames.push(_.get(instanceName, "") as string);
     serviceTypeInfo?.tag && tags.push(serviceTypeInfo.tag);
   }
   return instanceName;

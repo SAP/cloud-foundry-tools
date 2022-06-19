@@ -690,6 +690,7 @@ describe("commands unit tests", () => {
           ignoreFocusOut: true,
         })
         .resolves({ label: "devx2", orgGUID: orgs[1].guid });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       sandbox.stub(cfLocal, "cfGetAvailableOrgs").resolves(orgs);
       vscodeWindowMock
         .expects("withProgress")

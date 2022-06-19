@@ -102,6 +102,7 @@ describe("utils unit tests", () => {
 
     afterEach(async () => {
       sandbox.restore();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       propReader.set(utils.ENV_VCAP_RESOURCES, vcapServicesObjBeforeChange);
       await propReader.save(envFilePath);
     });
@@ -120,8 +121,10 @@ describe("utils unit tests", () => {
           displayName: "bookshop-hdi-container",
         },
       };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       fsSync.chmodSync(bindContext.envPath.fsPath, 0o444);
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         await utils.removeResourceFromEnv(bindContext);
         fail("test should fail here");
       } catch (e) {
@@ -130,6 +133,7 @@ describe("utils unit tests", () => {
     });
 
     it("ok:: remove resource when it is not tagged", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const bindContext: any = {
         envPath: {
           fsPath: envFilePath,
@@ -138,6 +142,7 @@ describe("utils unit tests", () => {
           type: "xsuaa",
         },
       };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
       const envPropertiesAfterChange = PropertiesReader(envFilePath);
       expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include("xsuaa");
@@ -153,6 +158,7 @@ describe("utils unit tests", () => {
           type: "_xsuaa",
         },
       };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
       assert.deepEqual(PropertiesReader(envFilePath).get(utils.ENV_VCAP_RESOURCES), vcapServicesObjBeforeChange);
     });
@@ -171,6 +177,7 @@ describe("utils unit tests", () => {
           displayName: "bookshop-hdi-container",
         },
       };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
       const envPropertiesAfterChange = PropertiesReader(envFilePath);
       expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include(
@@ -194,6 +201,7 @@ describe("utils unit tests", () => {
           displayName: "hana1-mta",
         },
       };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
       envPropertiesAfterChange = PropertiesReader(envFilePath);
       expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include("hanatest");
@@ -214,6 +222,7 @@ describe("utils unit tests", () => {
           displayName: "hana2-mta",
         },
       };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext2);
       envPropertiesAfterChange = PropertiesReader(envFilePath);
       expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include("hanatest");
@@ -234,6 +243,7 @@ describe("utils unit tests", () => {
           displayName: "bookshop-hdi-container",
         },
       };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
       const envPropertiesAfterChange = PropertiesReader(envFilePath);
       expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include('"instance_name":"hdi-test-instance"');
@@ -245,8 +255,9 @@ describe("utils unit tests", () => {
     const plan = "application";
     it("generateParams4Service - xsuaa, plan - application", () => {
       const data = utils.generateParams4Service("xsuaa", plan);
-      expect(_.startsWith(data.xsappname, "xsuaa_")).to.be.true;
+      expect(_.startsWith(data.xsappname as string, "xsuaa_")).to.be.true;
       expect(data["tenant-mode"]).to.be.equal("dedicated");
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       expect(_.size(data["oauth2-configuration"]["redirect-uris"])).to.be.equal(1);
     });
 
@@ -398,12 +409,16 @@ describe("utils unit tests", () => {
     const gitIgnoreFile = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/${GITIGNORE}`));
 
     it("ok:: '.env' pattern added", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const gitIgnoreContent = _.join(["     # empty line"], EOL);
       const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
       vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
       vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([gitIgnoreFile]);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       fsMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, { encoding: UTF8 }).resolves(gitIgnoreContent);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const patterns = _.split(gitIgnoreContent, EOL);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);
       fsMock
         .expects("writeFile")
@@ -413,6 +428,7 @@ describe("utils unit tests", () => {
     });
 
     it("ok:: '.env' pattern not added - already exists", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const gitIgnoreContent = _.join(["     # empty line", "subFolder/.env"], EOL);
       const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
       vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
@@ -435,7 +451,9 @@ describe("utils unit tests", () => {
       vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([]);
       fsMock.expects("open").withExactArgs(path.resolve(gitIgnoreFile.fsPath), "w").resolves(undefined);
       fsMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, { encoding: UTF8 }).resolves(gitIgnoreContent);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const patterns = _.split(gitIgnoreContent, EOL);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);
       fsMock
         .expects("writeFile")
@@ -453,12 +471,15 @@ describe("utils unit tests", () => {
     });
 
     it("fail:: '.env' pattern NOT added, writeFile failed", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const gitIgnoreContent = _.join(["     # empty line"], EOL);
       const testEnv = nsVsMock.testVscode.Uri.file(path.resolve(`${project.uri.fsPath}/subFolder/.env`));
       vscodeWorkspaceMock.expects("getWorkspaceFolder").returns(project);
       vscodeWorkspaceMock.expects("findFiles").withExactArgs(ignorePattern).returns([gitIgnoreFile]);
       fsMock.expects("readFile").withExactArgs(gitIgnoreFile.fsPath, { encoding: UTF8 }).resolves(gitIgnoreContent);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const patterns = _.split(gitIgnoreContent, EOL);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const expectedPatterns = _.join(_.concat(patterns, [`# auto generated wildcard`, "subFolder/.env"]), EOL);
       fsMock
         .expects("writeFile")
@@ -496,6 +517,7 @@ describe("utils unit tests", () => {
 
       it("ok:: serviceInstanceInfo list is empty", async () => {
         const list = Promise.resolve([]);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         expect(await utils.notifyWhenServicesInfoResultIncomplete(list)).to.be.deep.equal([]);
       });
 

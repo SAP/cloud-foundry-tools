@@ -193,6 +193,7 @@ async function applyTarget(org: string, space: string) {
 export async function invokeLongFunctionWithProgressForm(longFunction: Function, ...args: any): Promise<any> {
   await _rpc.invoke("setBusyIndicator", [true]);
   try {
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     const ret = await longFunction(...args);
     await _rpc.invoke("setBusyIndicator", [false]);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return

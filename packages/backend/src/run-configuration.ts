@@ -57,6 +57,7 @@ export class DependencyHandler implements types.IDependencyHandler {
       let chiselTask;
       if (_.size(instanceNames)) {
         // Get metadata of service instance by service name
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const instanceType: string = (await cfLocal.cfGetInstanceMetadata(_.get(instanceNames, "[0]"))).service;
 
         // Create chisel task if neccessary

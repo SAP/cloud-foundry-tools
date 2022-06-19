@@ -516,7 +516,7 @@ export async function cmdBindLocal(
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       getModuleLogger(LOGGER_MODULE).error(
         `cmdBindLocal exception thrown`,
-        { error: toText(e) },
+        { error: toText(new Error(e?.message as string)) },
         { service: service },
         { envPath: filePath },
         { instanceName: instanceName }
@@ -589,7 +589,7 @@ export async function bindLocalService(
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     getModuleLogger(LOGGER_MODULE).error(
       `bindLocalService exception thrown`,
-      { error: toText(e) },
+      { error: toText(new Error(e?.message as string)) },
       { serviceInfos: serviceInfos },
       { envPath: EnvPathHelper.getPath(envPath) }
     );
@@ -607,7 +607,7 @@ export async function cmdGetServiceInstances(
   serviceQueryOptions?: ServiceQueryOptions,
   progressTitle?: string
 ): Promise<ServiceInstanceInfo[]> {
-  let query;
+  let query: IServiceQuery | undefined;
   if (serviceQueryOptions) {
     // prepare a query to filter the service list by service plan (e.g.: hdi-shared)
     // filter the list by service type name (e.g.: hana, hanatrial)

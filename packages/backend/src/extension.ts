@@ -113,8 +113,8 @@ export async function activate(context: ExtensionContext): Promise<unknown> {
 
   const loginCmdId = "cf.login";
   context.subscriptions.push(
-    commands.registerCommand(loginCmdId, (weak, target, isSplit) => {
-      return cmdLogin(weak, target, isSplit).then((result) => {
+    commands.registerCommand(loginCmdId, (weak: boolean, target: boolean, extEndPoint: string | undefined) => {
+      return cmdLogin(weak, target, extEndPoint).then((result) => {
         if (OK === result) {
           const active = _.find(treeDataProvider.getTargets(), "target.isCurrent");
           if (active) {
@@ -136,6 +136,7 @@ export async function activate(context: ExtensionContext): Promise<unknown> {
   // !!!! does not work on theia 1.5.0
   // cfStatusBarItem.command = {command: loginCmdId, arguments: [true], title: ""};
   // start workarround  --> remove following workarround in future theia releases
+  /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
   context.subscriptions.push(commands.registerCommand("cf.login.weak", cmdLogin.bind(null, true)));
   cfStatusBarItem.command = "cf.login.weak";
   // end workarround
@@ -192,7 +193,7 @@ export async function activate(context: ExtensionContext): Promise<unknown> {
       } catch (e) {
         platformExtension = undefined;
         getModuleLogger(LOGGER_MODULE).error("activate <%s> extension fails", runConfigExtName, {
-          exception: toText(e),
+          exception: toText(new Error(e?.message as string)),
         });
       }
     }
