@@ -126,6 +126,7 @@
       <span :style="{ display: authFailedVisibility }" style="color: var(--vscode-errorForeground, #b80000)">
         <v-mdi name="mdi-close-circle-outline" size="16" fill="var(--vscode-errorForeground, #b80000)"></v-mdi>
         Authentication failed. Please try again.
+        <br />
       </span>
       <br />
       <vscode-button @click="SigninClicked" v-bind:disabled="disableButton">Sign in</vscode-button>
