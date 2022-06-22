@@ -1,4 +1,7 @@
-/*
+# ignore all files:
+**/**
+
+# except for:
 !resources
 !dist
 !LICENSE

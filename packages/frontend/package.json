@@ -1,26 +1,30 @@
 {
-  "name": "cf-signin-ui",
-  "displayName": "Cloud Foundry Signin",
-  "version": "1.7.9",
+  "name": "cloud-foundry-tools-frontend",
+  "displayName": "Cloud Foundry Tools Sign Frontend",
+  "version": "0.0.1",
   "private": true,
   "description": "Frontend for the cf sign-in",
   "license": "Apache 2.0",
   "publisher": "SAP",
   "scripts": {
+    "ci": "npm-run-all clean build coverage",
+    "ci:artifacts_only": "npm-run-all clean build",
+    "clean": "rimraf ./dist ./coverage",
     "build": "vue-cli-service build",
     "build-dev": "vue-cli-service build --mode development",
-    "ci": "npm-run-all clean build",
-    "ci-tmp": "npm-run-all clean build coverage coverage:copy",
-    "clean": "rimraf ./dist ./coverage",
-    "coverage": "vue-cli-service test:unit",
-    "coverage:copy": "shx mkdir -p ../../coverage && shx cp -u ./coverage/lcov.info ../../coverage/lcov_frontend.info",
-    "serve": "vue-cli-service serve",
-    "test": "vue-cli-service test:unit"
+    "test": "vue-cli-service test:unit --colors",
+    "coverage": "nyc vue-cli-service test:unit --colors",
+    "serve": "vue-cli-service serve"
   },
   "browserslist": [
     "> 1%",
     "last 2 versions"
   ],
+  "jest": {
+    "coverageReporters": [
+      "json"
+    ]
+  },
   "eslintConfig": {
     "env": {
       "jest": true,
@@ -36,22 +40,11 @@
     "rules": {},
     "root": true
   },
-  "jest": {
-    "coverageReporters": [
-      "json"
-    ]
-  },
-  "nyc": {
-    "reporter": [
-      "lcov",
-      "text"
-    ],
-    "tempDirectory": "./coverage"
-  },
   "dependencies": {
     "@mdi/font": "5.9.55",
     "@mdi/js": "^6.7.96",
     "@sap-devx/webview-rpc": "0.3.1",
+    "@sap-devx/inquirer-gui": "0.2.1",
     "@vscode/webview-ui-toolkit": "^1.0.0",
     "core-js": "3.6.5",
     "v-tooltip": "^2.1.3",

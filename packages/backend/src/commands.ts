@@ -217,6 +217,7 @@ export async function cmdCFSetOrgSpace(opts?: {
           const spaces = opts?.space
             ? [{ label: opts.space }]
             : await invokeLongFunctionWithProgress(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 cfGetAvailableSpaces.bind(undefined, _.get(org, "guid")),
                 messages.getting_spaces
               );
@@ -234,6 +235,7 @@ export async function cmdCFSetOrgSpace(opts?: {
             if (space) {
               // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
               await invokeLongFunctionWithProgress(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 cfSetOrgSpace.bind(undefined, _.get(org, "label"), _.get(space, "label")),
                 messages.set_org_space
               );
@@ -347,6 +349,7 @@ export async function cmdSelectSpace(): Promise<string | undefined> {
         if (org) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           await invokeLongFunctionWithProgress(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             cfSetOrgSpace.bind(undefined, org.label, space.label),
             messages.set_org_space
           );
@@ -462,7 +465,7 @@ async function createUpsInstance(name: string, info?: ServiceTypeInfo): Promise<
       });
   if (credentials) {
     const tags = quietMode
-      ? info.tag
+      ? info?.tag
       : await vscode.window.showInputBox(
           _.merge({ prompt: messages.enter_tags, ignoreFocusOut: true }, info?.tag ? { value: info.tag } : {})
         );
