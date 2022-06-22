@@ -114,7 +114,7 @@ export async function activate(context: ExtensionContext): Promise<unknown> {
   const loginCmdId = "cf.login";
   context.subscriptions.push(
     commands.registerCommand(loginCmdId, (weak: boolean, target: boolean, extEndPoint: string | undefined) => {
-      return cmdLogin(weak, target, extEndPoint).then((result) => {
+      return cmdLogin(weak, target, extEndPoint, { isSplit: false, isCommandPallet: true }).then((result) => {
         if (OK === result) {
           const active = _.find(treeDataProvider.getTargets(), "target.isCurrent");
           if (active) {

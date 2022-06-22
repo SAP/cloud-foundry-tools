@@ -25,16 +25,18 @@ import { join, sep } from "path";
 
 export let _rpc: RpcExtension;
 
+let commandPallet = false;
 let currentTarget: ITarget | undefined;
 let initTarget: { endpoint: string | undefined; org?: string | undefined; space?: string | undefined };
+let panel: vscode.WebviewPanel;
 
 const LOGGER_MODULE = "loginTargetView";
 
 export function openLoginView(
+  opts: { isSplit: boolean; isCommandPallet?: boolean },
   endpoint?: string,
   org?: string,
-  space?: string,
-  isSplit?: boolean
+  space?: string
 ): Promise<string | undefined> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initTarget = {
@@ -42,43 +44,43 @@ export function openLoginView(
     org: org,
     space: space,
   };
+  commandPallet = opts.isCommandPallet ? opts.isCommandPallet : false;
+  return new Promise<string>(() => {
+    const split = opts.isSplit ? vscode.ViewColumn.Beside : vscode.ViewColumn.One;
+    panel = vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", split, {
+      enableScripts: true,
+      localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],
+    });
 
-  const split = isSplit ? vscode.ViewColumn.Beside : vscode.ViewColumn.One;
-  const panel = vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", split, {
-    enableScripts: true,
-    localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],
+    const extensionPath = extension.getPath();
+    const mediaPath = join(extensionPath, "dist", "media");
+    const htmlFileName = "index.html";
+
+    let indexHtml = fs.readFileSync(join(mediaPath, htmlFileName), "utf8");
+    if (indexHtml) {
+      // Local path to main script run in the webview
+      const scriptPathOnDisk = vscode.Uri.file(join(mediaPath, sep));
+      const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
+
+      // TODO: very fragile: assuming double quotes and src is first attribute
+      // specifically, doesn't work when building vue for development (vue-cli-service build --mode development)
+      indexHtml = indexHtml
+        .replace(/<link href=/g, `<link href=${scriptUri.toString()}`)
+        .replace(/<script src=/g, `<script src=${scriptUri.toString()}`)
+        .replace(/<img src=/g, `<img src=${scriptUri.toString()}`);
+    }
+
+    panel.webview.html = indexHtml;
+
+    _rpc = new RpcExtension(panel.webview);
+    _rpc.registerMethod({ func: init });
+    _rpc.registerMethod({ func: loginClick });
+    _rpc.registerMethod({ func: logoutClick });
+    _rpc.registerMethod({ func: getSelectedTarget });
+    _rpc.registerMethod({ func: getOrgs });
+    _rpc.registerMethod({ func: getSpaces });
+    _rpc.registerMethod({ func: applyTarget });
   });
-
-  const extensionPath = extension.getPath();
-  const mediaPath = join(extensionPath, "dist", "media");
-  const htmlFileName = "index.html";
-
-  let indexHtml = fs.readFileSync(join(mediaPath, htmlFileName), "utf8");
-  if (indexHtml) {
-    // Local path to main script run in the webview
-    const scriptPathOnDisk = vscode.Uri.file(join(mediaPath, sep));
-    const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
-
-    // TODO: very fragile: assuming double quotes and src is first attribute
-    // specifically, doesn't work when building vue for development (vue-cli-service build --mode development)
-    indexHtml = indexHtml
-      .replace(/<link href=/g, `<link href=${scriptUri.toString()}`)
-      .replace(/<script src=/g, `<script src=${scriptUri.toString()}`)
-      .replace(/<img src=/g, `<img src=${scriptUri.toString()}`);
-  }
-
-  panel.webview.html = indexHtml;
-
-  _rpc = new RpcExtension(panel.webview);
-  _rpc.registerMethod({ func: init });
-  _rpc.registerMethod({ func: loginClick });
-  _rpc.registerMethod({ func: logoutClick });
-  _rpc.registerMethod({ func: getSelectedTarget });
-  _rpc.registerMethod({ func: getOrgs });
-  _rpc.registerMethod({ func: getSpaces });
-  _rpc.registerMethod({ func: applyTarget });
-
-  return Promise.resolve("");
 }
 
 async function init() {
@@ -184,6 +186,9 @@ async function applyTarget(org: string, space: string) {
     await invokeLongFunctionWithProgressForm(cfSetOrgSpace, org, space);
     void vscode.window.showInformationMessage(messages.success_set_org_space);
     getModuleLogger(LOGGER_MODULE).debug("executeSetOrgSpace: set org & spaces succeeded");
+    if (!commandPallet) {
+      panel.dispose();
+    }
   } catch (error) {
     getModuleLogger(LOGGER_MODULE).error("executeSetOrgSpace: set org & spaces failed", error);
     return "Error";

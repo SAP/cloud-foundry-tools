@@ -21,7 +21,6 @@ import {
   eFilters,
   eServiceTypes,
   cfGetConfigFileJson,
-  cfApi,
 } from "@sap/cf-tools";
 import { messages } from "./messages";
 import { cmdReloadTargets } from "./cfViewCommands";
@@ -298,7 +297,7 @@ export async function cmdLogin(
   weak = false,
   target = true,
   extEndPoint?: string,
-  isSplit?: boolean
+  opts?: { isSplit: boolean; isCommandPallet?: boolean }
 ): Promise<string | undefined> {
   try {
     let endpoint: string | undefined = extEndPoint;
@@ -319,9 +318,8 @@ export async function cmdLogin(
         }
       }
     }
-
-    result = await openLoginView(endpoint, org, space, isSplit);
-
+    opts = opts ? opts : { isSplit: true, isCommandPallet: false };
+    result = await openLoginView(opts, endpoint, org, space);
     return result;
   } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -784,16 +782,7 @@ export async function cmdSelectAndSaveTarget(): Promise<string | undefined> {
         matchOnDetail: true,
       });
       if (action?.id === "pick-save") {
-        const cfEndpoint = await vscode.window.showInputBox({
-          prompt: messages.enter_cf_endpoint,
-          value: target["api endpoint"],
-          ignoreFocusOut: true,
-        });
-        if (cfEndpoint) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-          target["api endpoint"] != cfEndpoint && (await cfApi({ url: cfEndpoint }));
-          result = await cmdCFSetOrgSpace({ endPoint: cfEndpoint });
-        }
+        result = await cmdLogin(false, false);
       } else if (action?.id === "save") {
         if (!target.org || !target.space) {
           if (
