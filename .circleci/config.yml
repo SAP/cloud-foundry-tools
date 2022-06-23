@@ -24,19 +24,20 @@ jobs: # a collection of steps
   build-and-test-node16:
     docker:
       - image: cimg/node:16.15
-    working_directory: ~/repo
+    working_directory: ~/workdir
     steps:
       - checkout
       - run: yarn
       - run: yarn ci
-      - run:
-          name: Define environment variable with lastest commit's message
-          command: |
-            echo 'export COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")' >> $BASH_ENV
-            source $BASH_ENV
-      - run:
-          name: Lint commit message
-          command: echo "$COMMIT_MESSAGE" | npx commitlint
+      - run: yarn pwd-test
+      # - run:
+      #     name: Define environment variable with lastest commit's message
+      #     command: |
+      #       echo 'export COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")' >> $BASH_ENV
+      #       source $BASH_ENV
+      # - run:
+      #     name: Lint commit message
+      #     command: echo "$COMMIT_MESSAGE" | npx commitlint
 
   build-and-test-node18:
     docker:
@@ -49,7 +50,7 @@ jobs: # a collection of steps
   prepare-vsix:
     docker:
       - image: cimg/node:16.15
-    working_directory: ~/repo
+    working_directory: ~/workdir
     steps:
       - checkout
       - run: yarn
@@ -87,8 +88,8 @@ workflows:
   voter:
     jobs:
       - compliance
-      # - build-and-test-node14
-      - build-and-test-node16
+      - build-and-test-node14
+      # - build-and-test-node16
       # - build-and-test-node18
   release:
     jobs:

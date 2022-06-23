@@ -39,7 +39,8 @@
     "coverage:clean": "rimraf ./coverage",
     "coverage:merge": "node ./scripts/merge-coverage",
     "legal:delete": "lerna exec \"shx rm -rf .reuse LICENSES\" || true",
-    "legal:copy": "lerna exec \"shx cp -r ../../.reuse .reuse && shx cp -r ../../LICENSES LICENSES\""
+    "legal:copy": "lerna exec \"shx cp -r ../../.reuse .reuse && shx cp -r ../../LICENSES LICENSES\"",
+    "pwd-test": "pwd && find -name 'config.yml'"
   },
   "husky": {
     "hooks": {
