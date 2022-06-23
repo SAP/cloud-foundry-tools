@@ -92,7 +92,7 @@ describe("utils unit tests", () => {
   });
 
   describe("Tests for removeResourceFromEnv", () => {
-    const envFilePath: string = path.join(__dirname, "resources", ".env");
+    const envFilePath: string = path.join(__dirname, "resources", ".envtest");
     const propReader = PropertiesReader(envFilePath);
     let vcapServicesObjBeforeChange: any;
     before(() => {

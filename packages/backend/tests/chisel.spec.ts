@@ -33,7 +33,7 @@ describe("chisel unit tests", () => {
   };
 
   beforeEach(() => {
-    envFilePath = join(tmpTestDir, ".env");
+    envFilePath = join(tmpTestDir, ".envtest");
   });
 
   afterEach(() => {
