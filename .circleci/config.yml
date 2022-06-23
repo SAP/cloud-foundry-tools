@@ -29,7 +29,6 @@ jobs: # a collection of steps
       - checkout
       - run: yarn
       - run: yarn ci
-      - run: yarn pwd-test
       - run:
           name: Define environment variable with lastest commit's message
           command: |
@@ -88,9 +87,9 @@ workflows:
   voter:
     jobs:
       - compliance
-      # - build-and-test-node14
+      - build-and-test-node14
       - build-and-test-node16
-      # - build-and-test-node18
+      - build-and-test-node18
   release:
     jobs:
       - prepare-vsix:
