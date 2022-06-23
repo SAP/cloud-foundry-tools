@@ -15,7 +15,7 @@ jobs: # a collection of steps
 
   build-and-test-node14:
     docker:
-      - image: cimg/node:14
+      - image: cimg/node:14.19
     steps:
       - checkout
       - run: yarn
@@ -40,7 +40,7 @@ jobs: # a collection of steps
 
   build-and-test-node18:
     docker:
-      - image: cimg/node:18
+      - image: cimg/node:18.4
     steps:
       - checkout
       - run: yarn
