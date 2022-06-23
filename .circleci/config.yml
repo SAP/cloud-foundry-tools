@@ -88,8 +88,8 @@ workflows:
   voter:
     jobs:
       - compliance
-      - build-and-test-node14
-      # - build-and-test-node16
+      # - build-and-test-node14
+      - build-and-test-node16
       # - build-and-test-node18
   release:
     jobs:
