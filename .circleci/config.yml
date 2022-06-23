@@ -53,7 +53,7 @@ jobs: # a collection of steps
     steps:
       - checkout
       - run: yarn
-      - run: yarn run ci
+      - run: yarn ci
       - run: mkdir -p artifacts && cp packages/*/*.vsix ./artifacts
       - run:
           name: "Inspect Artifacts Folder"
@@ -87,9 +87,9 @@ workflows:
   voter:
     jobs:
       - compliance
-      - build-and-test-node14
+      # - build-and-test-node14
       - build-and-test-node16
-      - build-and-test-node18
+      # - build-and-test-node18
   release:
     jobs:
       - prepare-vsix:
