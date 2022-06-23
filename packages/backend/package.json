@@ -18,7 +18,7 @@
   "publisher": "SAP",
   "main": "./dist/extension.js",
   "scripts": {
-    "ci": "npm-run-all clean compile copy:test-resources coverage bundle frontend:all package",
+    "ci": "npm-run-all clean compile copy:test-resources show-out-debug coverage bundle frontend:all package",
     "ci:artifacts_only": "npm-run-all clean compile webpack-dev frontend:all package",
     "frontend:all": "cd ../frontend && npm run build && cd ../backend && npm run frontend:copy",
     "frontend:copy": "npm-run-all clean:frontend && shx cp -r ../frontend/dist/. ./dist/media/",
@@ -32,6 +32,7 @@
     "clean:dist": "rimraf ./dist",
     "clean:out": "rimraf ./out",
     "clean:vsix": "rimraf ./*.vsix",
+    "show-out-debug": "ls -LR -a ./out",
     "package": "vsce package",
     "copy-ui": "rm -rf ./resources/web && cd ../cf-login-ui && rm -rf dist && npm run build && mv ./dist ../cloud-foundry-tools/resources/web",
     "compile": "tsc -p ./",
