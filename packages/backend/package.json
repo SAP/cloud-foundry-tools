@@ -34,7 +34,7 @@
     "clean:out": "rimraf ./out",
     "clean:vsix": "rimraf ./*.vsix",
     "show-out-debug": "ls -LR -a ./out",
-    "package": "vsce package",
+    "package": "vsce package --yarn",
     "copy-ui": "rm -rf ./resources/web && cd ../cf-login-ui && rm -rf dist && npm run build && mv ./dist ../cloud-foundry-tools/resources/web",
     "compile": "tsc -p ./",
     "test": "mocha --colors",
