@@ -1,7 +1,7 @@
 const baseNycConfig = require("../../nyc.config");
 
 module.exports = Object.assign(baseNycConfig, {
-  branches: 83,
+  branches: 82,
   lines: 79,
   functions: 74,
   statements: 79,
