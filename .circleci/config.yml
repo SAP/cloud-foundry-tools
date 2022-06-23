@@ -30,14 +30,14 @@ jobs: # a collection of steps
       - run: yarn
       - run: yarn ci
       - run: yarn pwd-test
-      # - run:
-      #     name: Define environment variable with lastest commit's message
-      #     command: |
-      #       echo 'export COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")' >> $BASH_ENV
-      #       source $BASH_ENV
-      # - run:
-      #     name: Lint commit message
-      #     command: echo "$COMMIT_MESSAGE" | npx commitlint
+      - run:
+          name: Define environment variable with lastest commit's message
+          command: |
+            echo 'export COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")' >> $BASH_ENV
+            source $BASH_ENV
+      - run:
+          name: Lint commit message
+          command: echo "$COMMIT_MESSAGE" | npx commitlint
 
   build-and-test-node18:
     docker:
