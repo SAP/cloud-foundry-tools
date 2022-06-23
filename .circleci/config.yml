@@ -1,30 +1,9 @@
-version: 2.1
-jobs:
-  build-node14:
-    docker:
-      - image: circleci/node:14
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - run: yarn
-      - run: yarn run ci
-      - run:
-          name: Define environment variable with lastest commit's message
-          command: |
-            echo 'export COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")' >> $BASH_ENV
-            source $BASH_ENV
-      - run:
-          name: Lint commit message
-          command: echo "$COMMIT_MESSAGE" | npx commitlint
-      - run:
-          command: cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
-          environment:
-            COVERALLS_SERVICE_NAME: circle-ci
-            COVERALLS_GIT_BRANCH: ${CIRCLE_BRANCH}
-  
+version: 2.1 # use CircleCI 2.1
+
+jobs: # a collection of steps
   compliance:
     docker:
-      - image: cimg/python:3.10.0
+      - image: cimg/python:3.8.1
     working_directory: ~/workdir
     steps:
       - checkout
@@ -34,22 +13,42 @@ jobs:
             pip3 install --user reuse
             ~/.local/bin/reuse lint
 
-  deploy-npm:
+  build-and-test-node14:
     docker:
-      - image: circleci/node:14
+      - image: cimg/node:14
+    steps:
+      - checkout
+      - run: yarn
+      - run: yarn ci
+
+  build-and-test-node16:
+    docker:
+      - image: cimg/node:16.15
     working_directory: ~/repo
     steps:
       - checkout
-      - run: yarn --pure-lockfile
-      - run: yarn run ci
-      - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-      # To help debug when lerna detects changes to the working tree and fails the publish
-      - run: git status
-      - run: yarn run release:publish
+      - run: yarn
+      - run: yarn ci
+      - run:
+          name: Define environment variable with lastest commit's message
+          command: |
+            echo 'export COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")' >> $BASH_ENV
+            source $BASH_ENV
+      - run:
+          name: Lint commit message
+          command: echo "$COMMIT_MESSAGE" | npx commitlint
 
+  build-and-test-node18:
+    docker:
+      - image: cimg/node:18
+    steps:
+      - checkout
+      - run: yarn
+      - run: yarn ci
+  
   prepare-vsix:
     docker:
-      - image: circleci/node:14
+      - image: cimg/node:16.15
     working_directory: ~/repo
     steps:
       - checkout
@@ -68,7 +67,7 @@ jobs:
 
   deploy-gh-releases:
     docker:
-      - image: circleci/golang:1.13
+      - image: cimg/go:1.13
     steps:
       - attach_workspace:
           at: ./artifacts
@@ -87,16 +86,12 @@ workflows:
   version: 2
   voter:
     jobs:
-      - build-node14
       - compliance
+      - build-and-test-node14
+      - build-and-test-node16
+      - build-and-test-node18
   release:
     jobs:
-      - deploy-npm:
-          filters:
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*/
-            branches:
-              ignore: /.*/
       - prepare-vsix:
           filters:
             tags:
