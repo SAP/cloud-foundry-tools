@@ -57,7 +57,7 @@ export function openLoginView(
     panel.reveal();
     panel.onDidDispose(() => {
       if (applyIsSucceeded) resolve(OK);
-      else reject();
+      else reject("sessionClosed");
       panel = undefined;
     });
 

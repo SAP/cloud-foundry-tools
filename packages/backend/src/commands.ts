@@ -46,7 +46,7 @@ const MORE_RESULTS = "More results...";
 export const CMD_CREATE_SERVICE = "+ Create a new service instance";
 export const CMD_BIND_TO_DEFAULT_SERVICE = "Bind to the default service instance: ";
 const LOGGER_MODULE = "commands";
-let partOfScenario = false;
+let partOfBind = false;
 
 export function isCFResource(obj: unknown): boolean {
   return _.has(obj, "relationships") && _.has(obj, "links") && _.has(obj, "guid");
@@ -75,8 +75,9 @@ async function setCfTarget(message: string) {
     return Promise.reject(new Error(message));
   }
 
-  partOfScenario = true;
+  partOfBind = true;
   const result = await vscode.commands.executeCommand(commandId);
+  partOfBind = false;
   if (undefined === result) {
     return Promise.reject(); // canceled
   }
@@ -239,11 +240,14 @@ export async function cmdLogin(
       }
     }
 
-    opts = opts ? opts : { isSplit: true, isCommandPallet: false };
-    if (partOfScenario) opts = { isSplit: true, isCommandPallet: false };
+    opts = opts ?? { isSplit: true, isCommandPallet: false };
+    if (partOfBind) opts = { isSplit: true, isCommandPallet: false };
     result = await openLoginView(opts, endpoint, org, space);
     return result;
   } catch (e) {
+    if (e === "sessionClosed") {
+      return undefined;
+    }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const errText = toText(e);
     void vscode.window.showErrorMessage(errText);
