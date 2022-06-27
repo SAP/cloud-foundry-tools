@@ -54,7 +54,7 @@
       </vscode-radio-group>
 
       <div id="sso-div" :style="{ display: ssoVisibility }">
-        <vscode-link class="pr-4" :href="target.passcodeUrl"
+        <vscode-link @click="openPasscodeLink" class="pr-4"
           >Open a new browser page to generate your SSO passcode
         </vscode-link>
         <v-mdi
@@ -100,14 +100,6 @@
           size="50"
           placeholder="User ID"
         ></vscode-text-field>
-        <!-- <input class="pt-8"
-          v-on:keyup="btnStatus"
-          v-model="username"
-          :value="username"
-          @input="(u) => (username = u.target.value)"
-          size="50"
-          placeholder="User ID"
-        ></input> -->
         <br /><br />
 
         <span class="subtitle-color-field">Enter your password </span><span class="text-danger">*</span>
@@ -239,6 +231,11 @@ export default {
         }
       });
     },
+    openPasscodeLink() {
+      this.rpc.invoke("openPasscodeLink", [this.target.passcodeUrl]).then(() => {
+        console.log("opening passcode url");
+      });
+    },
   },
 };
 </script>
@@ -281,9 +278,5 @@ svg.mdi-icon {
 }
 .pt-8 {
   padding-top: 8px;
-  /* font-style: italic; */
 }
-/* ::placeholder {
-  font-style: italic;
-} */
 </style>

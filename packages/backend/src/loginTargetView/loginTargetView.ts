@@ -28,7 +28,8 @@ export let _rpc: RpcExtension;
 let commandPallet = false;
 let currentTarget: ITarget | undefined;
 let initTarget: { endpoint: string | undefined; org?: string | undefined; space?: string | undefined };
-let panel: vscode.WebviewPanel;
+let panel: vscode.WebviewPanel | undefined;
+let applyIsSucceeded = false;
 
 const LOGGER_MODULE = "loginTargetView";
 
@@ -45,11 +46,19 @@ export function openLoginView(
     space: space,
   };
   commandPallet = opts.isCommandPallet ? opts.isCommandPallet : false;
-  return new Promise<string>(() => {
+  return new Promise<string>((resolve, reject) => {
     const split = opts.isSplit ? vscode.ViewColumn.Beside : vscode.ViewColumn.One;
-    panel = vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", split, {
-      enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],
+    panel = panel
+      ? panel
+      : vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", split, {
+          enableScripts: true,
+          localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],
+        });
+    panel.reveal();
+    panel.onDidDispose(() => {
+      if (applyIsSucceeded) resolve(OK);
+      else reject();
+      panel = undefined;
     });
 
     const extensionPath = extension.getPath();
@@ -71,6 +80,7 @@ export function openLoginView(
     }
 
     panel.webview.html = indexHtml;
+    (<any>panel)["resolve"] = resolve;
 
     _rpc = new RpcExtension(panel.webview);
     _rpc.registerMethod({ func: init });
@@ -80,6 +90,7 @@ export function openLoginView(
     _rpc.registerMethod({ func: getOrgs });
     _rpc.registerMethod({ func: getSpaces });
     _rpc.registerMethod({ func: applyTarget });
+    _rpc.registerMethod({ func: openPasscodeLink });
   });
 }
 
@@ -185,14 +196,19 @@ async function applyTarget(org: string, space: string) {
   try {
     await invokeLongFunctionWithProgressForm(cfSetOrgSpace, org, space);
     void vscode.window.showInformationMessage(messages.success_set_org_space);
+    applyIsSucceeded = true;
     getModuleLogger(LOGGER_MODULE).debug("executeSetOrgSpace: set org & spaces succeeded");
     if (!commandPallet) {
-      panel.dispose();
+      panel?.dispose();
     }
   } catch (error) {
     getModuleLogger(LOGGER_MODULE).error("executeSetOrgSpace: set org & spaces failed", error);
     return "Error";
   }
+}
+
+function openPasscodeLink(url: string) {
+  void vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(url));
 }
 
 export async function invokeLongFunctionWithProgressForm(longFunction: Function, ...args: any): Promise<any> {

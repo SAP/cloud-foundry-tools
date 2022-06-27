@@ -3,9 +3,6 @@ import {
   ServiceInfo,
   PlanInfo,
   ServiceInstanceInfo,
-  cfGetAvailableOrgs,
-  cfGetAvailableSpaces,
-  cfSetOrgSpace,
   CF_PAGE_SIZE,
   IServiceQuery,
   Cli,
@@ -37,7 +34,6 @@ import {
   resolveFilterValue,
   notifyWhenServicesInfoResultIncomplete,
   examCFTarget,
-  invokeLongFunctionWithProgress,
 } from "./utils";
 import { stringify, parse } from "comment-json";
 import { getModuleLogger } from "./logger/logger-wrapper";
@@ -50,7 +46,6 @@ const MORE_RESULTS = "More results...";
 export const CMD_CREATE_SERVICE = "+ Create a new service instance";
 export const CMD_BIND_TO_DEFAULT_SERVICE = "Bind to the default service instance: ";
 const LOGGER_MODULE = "commands";
-
 let partOfScenario = false;
 
 export function isCFResource(obj: unknown): boolean {
@@ -81,7 +76,6 @@ async function setCfTarget(message: string) {
   }
 
   partOfScenario = true;
-
   const result = await vscode.commands.executeCommand(commandId);
   if (undefined === result) {
     return Promise.reject(); // canceled
@@ -192,87 +186,9 @@ async function verifyLoginRetryPartial(opts?: { endPoint?: string }): Promise<un
   return result;
 }
 
-export async function cmdCFSetOrgSpace(opts?: {
-  endPoint?: string;
-  org?: string;
-  space?: string;
-}): Promise<string | undefined> {
+export async function cmdCFSetOrgSpace(): Promise<string | undefined> {
   try {
-    let result: string | undefined = "";
-    if (await verifyLoginRetryPartial(opts)) {
-      let warningMessage: string = "";
-      const orgs = opts?.org
-        ? [{ label: opts.org }]
-        : await invokeLongFunctionWithProgress(cfGetAvailableOrgs.bind(undefined), messages.getting_orgs);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      if (_.size(orgs)) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        const org = opts?.org
-          ? { label: opts.org }
-          : await vscode.window.showQuickPick(orgs as readonly string[] | Thenable<readonly string[]>, {
-              placeHolder: messages.select_org,
-              canPickMany: false,
-              matchOnDetail: true,
-              ignoreFocusOut: true,
-            });
-        if (org) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          const spaces = opts?.space
-            ? [{ label: opts.space }]
-            : await invokeLongFunctionWithProgress(
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                cfGetAvailableSpaces.bind(undefined, _.get(org, "guid")),
-                messages.getting_spaces
-              );
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          if (_.size(spaces)) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            const space = opts?.space
-              ? { label: opts.space }
-              : await vscode.window.showQuickPick(spaces as readonly string[] | Thenable<readonly string[]>, {
-                  placeHolder: messages.select_space,
-                  canPickMany: false,
-                  matchOnDetail: true,
-                  ignoreFocusOut: true,
-                });
-            if (space) {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-              await invokeLongFunctionWithProgress(
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                cfSetOrgSpace.bind(undefined, _.get(org, "label"), _.get(space, "label")),
-                messages.set_org_space
-              );
-              void vscode.window.showInformationMessage(messages.success_set_org_space);
-              getModuleLogger(LOGGER_MODULE).debug(
-                "cmdCFSetOrgSpace: Organization <%s> and space <%s> have been set",
-                _.get(org, "label"),
-                _.get(space, "label")
-              );
-              return OK;
-            } else {
-              result = undefined; // undefined -> canceled
-            }
-          } else {
-            result = undefined; // forced exit
-            warningMessage = messages.no_available_spaces;
-            getModuleLogger(LOGGER_MODULE).warn(
-              "cmdCFSetOrgSpace: No available spaces found in <%s> organization",
-              _.get(org, "label")
-            );
-          }
-        } else {
-          result = undefined; // undefined -> canceled
-        }
-      } else {
-        result = undefined; // forced exit
-        warningMessage = messages.no_available_orgs;
-        getModuleLogger(LOGGER_MODULE).warn("cmdCFSetOrgSpace: No available organization found");
-      }
-      if (warningMessage) {
-        void vscode.window.showWarningMessage(warningMessage);
-      }
-    }
-    return result;
+    return await cmdLogin(false, false);
   } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     void vscode.window.showErrorMessage(toText(e));
@@ -325,7 +241,6 @@ export async function cmdLogin(
 
     opts = opts ? opts : { isSplit: true, isCommandPallet: false };
     if (partOfScenario) opts = { isSplit: true, isCommandPallet: false };
-
     result = await openLoginView(opts, endpoint, org, space);
     return result;
   } catch (e) {
@@ -339,49 +254,7 @@ export async function cmdLogin(
 
 export async function cmdSelectSpace(): Promise<string | undefined> {
   try {
-    let result: string | undefined = "";
-    let warningMessage: string = "";
-    const spaces = await runWithProgressAndLoginRetry(false, messages.getting_spaces, cfGetAvailableSpaces);
-    if (_.size(spaces)) {
-      const space = await vscode.window.showQuickPick(spaces, {
-        placeHolder: messages.select_space,
-        canPickMany: false,
-        matchOnDetail: true,
-        ignoreFocusOut: true,
-      });
-      if (space) {
-        const org = _.find(await cfGetAvailableOrgs(), ["guid", space.orgGUID]);
-        if (org) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          await invokeLongFunctionWithProgress(
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            cfSetOrgSpace.bind(undefined, org.label, space.label),
-            messages.set_org_space
-          );
-          void vscode.window.showInformationMessage(messages.success_set_org_space);
-          getModuleLogger(LOGGER_MODULE).debug(
-            "cmdSelectSpace: org <%s> and space <%s> have been set",
-            org.label,
-            space.label
-          );
-          result = OK;
-        } else {
-          warningMessage = messages.no_available_orgs;
-          getModuleLogger(LOGGER_MODULE).warn("cmdSelectSpace: no available organization found");
-          result = org;
-        }
-      } else {
-        result = space;
-      }
-    } else {
-      result = undefined; // forced exit
-      warningMessage = messages.no_available_spaces;
-      getModuleLogger(LOGGER_MODULE).warn("cmdSelectSpace: no available spaces found");
-    }
-    if (warningMessage) {
-      void vscode.window.showWarningMessage(warningMessage);
-    }
-    return result;
+    return await cmdLogin(false, false);
   } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const errText = toText(e);
