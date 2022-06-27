@@ -51,6 +51,8 @@ export const CMD_CREATE_SERVICE = "+ Create a new service instance";
 export const CMD_BIND_TO_DEFAULT_SERVICE = "Bind to the default service instance: ";
 const LOGGER_MODULE = "commands";
 
+let partOfScenario = false;
+
 export function isCFResource(obj: unknown): boolean {
   return _.has(obj, "relationships") && _.has(obj, "links") && _.has(obj, "guid");
 }
@@ -77,6 +79,8 @@ async function setCfTarget(message: string) {
     getModuleLogger(LOGGER_MODULE).error("setCfTarget: cfGetTarget failed", { target: target }, { output: message });
     return Promise.reject(new Error(message));
   }
+
+  partOfScenario = true;
 
   const result = await vscode.commands.executeCommand(commandId);
   if (undefined === result) {
@@ -318,7 +322,10 @@ export async function cmdLogin(
         }
       }
     }
+
     opts = opts ? opts : { isSplit: true, isCommandPallet: false };
+    if (partOfScenario) opts = { isSplit: true, isCommandPallet: false };
+
     result = await openLoginView(opts, endpoint, org, space);
     return result;
   } catch (e) {

@@ -108,7 +108,7 @@ describe("utils unit tests", () => {
     });
 
     // does not work on linux ?! - clarification needed
-    it.skip("Test removeResourceFromEnv - exception thrown", async () => {
+    it("Test removeResourceFromEnv - exception thrown", async () => {
       const bindContext: any = {
         envPath: {
           fsPath: envFilePath + "_readonly",
