@@ -7,7 +7,6 @@ module.exports = {
     node: true,
   },
   rules: {
-    // TODO "eslint-comments/require-description": ["error", { ignore: [] }],
     "eslint-comments/require-description": "off",
   },
   overrides: [

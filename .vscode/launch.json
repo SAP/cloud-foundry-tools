@@ -8,27 +8,9 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Run YoUi websocket server",
-      "program": "${workspaceFolder}/packages/backend/src/webSocketServer/youi.ts",
-      "outFiles": ["${workspaceFolder}/packages/backend/dist/**/*.js"],
-      "env": {
-        "PORT": "8081"
-      },
-      "preLaunchTask": "watch backend (tsc)"
-    },
-    {
-      "type": "node",
-      "request": "launch",
       "name": "backend unit tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/mocha",
-      "args": [
-        "-r",
-        "ts-node/register",
-        "--timeout",
-        "999999",
-        "--colors",
-        "${workspaceFolder}/packages/backend/test/**/*.spec.ts"
-      ],
+      "args": ["--timeout", "999999", "--colors", "${workspaceFolder}/packages/backend/out/tests/**/*.spec.js"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "protocol": "inspector"
@@ -48,28 +30,6 @@
         "${workspaceFolder}/**",
         "!**/node_modules/**"
       ]
-    },
-    {
-      "name": "Test extension",
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/packages/backend",
-        "--extensionTestsPath=${workspaceFolder}/packages/backend/dist/test"
-      ],
-      "outFiles": ["${workspaceFolder}/packages/backend/dist/**/*.js"],
-      "preLaunchTask": "watch backend (tsc)"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Run reference generator (foodq)",
-      "program": "${workspaceFolder}/generator-foodq/node_modules/yo/lib/cli.js",
-      "args": ["foodq"],
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "skipFiles": ["<node_internals>/**"]
     },
     {
       "name": "frontend unit tests",
