@@ -634,7 +634,7 @@ export async function updateInstanceNameAndTags(
     }
   }
   if (_.size(instanceName) > 0) {
-    instanceNames.push(_.get(instanceName, "") as string);
+    instanceNames.push(instanceName!);
     serviceTypeInfo?.tag && tags.push(serviceTypeInfo.tag);
   }
   return instanceName;

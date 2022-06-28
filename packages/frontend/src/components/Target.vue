@@ -71,7 +71,7 @@ export default {
         this.rpc.invoke("getOrgs").then((orgs) => {
           this.disableApplyButton = true;
 
-          let orgsWithSelected = orgs.map((org) => {
+          const orgsWithSelected = orgs.map((org) => {
             if (org.label === target.org) {
               this.selectedOrg = { label: org.label, guid: org.guid };
             }
@@ -96,7 +96,7 @@ export default {
     },
     selectSpace(targetSpace) {
       this.rpc.invoke("getSpaces", [this.selectedOrg.guid]).then((spaces) => {
-        let spacesWithSelected = spaces.map((space) => {
+        const spacesWithSelected = spaces.map((space) => {
           return {
             guid: space.guid,
             label: space.label,
@@ -124,9 +124,13 @@ export default {
       this.statusApplyButton();
     },
     statusApplyButton() {
-      if (this.selectedSpace.label == this.currentSpace) this.disableApplyButton = true;
-      else if (this.selectedOrg.guid != "0" && this.selectedSpace.guid != "0") this.disableApplyButton = false;
-      else this.disableApplyButton = true;
+      if (this.selectedSpace.label == this.currentSpace) {
+        this.disableApplyButton = true;
+      } else if (this.selectedOrg.guid != "0" && this.selectedSpace.guid != "0") {
+        this.disableApplyButton = false;
+      } else {
+        this.disableApplyButton = true;
+      }
     },
     setEndpoint(val) {
       this.endpoint = val.target.value;
