@@ -1,37 +1,53 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "extensionHost",
-            "request": "launch",
-            "name": "CF run",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-              "--extensionDevelopmentPath=${workspaceFolder}"
-            ],
-            "outFiles": [
-              "${workspaceFolder}/src/**/*.ts"
-            ]
-          },
-          {
-            "type": "node",
-            "request": "launch",
-            "name": "Mocha Tests",
-            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-            "args": [
-                "-r",
-                "ts-node/register",
-                "--timeout",
-                "999999",
-                "--colors",
-                "${workspaceFolder}/out/tests/**/*.spec.js"
-            ],
-            "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen",
-            "protocol": "inspector"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "backend unit tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/mocha",
+      "args": ["--timeout", "999999", "--colors", "${workspaceFolder}/packages/backend/out/tests/**/*.spec.js"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "protocol": "inspector"
+    },
+    {
+      "name": "Run extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "env": {
+        "CF_API_ENDPOINT": "https://api.cf.sap.hana.ondemand.com"
+      },
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/backend"],
+      "outFiles": ["${workspaceFolder}/packages/backend/dist/**/*.js"],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/packages/backend/**",
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "name": "frontend unit tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "./node_modules/@vue/cli-service/bin/vue-cli-service.js",
+        "test:unit",
+        "--runInBand"
+      ],
+      "cwd": "${workspaceFolder}/packages/frontend",
+      "protocol": "inspector",
+      "disableOptimisticBPs": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "outFiles": ["${workspaceFolder}/packages/frontend/src/**/*.js"],
+      "port": 9229
+    }
+  ]
 }

@@ -43,7 +43,7 @@ This VSCode extension provides tools for easy application development with Cloud
 - clone the repo
 - open it in a vscode
 - execute `yarn` and `ci:artifacts_only`
-- run the launch config 'Run extension'
+- run the launch config 'Run Extension'
 - see available commands via `Command palette` (with prefix `CF`)
 
 [back to top](#table-of-contents)

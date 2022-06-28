@@ -1,26 +1,12 @@
 {
-	"compilerOptions": {
-		"composite": true,
-		"lib": [
-			"es7"
-		],
-		"module": "commonjs",
-		"outDir": "./out",
-		"rootDir": ".",
-		"rootDirs": [
-			"./src",
-			"./tests"
-		],
-		"skipLibCheck": true,
-		"sourceMap": true,
-		"target": "es2017",
-		"declaration": true,
-		"forceConsistentCasingInFileNames": true,
-    	"strict": true,
-    	"useUnknownInCatchVariables": false
-	},
-	"include": [
-		"./src/**/*",
-		"./tests/**/*"
-	]
+  "references": [
+    {
+      "path": "./packages/backend"
+    }
+  ],
+  // needed to avoid trying to compile other .ts files in this repo
+  // and/or try to compile files included in the above references, only with incorrect settings
+  "files": [],
+  "include": [],
+  "exclude": []
 }

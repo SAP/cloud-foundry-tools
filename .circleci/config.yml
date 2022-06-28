@@ -13,25 +13,22 @@ jobs: # a collection of steps
             pip3 install --user reuse
             ~/.local/bin/reuse lint
 
-  build-and-test:
+  build-and-test-node14:
     docker:
-      - image: cimg/node:16.12
-    working_directory: ~/repo
+      - image: cimg/node:14.19
     steps:
       - checkout
-      - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: install
-          command: npm install
-      - run:
-          name: test
-          command: npm run test
-      - run:
-          command: cat ./reports/coverage/lcov.info | ./node_modules/.bin/coveralls
-          environment:
-            COVERALLS_SERVICE_NAME: circle-ci
-            COVERALLS_GIT_BRANCH: ${CIRCLE_BRANCH}
+      - run: yarn
+      - run: yarn ci
+
+  build-and-test-node16:
+    docker:
+      - image: cimg/node:16.15
+    working_directory: ~/workdir
+    steps:
+      - checkout
+      - run: yarn
+      - run: yarn ci
       - run:
           name: Define environment variable with lastest commit's message
           command: |
@@ -39,44 +36,63 @@ jobs: # a collection of steps
             source $BASH_ENV
       - run:
           name: Lint commit message
-          command: echo "$COMMIT_MESSAGE" | npx commitlint      
-      - run:
-          name: package
-          command: npm run build
-      - save_cache:
-          paths:
-            - node_modules
-          key: dependency-cache-{{ checksum "package.json" }}
-      - persist_to_workspace:
-          root: .
-          paths: 
-           # https://golang.org/pkg/path/filepath/#Match
-            - vscode-wing-cf-tools-*
+          command: echo "$COMMIT_MESSAGE" | npx commitlint
+
   
-  deploy:
+  prepare-vsix:
+    docker:
+      - image: cimg/node:16.15
+    working_directory: ~/workdir
+    steps:
+      - checkout
+      - run: yarn
+      - run: yarn ci
+      - run: mkdir -p artifacts && cp packages/*/*.vsix ./artifacts
+      - run:
+          name: "Inspect Artifacts Folder"
+          working_directory: ./artifacts
+          command: ls -la
+      - persist_to_workspace:
+          root: "./artifacts"
+          paths:
+            # https://golang.org/pkg/path/filepath/#Match
+            - "*.vsix"
+
+  deploy-gh-releases:
     docker:
       - image: cimg/go:1.13
     steps:
       - attach_workspace:
-          at: ./dest
+          at: ./artifacts
+      - run:
+          name: "Inspect Artifacts Folder"
+          working_directory: ./artifacts
+          command: ls -la
       - run:
           name: "Publish Release on GitHub"
           command: |
             go get github.com/tcnksm/ghr
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ./dest/ 
+            VERSION=${CIRCLE_TAG}
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 
 workflows:
   version: 2
-  test-deploy:
+  voter:
     jobs:
       - compliance
-      - build-and-test:
+      - build-and-test-node14
+      - build-and-test-node16
+  release:
+    jobs:
+      - prepare-vsix:
           filters:
             tags:
-              only: /.*/
-      - deploy:
+              only: /^v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+      - deploy-gh-releases:
           requires:
-            - build-and-test
+            - prepare-vsix
           filters:
             tags:
               only: /^v[0-9]+(\.[0-9]+)*/
