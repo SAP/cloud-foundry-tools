@@ -38,13 +38,6 @@ jobs: # a collection of steps
           name: Lint commit message
           command: echo "$COMMIT_MESSAGE" | npx commitlint
 
-  build-and-test-node18:
-    docker:
-      - image: cimg/node:18.4
-    steps:
-      - checkout
-      - run: yarn
-      - run: yarn ci
   
   prepare-vsix:
     docker:
