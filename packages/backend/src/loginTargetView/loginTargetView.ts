@@ -29,12 +29,13 @@ let commandPallet = false;
 let currentTarget: ITarget | undefined;
 let initTarget: { endpoint: string | undefined; org?: string | undefined; space?: string | undefined };
 let panel: vscode.WebviewPanel | undefined;
-let applyIsSucceeded = false;
+let isLoginOnly: boolean | undefined;
+let cmdLoginResult: string | undefined;
 
 const LOGGER_MODULE = "loginTargetView";
 
 export function openLoginView(
-  opts: { isSplit: boolean; isCommandPallet?: boolean },
+  opts: { isSplit: boolean; isCommandPallet?: boolean; isLoginOnly?: boolean },
   endpoint?: string,
   org?: string,
   space?: string
@@ -46,51 +47,58 @@ export function openLoginView(
     space: space,
   };
   commandPallet = opts.isCommandPallet ? opts.isCommandPallet : false;
-  return new Promise<string>((resolve, reject) => {
-    const split = opts.isSplit ? vscode.ViewColumn.Beside : vscode.ViewColumn.One;
-    panel = panel
-      ? panel
-      : vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", split, {
-          enableScripts: true,
-          localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],
-        });
-    panel.reveal();
-    panel.onDidDispose(() => {
-      if (applyIsSucceeded) resolve(OK);
-      else reject("sessionClosed");
-      panel = undefined;
-    });
+  isLoginOnly = opts.isLoginOnly;
+  // Every time the view is opened need to recalculate the login result
+  cmdLoginResult = undefined;
 
-    const extensionPath = extension.getPath();
-    const mediaPath = join(extensionPath, "dist", "media");
-    const htmlFileName = "index.html";
+  return new Promise<string | undefined>((resolve, reject) => {
+    try {
+      const split = opts.isSplit ? vscode.ViewColumn.Beside : vscode.ViewColumn.One;
+      panel = panel
+        ? panel
+        : vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", split, {
+            enableScripts: true,
+            localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],
+          });
+      panel.reveal();
+      panel.onDidDispose(() => {
+        resolve(cmdLoginResult);
+        panel = undefined;
+      });
 
-    let indexHtml = fs.readFileSync(join(mediaPath, htmlFileName), "utf8");
-    if (indexHtml) {
-      // Local path to main script run in the webview
-      const scriptPathOnDisk = vscode.Uri.file(join(mediaPath, sep));
-      const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
+      const extensionPath = extension.getPath();
+      const mediaPath = join(extensionPath, "dist", "media");
+      const htmlFileName = "index.html";
 
-      // TODO: very fragile: assuming double quotes and src is first attribute
-      // specifically, doesn't work when building vue for development (vue-cli-service build --mode development)
-      indexHtml = indexHtml
-        .replace(/<link href=/g, `<link href=${scriptUri.toString()}`)
-        .replace(/<script src=/g, `<script src=${scriptUri.toString()}`)
-        .replace(/<img src=/g, `<img src=${scriptUri.toString()}`);
+      let indexHtml = fs.readFileSync(join(mediaPath, htmlFileName), "utf8");
+      if (indexHtml) {
+        // Local path to main script run in the webview
+        const scriptPathOnDisk = vscode.Uri.file(join(mediaPath, sep));
+        const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
+
+        // TODO: very fragile: assuming double quotes and src is first attribute
+        // specifically, doesn't work when building vue for development (vue-cli-service build --mode development)
+        indexHtml = indexHtml
+          .replace(/<link href=/g, `<link href=${scriptUri.toString()}`)
+          .replace(/<script src=/g, `<script src=${scriptUri.toString()}`)
+          .replace(/<img src=/g, `<img src=${scriptUri.toString()}`);
+      }
+
+      panel.webview.html = indexHtml;
+      (<any>panel)["resolve"] = resolve;
+
+      _rpc = new RpcExtension(panel.webview);
+      _rpc.registerMethod({ func: init });
+      _rpc.registerMethod({ func: loginClick });
+      _rpc.registerMethod({ func: logoutClick });
+      _rpc.registerMethod({ func: getSelectedTarget });
+      _rpc.registerMethod({ func: getOrgs });
+      _rpc.registerMethod({ func: getSpaces });
+      _rpc.registerMethod({ func: applyTarget });
+      _rpc.registerMethod({ func: openPasscodeLink });
+    } catch (e) {
+      reject(e.toString());
     }
-
-    panel.webview.html = indexHtml;
-    (<any>panel)["resolve"] = resolve;
-
-    _rpc = new RpcExtension(panel.webview);
-    _rpc.registerMethod({ func: init });
-    _rpc.registerMethod({ func: loginClick });
-    _rpc.registerMethod({ func: logoutClick });
-    _rpc.registerMethod({ func: getSelectedTarget });
-    _rpc.registerMethod({ func: getOrgs });
-    _rpc.registerMethod({ func: getSpaces });
-    _rpc.registerMethod({ func: applyTarget });
-    _rpc.registerMethod({ func: openPasscodeLink });
   });
 }
 
@@ -136,13 +144,19 @@ function calculatePasscodeUrl(endpoint: string): string {
 }
 
 async function loginClick(payload: SSOLoginOptions | CredentialsLoginOptions) {
-  const result: string = await invokeLongFunctionWithProgressForm(cfLogin, payload);
-  if (OK !== result) {
+  cmdLoginResult = await invokeLongFunctionWithProgressForm(cfLogin, payload);
+  if (OK !== cmdLoginResult) {
     void vscode.window.showErrorMessage(messages.login_failed);
     return false;
   }
   void vscode.window.showInformationMessage(messages.login_success);
   getModuleLogger(LOGGER_MODULE).debug("executeLogin: login succeeded");
+
+  if (isLoginOnly) {
+    setTimeout(() => {
+      panel?.dispose();
+    });
+  }
 
   return true;
 }
@@ -195,13 +209,14 @@ async function getSpaces(org: string): Promise<Space[]> {
 async function applyTarget(org: string, space: string) {
   try {
     await invokeLongFunctionWithProgressForm(cfSetOrgSpace, org, space);
+    cmdLoginResult = OK;
     void vscode.window.showInformationMessage(messages.success_set_org_space);
-    applyIsSucceeded = true;
     getModuleLogger(LOGGER_MODULE).debug("executeSetOrgSpace: set org & spaces succeeded");
     if (!commandPallet) {
       panel?.dispose();
     }
   } catch (error) {
+    cmdLoginResult = undefined;
     getModuleLogger(LOGGER_MODULE).error("executeSetOrgSpace: set org & spaces failed", error);
     return "Error";
   }

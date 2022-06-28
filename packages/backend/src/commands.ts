@@ -18,6 +18,7 @@ import {
   eFilters,
   eServiceTypes,
   cfGetConfigFileJson,
+  cfSetOrgSpace,
 } from "@sap/cf-tools";
 import { messages } from "./messages";
 import { cmdReloadTargets } from "./cfViewCommands";
@@ -54,6 +55,18 @@ export function isCFResource(obj: unknown): boolean {
 
 export function isServiceTypeInfoInArray(obj: unknown): boolean {
   return _.isArray(obj) && _.has(obj, "[0].name");
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function invokeLongFunctionWithProgress(longFunction: any, progressMessage: string): Thenable<any> {
+  return vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Window,
+      title: progressMessage,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    },
+    () => longFunction()
+  );
 }
 
 async function setCfTarget(message: string) {
@@ -218,15 +231,17 @@ export async function cmdLogin(
   weak = false,
   target = true,
   extEndPoint?: string,
-  opts?: { isSplit: boolean; isCommandPallet?: boolean }
+  opts?: { isSplit: boolean; isCommandPallet?: boolean; isLoginOnly?: boolean }
 ): Promise<string | undefined> {
   try {
     let endpoint: string | undefined = extEndPoint;
     let space: string = "";
     let org: string = "";
 
+    opts = opts ?? { isSplit: true, isCommandPallet: false, isLoginOnly: true };
+
     let result = weak ? (_.get(await pickCfTargetWithProgress(), "user") ? OK : undefined) : undefined;
-    if (target || !result) {
+    if (!result) {
       const node = weak as unknown;
       if (node instanceof CFLoginNode) {
         // attempt to login from targets tree
@@ -238,16 +253,38 @@ export async function cmdLogin(
           org = _.get(configJson, ["OrganizationFields", "Name"]);
         }
       }
+
+      if (partOfBind) {
+        opts = { isSplit: true, isCommandPallet: false };
+      }
+
+      opts.isLoginOnly = true;
+      result = await openLoginView(opts, endpoint, org, space);
     }
 
-    opts = opts ?? { isSplit: true, isCommandPallet: false };
-    if (partOfBind) opts = { isSplit: true, isCommandPallet: false };
-    result = await openLoginView(opts, endpoint, org, space);
+    //If not manually triggered
+    if (!opts.isCommandPallet) {
+      // User is signed in (result = OK) and trying to log in from CF targets view
+      if (target && OK === result) {
+        // Need only to set active target
+        if (endpoint && org && space) {
+          await invokeLongFunctionWithProgress(cfSetOrgSpace.bind(undefined, org, space), messages.set_org_space);
+          void vscode.window.showInformationMessage(messages.success_set_org_space);
+          getModuleLogger(LOGGER_MODULE).debug(
+            "cmdCFSetOrgSpace: Organization <%s> and space <%s> have been set",
+            org,
+            space
+          );
+          result = OK;
+        } else {
+          // Needs to complete the target settings (org & space)
+          result = await openLoginView(opts, endpoint, org, space);
+        }
+      }
+    }
+
     return result;
   } catch (e) {
-    if (e === "sessionClosed") {
-      return undefined;
-    }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const errText = toText(e);
     void vscode.window.showErrorMessage(errText);
