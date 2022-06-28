@@ -80,6 +80,7 @@
           placeholder="Enter your passcode"
           v-on:keyup="btnStatus"
           v-model="passcode"
+          ref="psc"
           @input="(p) => (passcode = p.target.value)"
           :value="passcode"
         >
@@ -197,6 +198,7 @@ export default {
     paste() {
       navigator.clipboard.readText().then((clipText) => {
         this.passcode = clipText;
+        this.$refs.psc.value = this.passcode;
         this.btnStatus();
       });
     },
