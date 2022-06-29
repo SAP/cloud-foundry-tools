@@ -46,7 +46,7 @@ export function openLoginView(
     org: org,
     space: space,
   };
-  commandPallet = opts.isCommandPallet ? opts.isCommandPallet : false;
+  commandPallet = opts.isCommandPallet ?? false;
   isLoginOnly = opts.isLoginOnly;
   // Every time the view is opened need to recalculate the login result
   cmdLoginResult = undefined;
