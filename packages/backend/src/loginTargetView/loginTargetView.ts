@@ -85,7 +85,6 @@ export function openLoginView(
       }
 
       panel.webview.html = indexHtml;
-      (<any>panel)["resolve"] = resolve;
 
       _rpc = new RpcExtension(panel.webview);
       _rpc.registerMethod({ func: init });
@@ -115,6 +114,8 @@ async function init() {
     defaultEndpoint: initTarget.endpoint,
     isLoggedIn: currentTarget !== undefined,
     passcodeUrl: calculatePasscodeUrl(initTarget.endpoint),
+    currentOrg: currentTarget?.org,
+    currentSpace: currentTarget?.space,
   };
 }
 

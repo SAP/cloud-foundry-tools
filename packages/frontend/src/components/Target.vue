@@ -48,13 +48,23 @@ export default {
       spaces: [],
       selectedOrg: {},
       selectedSpace: {},
-      currentOrg: undefined,
-      currentSpace: undefined,
+      currentOrg: "",
+      currentSpace: "",
     };
+  },
+  updated() {
+    this.currentOrg === "" ? (this.currentOrg = this.target.currentOrg) : "";
+    this.currentSpace === "" ? (this.currentSpace = this.target.currentSpace) : "";
   },
   watch: {
     isLoggedIn(newVal) {
       if (newVal) this.getOrgAndSpace();
+    },
+    currentOrg(newOrg) {
+      this.$emit("updateTargetOrg", newOrg);
+    },
+    currentSpace(newSpace) {
+      this.$emit("updateTargetSpace", newSpace);
     },
   },
   computed: {
@@ -62,7 +72,7 @@ export default {
       return !this.isLoggedIn ? "none" : "";
     },
     orgAndSpaceSetVisibility() {
-      return !this.areOrgAndSpaceSet ? "none" : "";
+      return this.areOrgAndSpaceSet || (this.target.currentOrg && this.target.currentSpace) ? "" : "none";
     },
   },
   methods: {
