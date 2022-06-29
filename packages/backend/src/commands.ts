@@ -47,7 +47,6 @@ const MORE_RESULTS = "More results...";
 export const CMD_CREATE_SERVICE = "+ Create a new service instance";
 export const CMD_BIND_TO_DEFAULT_SERVICE = "Bind to the default service instance: ";
 const LOGGER_MODULE = "commands";
-let partOfBind = false;
 
 export function isCFResource(obj: unknown): boolean {
   return _.has(obj, "relationships") && _.has(obj, "links") && _.has(obj, "guid");
@@ -72,6 +71,8 @@ function invokeLongFunctionWithProgress(longFunction: any, progressMessage: stri
 async function setCfTarget(message: string) {
   let commandId: string;
   let target;
+  let arg;
+
   try {
     target = await cfGetTarget();
   } catch (e) {
@@ -79,6 +80,7 @@ async function setCfTarget(message: string) {
   }
   if (!target || !target.user) {
     commandId = "cf.login";
+    arg = true;
   } else if (!target.org) {
     commandId = "cf.set.orgspace";
   } else if (!target.space) {
@@ -88,9 +90,7 @@ async function setCfTarget(message: string) {
     return Promise.reject(new Error(message));
   }
 
-  partOfBind = true;
-  const result = await vscode.commands.executeCommand(commandId);
-  partOfBind = false;
+  const result = await vscode.commands.executeCommand(commandId, arg);
   if (undefined === result) {
     return Promise.reject(); // canceled
   }
@@ -254,16 +254,12 @@ export async function cmdLogin(
         }
       }
 
-      if (partOfBind) {
-        opts = { isSplit: true, isCommandPallet: false };
-      }
-
       opts.isLoginOnly = true;
       result = await openLoginView(opts, endpoint, org, space);
     }
 
-    //If not manually triggered
-    if (!opts.isCommandPallet) {
+    //If NOT manually triggered, the login comes from targets node
+    if (weak) {
       // User is signed in (result = OK) and trying to log in from CF targets view
       if (target && OK === result) {
         // Need only to set active target
