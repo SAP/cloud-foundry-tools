@@ -1925,7 +1925,7 @@ describe("commands unit tests", () => {
         })
         .rejects(new Error(errorMessage));
       cfLocalMock.expects("cfGetTarget").rejects();
-      vscodeCommandsMock.expects("executeCommand").withExactArgs("cf.login").resolves(OK);
+      vscodeCommandsMock.expects("executeCommand").withExactArgs("cf.login", true).resolves(OK);
       vscodeWindowMock
         .expects("withProgress")
         .withArgs({
@@ -1948,7 +1948,7 @@ describe("commands unit tests", () => {
         })
         .rejects(new Error(errorMessage));
       cfLocalMock.expects("cfGetTarget").rejects();
-      vscodeCommandsMock.expects("executeCommand").withExactArgs("cf.login").resolves(undefined);
+      vscodeCommandsMock.expects("executeCommand").withExactArgs("cf.login", true).resolves(undefined);
       try {
         await commands.fetchServicePlanList();
         fail("should fail");

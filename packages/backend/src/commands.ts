@@ -71,7 +71,7 @@ function invokeLongFunctionWithProgress(longFunction: any, progressMessage: stri
 async function setCfTarget(message: string) {
   let commandId: string;
   let target;
-  let arg;
+  const args = [];
 
   try {
     target = await cfGetTarget();
@@ -80,7 +80,7 @@ async function setCfTarget(message: string) {
   }
   if (!target || !target.user) {
     commandId = "cf.login";
-    arg = true;
+    args.push(true);
   } else if (!target.org) {
     commandId = "cf.set.orgspace";
   } else if (!target.space) {
@@ -90,7 +90,7 @@ async function setCfTarget(message: string) {
     return Promise.reject(new Error(message));
   }
 
-  const result = await vscode.commands.executeCommand(commandId, arg);
+  const result = await vscode.commands.executeCommand(commandId, ...args);
   if (undefined === result) {
     return Promise.reject(); // canceled
   }
