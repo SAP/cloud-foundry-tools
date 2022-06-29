@@ -11,7 +11,13 @@
         <Signin :target="initialTarget" :rpc="rpc" @updateIsLoggedIn="updateIsLoggedIn" />
 
         <div :style="{ display: targetVisibility }">
-          <Target :target="initialTarget" :rpc="rpc" :isLoggedIn="isLoggedIn" />
+          <Target
+            :target="initialTarget"
+            :rpc="rpc"
+            :isLoggedIn="isLoggedIn"
+            @updateTargetOrg="updateTargetOrg"
+            @updateTargetSpace="updateTargetSpace"
+          />
         </div>
       </div>
     </div>
@@ -45,6 +51,8 @@ function initialState() {
     showBusyIndicator: "",
     initialTarget: Object,
     isLoggedIn: false,
+    curretOrg: "",
+    currentSpace: "",
   };
 }
 export default {
@@ -84,6 +92,12 @@ export default {
   methods: {
     updateIsLoggedIn(val) {
       this.isLoggedIn = val;
+    },
+    updateTargetOrg(org) {
+      this.curretOrg = org;
+    },
+    updateTargetSpace(space) {
+      this.currentSpace = space;
     },
     setBusyIndicator(value) {
       this.showBusyIndicator = value;
