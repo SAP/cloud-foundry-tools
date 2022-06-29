@@ -237,12 +237,12 @@ export async function cmdLogin(
     let endpoint: string | undefined = extEndPoint;
     let space: string | undefined = "";
     let org: string | undefined = "";
-    const node = weak as unknown;
 
     opts = opts ?? { isSplit: true, isCommandPallet: false, isLoginOnly: true };
 
     let result = weak ? (_.get(await pickCfTargetWithProgress(), "user") ? OK : undefined) : undefined;
     if (!result) {
+      const node = weak as unknown;
       if (node instanceof CFLoginNode) {
         // attempt to login from targets tree
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -258,8 +258,6 @@ export async function cmdLogin(
       result = await openLoginView(opts, endpoint, org, space);
     }
 
-    //If NOT manually triggered, the login comes from targets node
-    // if (weak) {
     // User is signed in (result = OK) and trying to log in from CF targets view
     if (target && OK === result) {
       const currentCFTarget = await cfGetTarget();
@@ -282,7 +280,6 @@ export async function cmdLogin(
         result = await openLoginView(opts, endpoint, org, space);
       }
     }
-    // }
 
     return result;
   } catch (e) {
