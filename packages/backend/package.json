@@ -1,7 +1,7 @@
 {
   "name": "vscode-wing-cf-tools",
   "displayName": "Cloud Foundry Tools",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "private": true,
   "description": "Vscode extension of Cloud Foundry tools",
   "categories": [
