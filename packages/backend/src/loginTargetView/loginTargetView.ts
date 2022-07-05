@@ -232,7 +232,9 @@ export async function invokeLongFunctionWithProgressForm(longFunction: Function,
   try {
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     const ret = await longFunction(...args);
-    await _rpc.invoke("setBusyIndicator", [false]);
+    if (longFunction.name != "cfGetTarget" && longFunction.name != "cfGetAvailableOrgs") {
+      await _rpc.invoke("setBusyIndicator", [false]);
+    }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return ret;
   } catch (error) {

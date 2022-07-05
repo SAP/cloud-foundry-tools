@@ -16,7 +16,7 @@
       <br />
       <div class="mt-8">{{ endpoint }}</div>
       <br /><br />
-      <vscode-button class="sign-out-button" @click="SignoutClicked">Sign out</vscode-button>
+      <vscode-button class="sign-out-button" @click="SignoutClicked">Sign Out</vscode-button>
     </div>
 
     <!-- authentication area -->
@@ -90,7 +90,7 @@
       <br />
 
       <div id="credentials-div" :style="{ display: credentialsVisibility }">
-        <span class="subtitle-color-field">Enter your Username </span><span class="text-danger">*</span>
+        <span class="subtitle-color-field">Enter your username </span><span class="text-danger">*</span>
         <br />
         <vscode-text-field
           class="pt-8"
