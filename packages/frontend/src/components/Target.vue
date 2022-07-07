@@ -142,9 +142,6 @@ export default {
         this.disableApplyButton = true;
       }
     },
-    setEndpoint(val) {
-      this.endpoint = val.target.value;
-    },
     setTarget() {
       const org = this.selectedOrg.label;
       const space = this.selectedSpace.label;
