@@ -4,6 +4,7 @@ import VueMdijs from "vue-mdijs";
 import { mdiCheckCircleOutline, mdiHelpCircleOutline, mdiCloseCircleOutline } from "@mdi/js";
 import { VTooltip, VPopover, VClosePopover } from "v-tooltip";
 
+Vue.config.ignoredElements = [/^ui5-/];
 Vue.config.productionTip = false;
 VueMdijs.add({ mdiCheckCircleOutline, mdiHelpCircleOutline, mdiCloseCircleOutline });
 Vue.use(VueMdijs);

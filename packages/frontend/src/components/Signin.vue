@@ -32,7 +32,19 @@
       ></vscode-text-field>
       <br /><br />
 
-      <span class="subtitle-color-field">Select authentication method </span>
+      <div>
+        Select authentication method
+        <div class="tooltip">
+          <ui5-icon name="sys-help" show-tooltip style="fill: var(--vscode-inputValidation-infoBorder, #4f9cea)">
+          </ui5-icon>
+          <span class="tooltiptext"
+            >Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP
+            header or cookie.</span
+          >
+        </div>
+      </div>
+
+      <!-- <span class="subtitle-color-field">Select authentication method </span>
 
       <v-mdi
         name="mdi-help-circle-outline"
@@ -47,7 +59,7 @@
           size: '10%',
         }"
       >
-      </v-mdi>
+      </v-mdi> -->
       <vscode-radio-group orientation="horizontal" :value="ssoOrCredentials" @change="setSSO">
         <vscode-radio id="radioCredentials" value="Credentials">Credentials </vscode-radio>
         <vscode-radio id="radioSSO" value="SSO">SSO Passcode </vscode-radio>
@@ -137,6 +149,8 @@ import {
   vsCodeLink,
   vsCodeButton,
 } from "@vscode/webview-ui-toolkit";
+import "@ui5/webcomponents/dist/Icon";
+import "@ui5/webcomponents-icons/dist/sys-help.js";
 
 provideVSCodeDesignSystem().register(vsCodeTextField());
 provideVSCodeDesignSystem().register(vsCodeRadioGroup());
@@ -264,7 +278,7 @@ export default {
 svg.mdi-icon {
   vertical-align: bottom;
 }
-.tooltip .tooltip-inner {
+/* .tooltip .tooltip-inner {
   width: 284px;
   background-color: black;
   color: #fff;
@@ -273,12 +287,43 @@ svg.mdi-icon {
   border-radius: 6px;
   box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
   text-align: left;
-}
+} */
 .pr-4 {
   padding-right: 4px;
   padding-top: 16px;
 }
 .pt-8 {
   padding-top: 8px;
+}
+
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 284px;
+  background-color: rgb(0, 0, 0);
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+.tooltip .tooltiptext {
+  top: -5px;
+  left: 105%;
 }
 </style>
