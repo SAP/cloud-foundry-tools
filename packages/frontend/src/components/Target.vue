@@ -27,7 +27,7 @@
     </vscode-dropdown>
     <br /><br />
 
-    <vscode-button class="mt-8" @click="setTarget" v-bind:disabled="disableApplyButton">Apply</vscode-button>
+    <vscode-button class="mt-8" @click="setTarget" v-bind:disabled="statusApplyButton">Apply</vscode-button>
   </div>
 </template>
 <script>
@@ -43,7 +43,6 @@ export default {
   data() {
     return {
       areOrgAndSpaceSet: "",
-      disableApplyButton: true,
       orgs: [],
       spaces: [],
       selectedOrg: {},
@@ -74,16 +73,21 @@ export default {
     orgAndSpaceSetVisibility() {
       return this.areOrgAndSpaceSet || (this.target.currentOrg && this.target.currentSpace) ? "" : "none";
     },
+    statusApplyButton() {
+      return (
+        this.selectedOrg.label === undefined ||
+        this.selectedSpace.label === undefined ||
+        (this.selectedOrg.label === this.currentOrg && this.selectedSpace.label === this.currentSpace)
+      );
+    },
   },
   methods: {
     getOrgAndSpace() {
       this.rpc.invoke("getSelectedTarget").then((target) => {
         this.rpc.invoke("getOrgs").then((orgs) => {
-          this.disableApplyButton = true;
-
           const orgsWithSelected = orgs.map((org) => {
             if (org.label === target.org) {
-              this.selectedOrg = { label: org.label, guid: org.guid };
+              this.selectedOrg = { label: org.label, guid: org.guid, selected: true };
             }
             return {
               guid: org.guid,
@@ -91,7 +95,11 @@ export default {
               selected: org.label === target.org,
             };
           });
-          this.orgs = [{ label: " ", guid: "0", selected: true }].concat(orgsWithSelected);
+          if (!this.currentOrg) {
+            this.orgs = [{ label: " ", guid: "0", selected: false }].concat(orgsWithSelected);
+          } else {
+            this.orgs = orgsWithSelected;
+          }
 
           if (!this.selectedOrg || !this.selectedOrg.guid) {
             if (this.orgs && this.orgs[0]) {
@@ -113,34 +121,22 @@ export default {
             selected: targetSpace ? space.label === targetSpace : false,
           };
         });
-        this.spaces = [{ label: " ", guid: "0", selected: true }].concat(spacesWithSelected);
-
-        if (targetSpace == undefined || !this.selectedSpace || !this.selectedSpace.guid) {
-          this.selectedSpace = {
-            label: this.spaces[0].label,
-            guid: this.spaces[0].guid,
-          };
+        if (!this.currentSpace || targetSpace == undefined) {
+          this.spaces = [{ label: " ", guid: "0", selected: true }].concat(spacesWithSelected);
+          this.selectedSpace.label = undefined;
+        } else {
+          this.spaces = spacesWithSelected;
         }
       });
-      this.statusApplyButton();
     },
     changeOrg(val) {
       this.selectedOrg = this.orgs.find((org) => org.guid === val.target.value);
+      this.selectedOrg.selected = true;
       this.selectSpace(undefined);
-      this.statusApplyButton();
     },
     changeSpace(val) {
       this.selectedSpace = this.spaces.find((space) => space.guid === val.target.value);
-      this.statusApplyButton();
-    },
-    statusApplyButton() {
-      if (this.selectedSpace.label == this.currentSpace) {
-        this.disableApplyButton = true;
-      } else if (this.selectedOrg.guid != "0" && this.selectedSpace.guid != "0") {
-        this.disableApplyButton = false;
-      } else {
-        this.disableApplyButton = true;
-      }
+      this.selectedSpace.selected = true;
     },
     setTarget() {
       const org = this.selectedOrg.label;
@@ -150,7 +146,6 @@ export default {
         this.areOrgAndSpaceSet = true;
         this.currentOrg = org;
         this.currentSpace = space;
-        this.disableApplyButton = true;
         console.log("update target display");
       });
     },

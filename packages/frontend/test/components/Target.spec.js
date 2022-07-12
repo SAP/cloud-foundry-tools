@@ -57,8 +57,8 @@ describe("Target.vue", () => {
     expect(rpcInvokeMockFunction).toHaveBeenCalledWith("applyTarget", ["orgLabel1", "spaceLabel1"]);
   });
 
-  describe("statusApplyButton - method", () => {
-    test("selectedSpace equals to currentSpace", () => {
+  describe("statusApplyButton - computed", () => {
+    test("selected equals to current", () => {
       let target1 = {
         defaultEndpoint: "endpoint1",
         isLoggedIn: true,
@@ -77,12 +77,12 @@ describe("Target.vue", () => {
         },
         true
       );
+      wrapper.vm.$data.currentOrg = "orgLabel1";
       wrapper.vm.$data.currentSpace = "spaceLabel1";
       wrapper.vm.$data.selectedOrg = { label: "orgLabel1", guid: "orgGuild1" };
       wrapper.vm.$data.selectedSpace = { label: "spaceLabel1", guid: "spaceGuid1" };
 
-      wrapper.vm.statusApplyButton();
-      expect(wrapper.vm.disableApplyButton).toBe(true);
+      expect(wrapper.vm.statusApplyButton).toBe(true);
     });
 
     test("selectedOrg and selectedSpace chosen", () => {
@@ -107,8 +107,7 @@ describe("Target.vue", () => {
       wrapper.vm.$data.selectedOrg = { label: "orgLabel1", guid: "orgGuild1" };
       wrapper.vm.$data.selectedSpace = { label: "spaceLabel1", guid: "spaceGuid1" };
 
-      wrapper.vm.statusApplyButton();
-      expect(wrapper.vm.disableApplyButton).toBe(false);
+      expect(wrapper.vm.statusApplyButton).toBe(false);
     });
 
     test("selectedOrg and selectedSpace not selected", () => {
@@ -133,8 +132,7 @@ describe("Target.vue", () => {
       wrapper.vm.$data.selectedOrg = { label: "", guid: "0" };
       wrapper.vm.$data.selectedSpace = { label: "", guid: "0" };
 
-      wrapper.vm.statusApplyButton();
-      expect(wrapper.vm.disableApplyButton).toBe(true);
+      expect(wrapper.vm.statusApplyButton).toBe(true);
     });
   });
 
@@ -161,7 +159,7 @@ describe("Target.vue", () => {
     wrapper.vm.$data.currentSpace = "space1";
 
     wrapper.vm.changeSpace({ target: { value: "1" } });
-    expect(wrapper.vm.disableApplyButton).toBe(true);
+    expect(wrapper.vm.statusApplyButton).toBe(true);
   });
 
   test.skip("changeOrg - method", () => {
@@ -192,7 +190,7 @@ describe("Target.vue", () => {
     // wrapper.vm.$data.currentSpace = "space1";
 
     wrapper.vm.changeOrg({ target: { value: "1" } });
-    expect(wrapper.vm.disableApplyButton).toBe(false);
+    expect(wrapper.vm.statusApplyButton).toBe(false);
   });
 
   test.skip("selectSpace - method", () => {
@@ -228,7 +226,7 @@ describe("Target.vue", () => {
     // wrapper.vm.$data.currentSpace = "space1";
 
     wrapper.vm.selectSpace({ target: { value: "1" } });
-    expect(wrapper.vm.disableApplyButton).toBe(false);
+    expect(wrapper.vm.statusApplyButton).toBe(false);
   });
 
   describe("loggedInVisibility - computed", () => {

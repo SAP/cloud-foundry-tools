@@ -203,8 +203,9 @@ describe("Signin.vue", () => {
       },
       true
     );
+    wrapper.vm.$data.endpoint = "endpoint1";
 
     wrapper.findAll("vscode-link").wrappers[0].trigger("click");
-    expect(rpcInvokeMockFunction).toHaveBeenCalledWith("openPasscodeLink", [defaultTarget.passcodeUrl]);
+    expect(rpcInvokeMockFunction).toHaveBeenCalledWith("openPasscodeLink", ["endpoint1"]);
   });
 });
