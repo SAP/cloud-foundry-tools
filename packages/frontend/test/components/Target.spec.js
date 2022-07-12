@@ -159,10 +159,12 @@ describe("Target.vue", () => {
     wrapper.vm.$data.currentSpace = "space1";
 
     wrapper.vm.changeSpace({ target: { value: "1" } });
-    expect(wrapper.vm.statusApplyButton).toBe(true);
+    expect(wrapper.vm.selectedSpace.label).toBe("space1");
+    expect(wrapper.vm.selectedSpace.guid).toBe("1");
+    expect(wrapper.vm.selectedSpace.selected).toBe(true);
   });
 
-  test.skip("changeOrg - method", () => {
+  test("changeOrg - method", () => {
     let target1 = {
       defaultEndpoint: "endpoint1",
       isLoggedIn: true,
@@ -187,13 +189,13 @@ describe("Target.vue", () => {
     wrapper.vm.$data.orgs = [{ label: "org1", guid: "1" }];
     wrapper.vm.$data.spaces = [{ label: "space1", guid: "1" }];
 
-    // wrapper.vm.$data.currentSpace = "space1";
-
     wrapper.vm.changeOrg({ target: { value: "1" } });
-    expect(wrapper.vm.statusApplyButton).toBe(false);
+    expect(wrapper.vm.selectedOrg.label).toBe("org1");
+    expect(wrapper.vm.selectedOrg.guid).toBe("1");
+    expect(wrapper.vm.selectedOrg.selected).toBe(true);
   });
 
-  test.skip("selectSpace - method", () => {
+  test("selectSpace - method", () => {
     let target1 = {
       defaultEndpoint: "endpoint1",
       isLoggedIn: true,
@@ -201,13 +203,8 @@ describe("Target.vue", () => {
       currentOrg: "org1",
       currentSpace: "space1",
     };
-    let spaces = [{ label: "org1", guid: "1" }];
-    spaces.map = () => {
-      return { label: "org1", guid: "1" };
-    };
-
     const rpcInvokeMockFunction = jest.fn().mockImplementation(async () => {
-      return { spaces: spaces, then: {} };
+      return {};
     });
     wrapper = wrapper = initComponent(
       Target,
@@ -220,13 +217,9 @@ describe("Target.vue", () => {
       },
       true
     );
-    wrapper.vm.$data.orgs = [{ label: "org1", guid: "1" }];
-    wrapper.vm.$data.spaces = [{ label: "space1", guid: "1" }];
-
-    // wrapper.vm.$data.currentSpace = "space1";
 
     wrapper.vm.selectSpace({ target: { value: "1" } });
-    expect(wrapper.vm.statusApplyButton).toBe(false);
+    expect(wrapper.vm.spaces).toBeEmpty;
   });
 
   describe("loggedInVisibility - computed", () => {
