@@ -157,7 +157,7 @@ export default {
 
 <style>
 .subtitle-color-field {
-  color: var(--vscode-editorCodeLens-foreground, #999999);
+  color: var(--vscode-descriptionForeground, #717171);
 }
 .mt-8 {
   margin-top: 8px;

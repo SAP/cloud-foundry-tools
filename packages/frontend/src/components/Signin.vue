@@ -268,7 +268,7 @@ export default {
   color: red;
 }
 .subtitle-color-field {
-  color: var(--vscode-editorCodeLens-foreground, #999999);
+  color: var(--vscode-descriptionForeground, #717171);
 }
 /* mdi-icon */
 svg.mdi-icon {
@@ -276,8 +276,8 @@ svg.mdi-icon {
 }
 .tooltip .tooltip-inner {
   width: auto;
-  background-color: var(--vscode-editorLightBulb-foreground, #ddb100);
-  color: rgb(0, 0, 0);
+  background-color: black;
+  color: white;
   font-size: 10px !important;
   padding: 8px 8px 8px 8px;
   border-radius: 5px;
