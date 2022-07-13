@@ -223,8 +223,8 @@ async function applyTarget(org: string, space: string) {
   }
 }
 
-function openPasscodeLink(url: string) {
-  void vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(url));
+function openPasscodeLink(endpoint: string) {
+  void vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(calculatePasscodeUrl(endpoint)));
 }
 
 export async function invokeLongFunctionWithProgressForm(longFunction: Function, ...args: any): Promise<any> {
@@ -232,7 +232,9 @@ export async function invokeLongFunctionWithProgressForm(longFunction: Function,
   try {
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     const ret = await longFunction(...args);
-    await _rpc.invoke("setBusyIndicator", [false]);
+    if (!["cfGetTarget", "cfGetAvailableOrgs"].includes(longFunction.name)) {
+      await _rpc.invoke("setBusyIndicator", [false]);
+    }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return ret;
   } catch (error) {
