@@ -23,7 +23,7 @@ export default {
 
 <style>
 .subtitle-field {
-  color: var(--vscode-editorCodeLens-foreground, #999999);
+  color: var(--vscode-descriptionForeground, #717171);
   margin-bottom: 16px;
 }
 </style>
