@@ -25,7 +25,6 @@ import { join, sep } from "path";
 
 export let _rpc: RpcExtension;
 
-let commandPallet = false;
 let currentTarget: ITarget | undefined;
 let initTarget: { endpoint: string | undefined; org?: string | undefined; space?: string | undefined };
 let panel: vscode.WebviewPanel | undefined;
@@ -46,7 +45,6 @@ export function openLoginView(
     org: org,
     space: space,
   };
-  commandPallet = opts.isCommandPallet ?? false;
   isLoginOnly = opts.isLoginOnly;
   // Every time the view is opened need to recalculate the login result
   cmdLoginResult = undefined;
@@ -213,9 +211,7 @@ async function applyTarget(org: string, space: string) {
     cmdLoginResult = OK;
     void vscode.window.showInformationMessage(messages.success_set_org_space);
     getModuleLogger(LOGGER_MODULE).debug("executeSetOrgSpace: set org & spaces succeeded");
-    if (!commandPallet) {
-      panel?.dispose();
-    }
+    panel?.dispose();
   } catch (error) {
     cmdLoginResult = undefined;
     getModuleLogger(LOGGER_MODULE).error("executeSetOrgSpace: set org & spaces failed", error);
