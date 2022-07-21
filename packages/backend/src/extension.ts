@@ -114,7 +114,7 @@ export async function activate(context: ExtensionContext): Promise<unknown> {
   const loginCmdId = "cf.login";
   context.subscriptions.push(
     commands.registerCommand(loginCmdId, (weak: boolean, target: boolean, extEndPoint: string | undefined) => {
-      return cmdLogin(weak, target, extEndPoint, { isSplit: !!weak, isCommandPallet: !weak }).then((result) => {
+      return cmdLogin(weak, target, extEndPoint, { isSplit: !!weak }).then((result) => {
         if (OK === result) {
           const active = _.find(treeDataProvider.getTargets(), "target.isCurrent");
           if (active) {
@@ -138,7 +138,7 @@ export async function activate(context: ExtensionContext): Promise<unknown> {
   // start workarround  --> remove following workarround in future theia releases
   /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
   context.subscriptions.push(commands.registerCommand("cf.login.weak", cmdLogin.bind(null, true)));
-  cfStatusBarItem.command = "cf.login.weak";
+  cfStatusBarItem.command = "cf.login";
   // end workarround
 
   void updateStatusBar();

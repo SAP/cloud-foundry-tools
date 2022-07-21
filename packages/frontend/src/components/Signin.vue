@@ -76,7 +76,7 @@
         <br />
         <vscode-text-field
           class="pt-8"
-          size="50"
+          size="47"
           placeholder="Enter your passcode"
           v-on:keyup="btnStatus"
           v-model="passcode"
@@ -290,5 +290,8 @@ svg.mdi-icon {
 }
 .pt-8 {
   padding-top: 8px;
+}
+.pt-8::part(control)::placeholder {
+  font-style: italic;
 }
 </style>

@@ -14,16 +14,32 @@
     <br /><br />
     <span class="subtitle-color-field">Select Cloud Foundry Organization </span><span class="text-danger">*</span><br />
     <vscode-dropdown class="mt-8 dropdown" position="below" @change="changeOrg">
-      <vscode-option v-for="o in orgs" :key="o.guid" :value="o.guid" :selected="o.selected">{{
-        o.label
-      }}</vscode-option>
+      <vscode-option
+        v-for="o in orgs"
+        :key="o.guid"
+        :value="o.guid"
+        :selected="o.selected"
+        v-tooltip="{
+          content: o.label,
+          placement: 'right',
+        }"
+        >{{ o.label }}</vscode-option
+      >
     </vscode-dropdown>
     <br /><br />
     <span class="subtitle-color-field">Select Cloud Foundry Space </span><span class="text-danger">*</span><br />
     <vscode-dropdown class="mt-8 dropdown" position="below" @change="changeSpace">
-      <vscode-option v-for="s in spaces" :key="s.guid" :value="s.guid" :selected="s.selected">{{
-        s.label
-      }}</vscode-option>
+      <vscode-option
+        v-for="s in spaces"
+        :key="s.guid"
+        :value="s.guid"
+        :selected="s.selected"
+        v-tooltip="{
+          content: s.label,
+          placement: 'right',
+        }"
+        >{{ s.label }}</vscode-option
+      >
     </vscode-dropdown>
     <br /><br />
 
@@ -175,6 +191,15 @@ export default {
   color: red;
 }
 .dropdown {
-  width: 300px;
+  min-width: 400px;
+  width: fit-content;
+}
+.tooltip .tooltip-inner {
+  display: block;
+  z-index: 10000;
+  background: black;
+  color: white;
+  border-radius: 16px;
+  padding: 5px 10px 4px;
 }
 </style>
