@@ -292,6 +292,6 @@ svg.mdi-icon {
   padding-top: 8px;
 }
 .pt-8::part(control)::placeholder {
-  font-style: italic !important;
+  font-style: italic;
 }
 </style>

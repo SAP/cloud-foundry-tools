@@ -224,7 +224,7 @@ function openPasscodeLink(endpoint: string) {
 }
 
 export async function invokeLongFunctionWithProgressForm(longFunction: Function, ...args: any): Promise<any> {
-  if (!["cfGetAvailableSpaces"].includes(longFunction.name)) {
+  if ("cfGetAvailableSpaces" !== longFunction.name) {
     await _rpc.invoke("setBusyIndicator", [true]);
   }
   try {
