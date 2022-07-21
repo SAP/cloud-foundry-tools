@@ -34,7 +34,7 @@ let cmdLoginResult: string | undefined;
 const LOGGER_MODULE = "loginTargetView";
 
 export function openLoginView(
-  opts: { isSplit: boolean; isCommandPallet?: boolean; isLoginOnly?: boolean },
+  opts: { isSplit: boolean; isLoginOnly?: boolean },
   endpoint?: string,
   org?: string,
   space?: string
@@ -224,7 +224,9 @@ function openPasscodeLink(endpoint: string) {
 }
 
 export async function invokeLongFunctionWithProgressForm(longFunction: Function, ...args: any): Promise<any> {
-  await _rpc.invoke("setBusyIndicator", [true]);
+  if (!["cfGetAvailableSpaces"].includes(longFunction.name)) {
+    await _rpc.invoke("setBusyIndicator", [true]);
+  }
   try {
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     const ret = await longFunction(...args);
