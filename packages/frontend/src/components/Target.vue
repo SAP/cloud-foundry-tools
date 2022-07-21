@@ -22,8 +22,6 @@
         v-tooltip="{
           content: o.label,
           placement: 'right',
-          class: 'tooltip-custom',
-          size: '10%',
         }"
         >{{ o.label }}</vscode-option
       >
@@ -39,8 +37,6 @@
         v-tooltip="{
           content: s.label,
           placement: 'right',
-          class: 'tooltip-custom',
-          size: '10%',
         }"
         >{{ s.label }}</vscode-option
       >
@@ -199,7 +195,7 @@ export default {
   width: fit-content;
 }
 .tooltip .tooltip-inner {
-  display: block !important;
+  display: block;
   z-index: 10000;
   background: black;
   color: white;
