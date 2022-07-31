@@ -1,13 +1,25 @@
-// import { initComponent } from "./Utils";
-// import App from "../src/App";
-import { expect } from "chai";
-
-// let wrapper;
+import { initComponent, destroy } from "./Utils";
+import App from "../src/App";
+import { WebSocket } from "mock-socket";
+global.WebSocket = WebSocket;
+let wrapper;
 
 describe("App.vue", () => {
-  test("component name", () => {
-    // wrapper = initComponent(App);
-    // expect(wrapper.name()).toBe("App");
-    expect(true).to.be.true;
+  afterEach(() => {
+    destroy(wrapper);
+  });
+
+  describe("targetVisibility - computed", () => {
+    test.skip("isLoggedIn is true", () => {
+      wrapper = initComponent(App, {}, true);
+      wrapper.vm.rpc = {
+        invoke: jest.fn(),
+      };
+      wrapper.vm.$data.rpc = {
+        invoke: jest.fn(),
+      };
+      wrapper.vm.$data.isLoggedIn = true;
+      expect(wrapper.vm.targetVisibility).toEqual("");
+    });
   });
 });

@@ -6,9 +6,7 @@ module.exports = {
     "src/**/*.{js,vue}",
     "!**/node_modules/**",
     "!<rootDir>/src/utils.js",
-    "!<rootDir>/src/exploregens/**",
     "!<rootDir>/src/main.js",
-    "!<rootDir>/src/plugins/**",
   ],
   coverageReporters: ["lcov", "html", "text-summary"],
   moduleFileExtensions: ["js", "vue", "json"],
@@ -18,8 +16,16 @@ module.exports = {
     ".*\\.(vue)$": "vue-jest",
     "^.+\\.vue$": "vue-jest",
     ".+\\.(css|styl|less|sass|scss|svg|png|jpg|ttf|woff|woff2)$": "jest-transform-stub",
-    "^.+\\.tsx?$": "ts-jest",
+    "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest",
     "^.+\\.js$": "<rootDir>/node_modules/babel-jest",
   },
   snapshotSerializers: ["<rootDir>/node_modules/jest-serializer-vue"],
+  coverageThreshold: {
+    global: {
+      branches: 0,
+      functions: 0,
+      lines: 0,
+      statements: 0,
+    },
+  },
 };

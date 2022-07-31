@@ -283,6 +283,7 @@ svg.mdi-icon {
   border-radius: 5px;
   box-shadow: rgba(0, 0, 0, 0.22) 5px 5px 5px;
   opacity: 1 !important;
+  text-align: left;
 }
 .pr-4 {
   padding-right: 4px;

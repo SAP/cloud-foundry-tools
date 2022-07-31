@@ -1,17 +1,29 @@
-// import { initComponent } from "../Utils";
-// import Header from "../../src/components/Header.vue";
-//There are issues of importing vuetify components https://github.com/vuejs/vue-cli/issues/1584
-// import _ from "lodash";
-import { expect } from "chai";
-// import { shallowMount } from "@vue/test-utils";
-// import BasToolbarDivider from "@/components/Header.vue";
+import { initComponent, destroy } from "../Utils";
+import Header from "../../src/components/Header.vue";
+import { keys } from "lodash";
 
-// let wrapper;
+let wrapper;
 
 describe("Header.vue", () => {
+  afterEach(() => {
+    destroy(wrapper);
+  });
+
   test("component name", () => {
-    // wrapper = shallowMount(Header);
-    // expect(wrapper.name()).toBe("Header");
-    expect(true).to.be.true;
+    wrapper = initComponent(Header);
+    expect(wrapper.name()).toBe("Header");
+  });
+
+  test("component props", () => {
+    wrapper = initComponent(Header);
+    expect(keys(wrapper.props())).toHaveLength(0);
+  });
+
+  test("component items", () => {
+    wrapper = initComponent(Header);
+    expect(wrapper.find("h1").text()).toBe("Cloud Foundry Sign In and Targets");
+    expect(wrapper.find("span.subtitle-field").text()).toBe(
+      "Provide your Cloud Foundry parameters to sign in to the Cloud Foundry enviroment"
+    );
   });
 });

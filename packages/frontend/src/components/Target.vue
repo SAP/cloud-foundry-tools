@@ -47,11 +47,17 @@
   </div>
 </template>
 <script>
-import { provideVSCodeDesignSystem, vsCodeButton, vsCodeDropdown, vsCodeOption } from "@vscode/webview-ui-toolkit";
-
+import {
+  provideVSCodeDesignSystem,
+  vsCodeButton,
+  vsCodeDropdown,
+  vsCodeOption,
+  vsCodeDivider,
+} from "@vscode/webview-ui-toolkit";
 provideVSCodeDesignSystem().register(vsCodeDropdown());
 provideVSCodeDesignSystem().register(vsCodeButton());
 provideVSCodeDesignSystem().register(vsCodeOption());
+provideVSCodeDesignSystem().register(vsCodeDivider());
 
 export default {
   name: "Target",
@@ -130,13 +136,15 @@ export default {
     },
     selectSpace(targetSpace) {
       this.rpc.invoke("getSpaces", [this.selectedOrg.guid]).then((spaces) => {
-        const spacesWithSelected = spaces.map((space) => {
-          return {
-            guid: space.guid,
-            label: space.label,
-            selected: targetSpace ? space.label === targetSpace : false,
-          };
-        });
+        const spacesWithSelected = Array.isArray(spaces)
+          ? spaces.map((space) => {
+              return {
+                guid: space.guid,
+                label: space.label,
+                selected: targetSpace ? space.label === targetSpace : false,
+              };
+            })
+          : [];
         if (!this.currentSpace || targetSpace == undefined) {
           this.spaces = [{ label: " ", guid: "0", selected: true }].concat(spacesWithSelected);
           this.selectedSpace.label = undefined;
@@ -153,9 +161,6 @@ export default {
     changeSpace(val) {
       this.selectedSpace = this.spaces.find((space) => space.guid === val.target.value);
       this.selectedSpace.selected = true;
-    },
-    setEndpoint(val) {
-      this.endpoint = val.target.value;
     },
     setTarget() {
       const org = this.selectedOrg.label;
