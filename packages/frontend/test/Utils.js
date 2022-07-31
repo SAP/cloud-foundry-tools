@@ -1,8 +1,8 @@
-import { mount, shallowMount } from "@vue/test-utils";
+import { mount, shallowMount, createLocalVue } from "@vue/test-utils";
 import Vue from "vue";
-import Form from "@sap-devx/inquirer-gui";
+import Vuetify from "vuetify";
+Vue.use(Vuetify);
 
-import { createLocalVue } from "@vue/test-utils";
 const localVue = createLocalVue();
 
 Object.defineProperty(window, "matchMedia", {
@@ -20,9 +20,6 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 export function initComponent(component, propsData, isMount) {
-  const options = {};
-  Vue.use(Form, options);
-
   const initFunction = isMount === true ? mount : shallowMount;
   const props = {
     localVue,

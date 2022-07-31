@@ -1,6 +1,6 @@
 import { initComponent, destroy } from "../Utils";
 import Header from "../../src/components/Header.vue";
-import _ from "lodash";
+import { keys } from "lodash";
 
 let wrapper;
 
@@ -16,7 +16,7 @@ describe("Header.vue", () => {
 
   test("component props", () => {
     wrapper = initComponent(Header);
-    expect(_.keys(wrapper.props())).toHaveLength(0);
+    expect(keys(wrapper.props())).toHaveLength(0);
   });
 
   test("component items", () => {

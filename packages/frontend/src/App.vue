@@ -25,10 +25,9 @@
 
 <script>
 // eslint-disable-next-line no-unused-vars
-import Vue from "vue";
 import { RpcBrowser } from "@sap-devx/webview-rpc/out.browser/rpc-browser";
 import { RpcBrowserWebSockets } from "@sap-devx/webview-rpc/out.browser/rpc-browser-ws";
-import * as _ from "lodash";
+import { get, forEach } from "lodash";
 import Header from "./components/Header.vue";
 import Signin from "./components/Signin.vue";
 import Target from "./components/Target.vue";
@@ -77,7 +76,7 @@ export default {
       return true;
     },
     currentPrompt() {
-      return _.get(this.prompts, "[" + this.promptIndex + "]");
+      return get(this.prompts, "[" + this.promptIndex + "]");
     },
   },
   watch: {
@@ -121,7 +120,7 @@ export default {
     },
     initRpc() {
       const functions = ["setBusyIndicator"];
-      _.forEach(functions, (funcName) => {
+      forEach(functions, (funcName) => {
         this.rpc.registerMethod({
           func: this[funcName],
           thisArg: this,

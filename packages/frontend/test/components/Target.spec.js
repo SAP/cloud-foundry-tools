@@ -1,6 +1,12 @@
 import { initComponent, destroy } from "../Utils";
 import Target from "../../src/components/Target.vue";
 import _ from "lodash";
+import Vue from "vue";
+import VueMdijs from "vue-mdijs";
+import { mdiCheckCircleOutline } from "@mdi/js";
+VueMdijs.add({ mdiCheckCircleOutline });
+
+Vue.use(VueMdijs);
 
 let wrapper;
 
@@ -17,13 +23,8 @@ describe("Target.vue", () => {
     currentSpace: "defaultSpace",
   };
 
-  test("component name", () => {
-    wrapper = initComponent(Target, { target: defaultTarget });
-    expect(wrapper.name()).toBe("Target");
-  });
-
   test("component props", () => {
-    wrapper = initComponent(Target, { target: defaultTarget });
+    wrapper = initComponent(Target, { target: defaultTarget }, true);
     expect(_.keys(wrapper.props())).toHaveLength(3);
   });
 
@@ -93,7 +94,7 @@ describe("Target.vue", () => {
         currentOrg: "org1",
         currentSpace: "space1",
       };
-      wrapper = wrapper = initComponent(
+      wrapper = initComponent(
         Target,
         {
           target: target1,
@@ -232,8 +233,17 @@ describe("Target.vue", () => {
     };
 
     test("isLoggedIn is false", () => {
-      wrapper = initComponent(Target, { target: target1 }, {}, true);
-      wrapper.vm.$props.isLoggedIn = false;
+      wrapper = wrapper = initComponent(
+        Target,
+        {
+          target: target1,
+          rpc: {
+            invoke: jest.fn,
+          },
+          isLoggedIn: false,
+        },
+        true
+      );
       expect(wrapper.vm.loggedInVisibility).toEqual("none");
     });
 
@@ -245,11 +255,10 @@ describe("Target.vue", () => {
           rpc: {
             invoke: jest.fn,
           },
-          isLoggedIn: target1.isLoggedIn,
+          isLoggedIn: true,
         },
         true
       );
-      wrapper.vm.$props.isLoggedIn = true;
       expect(wrapper.vm.loggedInVisibility).toEqual("");
     });
   });

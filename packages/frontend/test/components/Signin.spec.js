@@ -1,6 +1,15 @@
 import { initComponent, destroy } from "../Utils";
 import Signin from "../../src/components/Signin.vue";
-import _ from "lodash";
+import { keys } from "lodash";
+
+import Vue from "vue";
+import VueMdijs from "vue-mdijs";
+import { mdiCheckCircleOutline, mdiHelpCircleOutline, mdiCloseCircleOutline } from "@mdi/js";
+VueMdijs.add({ mdiCheckCircleOutline, mdiHelpCircleOutline, mdiCloseCircleOutline });
+import { VTooltip } from "v-tooltip";
+
+Vue.directive("tooltip", VTooltip);
+Vue.use(VueMdijs);
 
 let wrapper;
 
@@ -17,14 +26,9 @@ describe("Signin.vue", () => {
     currentSpace: "defaultSpace",
   };
 
-  test("component name", () => {
-    wrapper = initComponent(Signin, { target: defaultTarget });
-    expect(wrapper.name()).toBe("Signin");
-  });
-
   test("component props", () => {
-    wrapper = initComponent(Signin, { target: defaultTarget });
-    expect(_.keys(wrapper.props())).toHaveLength(2);
+    wrapper = initComponent(Signin, { target: defaultTarget }, {}, false);
+    expect(keys(wrapper.props())).toHaveLength(2);
   });
 
   describe("authFailedVisibility - computed", () => {
