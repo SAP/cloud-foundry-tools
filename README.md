@@ -10,6 +10,8 @@
 
 This VSCode extension provides tools for easy application development with Cloud Foundry. Its' tools contains such functionality as "Login to Cloud Foundry", "Create service", "Bind service", "Unbind service", etc.
 
+This extension is **not available in the Visual Studio Marketplace**. See the section [How to Run Locally](#how-to-run-locally) below for installation instructions.
+
 ## Table of contents
 
 - [Features](#features)
