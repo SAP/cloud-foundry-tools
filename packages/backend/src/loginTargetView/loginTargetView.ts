@@ -23,7 +23,7 @@ import * as _ from "lodash";
 import { messages } from "../messages";
 import { join, sep } from "path";
 
-export let _rpc: RpcExtension;
+let _rpc: RpcExtension;
 
 let currentTarget: ITarget | undefined;
 let initTarget: { endpoint: string | undefined; org?: string | undefined; space?: string | undefined };
@@ -131,11 +131,10 @@ async function getTarget(): Promise<ITarget | undefined> {
   //logged in then need to show the target section
 }
 
-async function getCFDefaultLandscape(): Promise<string> {
-  const apiFromEnv = _.get(process, "env.CF_API_ENDPOINT", "") as string;
-  const apiFromFile = (await cfGetConfigFileField("Target")) as string;
-
-  return apiFromEnv || apiFromFile;
+function getCFDefaultLandscape(): Promise<string> {
+  return cfGetConfigFileField("Target").then((cfgEndpoint: string) => {
+    return cfgEndpoint || _.get(process, "env.CF_API_ENDPOINT", "");
+  });
 }
 
 function calculatePasscodeUrl(endpoint: string): string {
@@ -240,3 +239,8 @@ export async function invokeLongFunctionWithProgressForm(longFunction: Function,
     throw error;
   }
 }
+
+// for testing purpose only
+export const internal = {
+  getCFDefaultLandscape,
+};
