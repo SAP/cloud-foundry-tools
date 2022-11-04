@@ -27,6 +27,7 @@
       <vscode-text-field
         class="pt-8"
         size="50"
+        type="url"
         :value="this.target.defaultEndpoint"
         @input="setEndpoint"
       ></vscode-text-field>
@@ -78,7 +79,6 @@
           class="pt-8"
           size="47"
           placeholder="Enter your passcode"
-          v-on:keyup="btnStatus"
           v-model="passcode"
           ref="psc"
           @input="(p) => (passcode = p.target.value)"
@@ -104,7 +104,6 @@
         <br />
         <vscode-text-field
           class="pt-8"
-          v-on:keyup="btnStatus"
           v-model="username"
           :value="username"
           @input="(u) => (username = u.target.value)"
@@ -117,7 +116,6 @@
         <br />
         <vscode-text-field
           class="pt-8"
-          v-on:keyup="btnStatus"
           v-model="password"
           :value="password"
           @input="(p) => (password = p.target.value)"
@@ -132,7 +130,7 @@
         <br />
       </span>
       <br />
-      <vscode-button @click="SigninClicked" v-bind:disabled="disableButton">Sign in</vscode-button>
+      <vscode-button @click="SigninClicked" v-bind:disabled="isSignInEnable">Sign in</vscode-button>
     </div>
 
     <br /><br />
@@ -159,11 +157,10 @@ export default {
   props: ["target", "rpc"],
   data() {
     return {
-      disableButton: true,
       isLoggedIn: "",
       authFailed: "",
       ssoOrCredentials: "Credentials",
-      endpoint: "",
+      endpoint: this.target.defaultEndpoint,
       passcode: "",
       username: "",
       password: "",
@@ -171,7 +168,6 @@ export default {
   },
   updated() {
     this.isLoggedIn === "" ? (this.isLoggedIn = this.target.isLoggedIn) : "";
-    this.endpoint === "" ? (this.endpoint = this.target.defaultEndpoint) : "";
   },
   watch: {
     isLoggedIn(newVal) {
@@ -194,14 +190,15 @@ export default {
     credentialsVisibility() {
       return this.ssoOrCredentials === "Credentials" ? "" : "none";
     },
+    isSignInEnable() {
+      let isValue = !!this.endpoint;
+      if (isValue) {
+        isValue = this.ssoOrCredentials == "SSO" ? !!this.passcode : !!this.username && !!this.password;
+      }
+      return !isValue;
+    },
   },
   methods: {
-    btnStatus() {
-      if (this.ssoOrCredentials == "Credentials" && this.username != "" && this.password != "")
-        this.disableButton = false;
-      else if (this.ssoOrCredentials == "SSO" && this.passcode != "") this.disableButton = false;
-      else this.disableButton = true;
-    },
     setEndpoint(val) {
       this.endpoint = val.target.value;
     },
@@ -209,12 +206,10 @@ export default {
       navigator.clipboard.readText().then((clipText) => {
         this.passcode = clipText;
         this.$refs.psc.value = this.passcode;
-        this.btnStatus();
       });
     },
     setSSO(val) {
       this.ssoOrCredentials = val.target.value;
-      this.disableButton = true;
     },
     SigninClicked() {
       let payload = {};
