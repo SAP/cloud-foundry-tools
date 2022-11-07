@@ -1,0 +1,28 @@
+name: Release
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # using `v1` because of: https://github.com/actions/checkout/issues/246
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Build & Test subpackages
+        run: yarn ci
+
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: packages/*/*.vsix
+          fail_on_unmatched_files: true
