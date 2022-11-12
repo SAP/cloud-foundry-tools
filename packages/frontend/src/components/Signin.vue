@@ -27,6 +27,7 @@
       <vscode-text-field
         class="pt-8"
         size="50"
+        type="Url"
         :value="this.target.defaultEndpoint"
         @input="setEndpoint"
       ></vscode-text-field>
@@ -203,7 +204,7 @@ export default {
       else this.disableButton = true;
     },
     setEndpoint(val) {
-      this.endpoint = val.target.value;
+      this.endpoint = val.target.value.replace(/ /g, "");
     },
     paste() {
       navigator.clipboard.readText().then((clipText) => {
