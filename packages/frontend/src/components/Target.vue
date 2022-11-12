@@ -13,45 +13,18 @@
     </div>
     <br /><br />
     <span class="subtitle-color-field">Select Cloud Foundry Organization </span><span class="text-danger">*</span><br />
-    <vscode-dropdown class="mt-8 dropdown" position="below" @change="changeOrg">
-      <vscode-option
-        v-for="o in orgs"
-        :key="o.guid"
-        :value="o.guid"
-        :selected="o.selected"
-        v-tooltip="{
-          content: o.label,
-          placement: 'right',
-        }"
-        >{{ o.label }}</vscode-option
-      >
-    </vscode-dropdown>
+    <v-select class="mt-8" v-model="selectedOrg" :options="optOrganizations" :clearable="false" />
     <br /><br />
     <span class="subtitle-color-field">Select Cloud Foundry Space </span><span class="text-danger">*</span><br />
-    <vscode-dropdown class="mt-8 dropdown" position="below" @change="changeSpace">
-      <vscode-option
-        v-for="s in spaces"
-        :key="s.guid"
-        :value="s.guid"
-        :selected="s.selected"
-        v-tooltip="{
-          content: s.label,
-          placement: 'right',
-        }"
-        >{{ s.label }}</vscode-option
-      >
-    </vscode-dropdown>
+    <v-select class="mt-8" v-model="selectedSpace" :options="optSpaces" :clearable="false" />
     <br /><br />
 
     <vscode-button class="mt-8" @click="setTarget" v-bind:disabled="statusApplyButton">Apply</vscode-button>
   </div>
 </template>
 <script>
-import { provideVSCodeDesignSystem, vsCodeButton, vsCodeDropdown, vsCodeOption } from "@vscode/webview-ui-toolkit";
-
-provideVSCodeDesignSystem().register(vsCodeDropdown());
+import { provideVSCodeDesignSystem, vsCodeButton } from "@vscode/webview-ui-toolkit";
 provideVSCodeDesignSystem().register(vsCodeButton());
-provideVSCodeDesignSystem().register(vsCodeOption());
 
 export default {
   name: "Target",
@@ -81,6 +54,10 @@ export default {
     currentSpace(newSpace) {
       this.$emit("updateTargetSpace", newSpace);
     },
+    selectedOrg(v) {
+      this.selectSpace(undefined);
+      this.$emit("updateTargetOrg", v.label);
+    },
   },
   computed: {
     loggedInVisibility() {
@@ -96,6 +73,12 @@ export default {
         (this.selectedOrg.label === this.currentOrg && this.selectedSpace.label === this.currentSpace)
       );
     },
+    optOrganizations() {
+      return this.orgs;
+    },
+    optSpaces() {
+      return this.spaces;
+    },
   },
   methods: {
     getOrgAndSpace() {
@@ -103,7 +86,11 @@ export default {
         this.rpc.invoke("getOrgs").then((orgs) => {
           const orgsWithSelected = orgs.map((org) => {
             if (org.label === target.org) {
-              this.selectedOrg = { label: org.label, guid: org.guid, selected: true };
+              this.selectedOrg = {
+                label: org.label,
+                guid: org.guid,
+                selected: true,
+              };
             }
             return {
               guid: org.guid,
@@ -119,7 +106,10 @@ export default {
 
           if (!this.selectedOrg || !this.selectedOrg.guid) {
             if (this.orgs && this.orgs[0]) {
-              this.selectedOrg = { label: this.orgs[0].label, guid: this.orgs[0].guid };
+              this.selectedOrg = {
+                label: this.orgs[0].label,
+                guid: this.orgs[0].guid,
+              };
             }
           }
           if (this.selectedOrg && this.selectedOrg.guid) {
@@ -144,11 +134,6 @@ export default {
           this.spaces = spacesWithSelected;
         }
       });
-    },
-    changeOrg(val) {
-      this.selectedOrg = this.orgs.find((org) => org.guid === val.target.value);
-      this.selectedOrg.selected = true;
-      this.selectSpace(undefined);
     },
     changeSpace(val) {
       this.selectedSpace = this.spaces.find((space) => space.guid === val.target.value);
@@ -201,5 +186,20 @@ export default {
   color: white;
   border-radius: 16px;
   padding: 5px 10px 4px;
+}
+.v-select .vs__dropdown-toggle,
+.vs__dropdown-menu {
+  background: var(--vscode-editor-background);
+  width: fit-content;
+  min-width: 400px;
+  border-color: var(--vscode-input-foreground);
+}
+.v-select,
+.vs__selected {
+  color: var(--vscode-editor-foreground);
+}
+.v-select .vs__open-indicator,
+.vs__clear {
+  fill: var(--vscode-scrollbarSlider-activeBackground);
 }
 </style>
