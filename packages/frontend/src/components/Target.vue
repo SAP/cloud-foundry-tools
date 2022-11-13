@@ -98,12 +98,7 @@ export default {
               selected: org.label === target.org,
             };
           });
-          if (!this.currentOrg) {
-            this.orgs = [{ label: " ", guid: "0", selected: false }].concat(orgsWithSelected);
-          } else {
-            this.orgs = orgsWithSelected;
-          }
-
+          this.orgs = orgsWithSelected;
           if (!this.selectedOrg || !this.selectedOrg.guid) {
             if (this.orgs && this.orgs[0]) {
               this.selectedOrg = {
@@ -127,12 +122,8 @@ export default {
             selected: targetSpace ? space.label === targetSpace : false,
           };
         });
-        if (!this.currentSpace || targetSpace == undefined) {
-          this.spaces = [{ label: " ", guid: "0", selected: true }].concat(spacesWithSelected);
-          this.selectedSpace.label = undefined;
-        } else {
-          this.spaces = spacesWithSelected;
-        }
+        this.selectedSpace.label = undefined;
+        this.spaces = spacesWithSelected;
       });
     },
     changeSpace(val) {
@@ -174,18 +165,6 @@ export default {
 }
 .text-danger {
   color: red;
-}
-.dropdown {
-  min-width: 400px;
-  width: fit-content;
-}
-.tooltip .tooltip-inner {
-  display: block;
-  z-index: 10000;
-  background: black;
-  color: white;
-  border-radius: 16px;
-  padding: 5px 10px 4px;
 }
 .v-select .vs__dropdown-toggle,
 .vs__dropdown-menu {
