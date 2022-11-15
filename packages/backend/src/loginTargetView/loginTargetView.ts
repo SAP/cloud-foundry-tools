@@ -235,4 +235,6 @@ export async function invokeLongFunctionWithProgressForm(longFunction: Function,
 // for testing purpose only
 export const internal = {
   getCFDefaultLandscape,
+  getOrgs,
+  getSpaces,
 };
