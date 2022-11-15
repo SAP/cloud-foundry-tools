@@ -41,8 +41,12 @@ export default {
     };
   },
   updated() {
-    this.currentOrg === "" ? (this.currentOrg = this.target.currentOrg) : "";
-    this.currentSpace === "" ? (this.currentSpace = this.target.currentSpace) : "";
+    if (this.currentOrg === "") {
+      this.currentOrg = this.target?.currentOrg;
+    }
+    if (this.currentSpace === "") {
+      this.currentSpace = this.target?.currentSpace;
+    }
   },
   watch: {
     isLoggedIn(newVal) {
@@ -56,7 +60,7 @@ export default {
     },
     selectedOrg(v) {
       this.selectSpace(undefined);
-      this.$emit("updateTargetOrg", v.label);
+      this.$emit("updateTargetOrg", v?.label);
     },
   },
   computed: {

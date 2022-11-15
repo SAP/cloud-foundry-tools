@@ -181,27 +181,27 @@ function getSelectedTarget() {
 }
 
 function getOrgs(): Promise<Organization[]> {
-  try {
-    const orgs: Promise<Organization[]> = cfGetAvailableOrgs();
-    getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableOrgs: get avaliable orgs succeeded");
-    return orgs;
-  } catch (error) {
-    getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableOrgs: get avaliable orgs failed", error);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return Promise.resolve([]);
-  }
+  return cfGetAvailableOrgs()
+    .then((orgs: Organization[]) => {
+      getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableOrgs: get avaliable orgs succeeded");
+      return orgs;
+    })
+    .catch((error) => {
+      getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableOrgs: get avaliable orgs failed", error);
+      return [];
+    });
 }
 
-async function getSpaces(org: string): Promise<Space[]> {
-  try {
-    const spaces: Promise<Space[]> = cfGetAvailableSpaces(org);
-    getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableSpaces: get avaliable spaces succeeded");
-    return spaces;
-  } catch (error) {
-    getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableSpaces: get avaliable spaces failed", error);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return Promise.resolve([]);
-  }
+function getSpaces(org: string): Promise<Space[]> {
+  return cfGetAvailableSpaces(org)
+    .then((spaces: Space[]) => {
+      getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableSpaces: get avaliable spaces succeeded");
+      return spaces;
+    })
+    .catch((error) => {
+      getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableSpaces: get avaliable spaces failed", error);
+      return [];
+    });
 }
 
 async function applyTarget(org: string, space: string) {

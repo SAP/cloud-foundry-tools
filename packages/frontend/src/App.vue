@@ -92,7 +92,7 @@ export default {
       this.isLoggedIn = val;
     },
     updateTargetOrg(org) {
-      this.curretOrg = org;
+      this.currentOrg = org;
     },
     updateTargetSpace(space) {
       this.currentSpace = space;
