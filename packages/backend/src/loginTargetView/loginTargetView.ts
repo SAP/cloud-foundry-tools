@@ -182,7 +182,7 @@ function getSelectedTarget() {
 
 function getOrgs(): Promise<Organization[]> {
   try {
-    const orgs: Promise<Organization[]> = invokeLongFunctionWithProgressForm(cfGetAvailableOrgs);
+    const orgs: Promise<Organization[]> = cfGetAvailableOrgs();
     getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableOrgs: get avaliable orgs succeeded");
     return orgs;
   } catch (error) {
@@ -194,7 +194,7 @@ function getOrgs(): Promise<Organization[]> {
 
 async function getSpaces(org: string): Promise<Space[]> {
   try {
-    const spaces: Promise<Space[]> = invokeLongFunctionWithProgressForm(cfGetAvailableSpaces, org);
+    const spaces: Promise<Space[]> = cfGetAvailableSpaces(org);
     getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableSpaces: get avaliable spaces succeeded");
     return spaces;
   } catch (error) {
@@ -206,7 +206,7 @@ async function getSpaces(org: string): Promise<Space[]> {
 
 async function applyTarget(org: string, space: string) {
   try {
-    await invokeLongFunctionWithProgressForm(cfSetOrgSpace, org, space);
+    await cfSetOrgSpace(org, space);
     cmdLoginResult = OK;
     void vscode.window.showInformationMessage(messages.success_set_org_space);
     getModuleLogger(LOGGER_MODULE).debug("executeSetOrgSpace: set org & spaces succeeded");
@@ -223,20 +223,12 @@ function openPasscodeLink(endpoint: string) {
 }
 
 export async function invokeLongFunctionWithProgressForm(longFunction: Function, ...args: any): Promise<any> {
-  if ("cfGetAvailableSpaces" !== longFunction.name) {
-    await _rpc.invoke("setBusyIndicator", [true]);
-  }
   try {
+    await _rpc.invoke("setBusyIndicator", [true]);
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-    const ret = await longFunction(...args);
-    if (!["cfGetTarget", "cfGetAvailableOrgs"].includes(longFunction.name)) {
-      await _rpc.invoke("setBusyIndicator", [false]);
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return ret;
-  } catch (error) {
+    return await longFunction(...args);
+  } finally {
     await _rpc.invoke("setBusyIndicator", [false]);
-    throw error;
   }
 }
 
