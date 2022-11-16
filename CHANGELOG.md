@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [7.1.0](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.0.4...v7.1.0) (2022-11-16)
+
+### Bug Fixes
+
+- [DEVXCORE-2589] fix type of endpoint control ([#245](https://github.com/sap-staging/cloud-foundry-tools/issues/245)) ([48ef31d](https://github.com/sap-staging/cloud-foundry-tools/commit/48ef31dc61478bd56190edfc14c3587111732a74))
+- make dropdown control searchable ([#248](https://github.com/sap-staging/cloud-foundry-tools/issues/248)) ([126d27b](https://github.com/sap-staging/cloud-foundry-tools/commit/126d27b7c24da77fc91bf3fac7b59e771a9e5c74))
+
 ## [7.0.4](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.0.1...v7.0.4) (2022-11-03)
 
 ### Bug Fixes
