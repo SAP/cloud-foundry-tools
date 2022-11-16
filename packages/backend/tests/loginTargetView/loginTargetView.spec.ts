@@ -1,3 +1,4 @@
+import { Organization, Space } from "@sap/cf-tools";
 import { fail } from "assert";
 import { expect } from "chai";
 import * as proxyquire from "proxyquire";
@@ -8,6 +9,8 @@ describe("loginTargetView tests", () => {
   let cfApiMock: SinonMock;
   const cfApiProxy = {
     cfGetConfigFileField: () => Promise.reject(new Error("not implemented")),
+    cfGetAvailableOrgs: () => Promise.reject(new Error("not implemented")),
+    cfGetAvailableSpaces: () => Promise.reject(new Error("not implemented")),
   };
   let internal: any;
 
@@ -59,5 +62,29 @@ describe("loginTargetView tests", () => {
           expect(e.message).to.be.equal(error.message);
         });
     });
+  });
+
+  it("ok:: getOrgs", async () => {
+    const orgs: Organization[] = [{ label: "org", guid: "guid" }];
+    cfApiMock.expects("cfGetAvailableOrgs").resolves(orgs);
+    expect(await internal.getOrgs()).to.be.deep.equal(orgs);
+  });
+
+  it("ok:: getOrgs - error occured", async () => {
+    cfApiMock.expects("cfGetAvailableOrgs").rejects();
+    expect(await internal.getOrgs()).to.be.deep.equal([]);
+  });
+
+  it("ok:: getSpaces", async () => {
+    const org = "org-1";
+    const spaces: Space[] = [{ label: "space", guid: "guid", orgGUID: "orgGUID" }];
+    cfApiMock.expects("cfGetAvailableSpaces").withExactArgs(org).resolves(spaces);
+    expect(await internal.getSpaces(org)).to.be.deep.equal(spaces);
+  });
+
+  it("ok:: getSpaces - error occured", async () => {
+    const org = "org-1";
+    cfApiMock.expects("cfGetAvailableSpaces").withExactArgs(org).rejects();
+    expect(await internal.getSpaces(org)).to.be.deep.equal([]);
   });
 });
