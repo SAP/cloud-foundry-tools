@@ -87,4 +87,9 @@ describe("loginTargetView tests", () => {
     cfApiMock.expects("cfGetAvailableSpaces").withExactArgs(org).rejects();
     expect(await internal.getSpaces(org)).to.be.deep.equal([]);
   });
+
+  it("ok:: calculatePasscodeUrl", () => {
+    const endpoint = "https://api.cf.test.org.my.com";
+    expect(internal.calculatePasscodeUrl(endpoint)).to.be.equal("https://login.cf.test.org.my.com/passcode");
+  });
 });
