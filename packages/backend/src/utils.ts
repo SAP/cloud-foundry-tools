@@ -5,8 +5,79 @@ import { messages } from "./messages";
 import * as types from "@sap/wing-run-config-types";
 import * as _ from "lodash";
 import * as dotenv from "dotenv";
-import { parse, stringify } from "comment-json";
+import { parse } from "comment-json";
 import { EOL, platform } from "os";
+// TODO: uncomment this when APIs of envFile will be available
+// import { envfile } from "@sap/bas-sdk"; 
+
+// TODO : delete this section, just a workaround for consuming the method exactly the same way as if it was used by importing from @sap/bas-sdk
+//------------------------------------------------------//
+export const envfile = {
+  // TODO: this implementation is currently in node. It writes the given envResources in .env file from scratch
+  // i.e envResources includes all the exact key value pairs that should be in the .env file at the end.
+  writeDotEnvKeyValues: (envFilePath: string, envResources: TPROPERTIES): void => {
+      // TODO: this is not good! writing to env not via standard way
+      // Different write here then from the bind!!!
+      // DO not delete properties that are not mentioned in envResources but override the onces that are given!!
+      // let mergedKeyValues: TPROPERTIES = {};
+      try {
+        // IF .env file exists - take all key values from it first
+        // if (fs.existsSync(envFilePath)) {
+        //   mergedKeyValues = envfile.getDotEnvFileKeyValues(envFilePath);
+        // }
+        // Object.keys(envResources).forEach((key) => {
+        //   const value = envResources[key];
+        //   if (value) {
+        //     // Override key with new given key/value pairs
+        //     mergedKeyValues[key] = value;
+        //     // text += `${key}=${value.trim()}\n`;
+        //   }
+        // });
+        let text = "";
+        Object.keys(envResources).forEach((key) => {
+          const value = envResources[key];
+          if (value) {
+            // TODO - we want to write differently in case key=VCAP_SERVICES?
+            text += `${key}=${value.trim()}\n`;
+          }
+        });
+        fs.writeFileSync(envFilePath, text, { encoding: "utf-8" });
+      } catch (err) {
+          throw new Error(
+              `Could not write to the '.env' file: ${envFilePath}. Error: ${err}`
+          );
+      }
+  },
+  getDotEnvFileKeyValues: (envFilePath: string) => {
+    const envFileContent = fs.readFileSync(envFilePath, { encoding: "utf8" });
+    return dotenv.parse(envFileContent);
+  },
+  getVCapServices: (envFilePath: string) => {
+    try {
+      if (fs.existsSync(envFilePath)) {
+        const envProperties = envfile.getDotEnvFileKeyValues(envFilePath);
+        const vcapServiceValue: string = envProperties[ENV_VCAP_RESOURCES];
+        if (vcapServiceValue) {
+          return JSON.parse(vcapServiceValue);
+        } else {
+          console.log(
+            `The ${envFilePath} file is missing a key '${ENV_VCAP_RESOURCES}'.`
+          );
+          return null;
+        }
+      } else {
+        console.log(`The ${envFilePath} file does not exist.`);
+        return null;
+      }
+    } catch (err) {
+      throw new Error(
+        `Could not get the '${ENV_VCAP_RESOURCES}' value from '${envFilePath}'. Error: ${err}`
+      );
+    }
+  }
+};
+//-------------------------------------------------------------------------------------------------------//
+
 import {
   IServiceQuery,
   ServiceInstanceInfo,
@@ -17,7 +88,7 @@ import {
   cfGetTarget,
 } from "@sap/cf-tools";
 import { getModuleLogger } from "./logger/logger-wrapper";
-import { readFile, writeFile } from "fs/promises";
+// import { writeFile } from "fs/promises";
 
 export const isWindows = platform().includes("win");
 type TypeValidationResult = string | undefined | null;
@@ -61,48 +132,27 @@ export function toText(e: Error): string {
 
 export type TPROPERTIES = { [name: string]: string };
 
-export async function getEnvResources(envFilePath: string): Promise<any> {
-  const value = (await readEnvResources(envFilePath))[ENV_VCAP_RESOURCES];
-  if (value) {
-    return parse(value);
-  }
+/**
+ * Returns the VCAP_SERVICES object parsed
+ * @param envFilePath 
+ * @returns 
+ */
+export function getEnvResources(envFilePath: string): Promise<any> {
+  return envfile.getVCapServices(envFilePath);
 }
 
-export async function readEnvResources(envFilePath: string): Promise<TPROPERTIES> {
-  try {
-    return dotenv.parse(await readFile(envFilePath, { encoding: "utf-8" }));
-    // const vcapProperty = env[ENV_VCAP_RESOURCES];
-    // if (vcapProperty) {
-    //   return JSON.parse(vcapProperty);
-    // } else {
-    //   getModuleLogger(LOGGER_MODULE).debug("getEnvResources: the '.env' file is missing a key <%s>", ENV_VCAP_RESOURCES, { filePath: envFilePath });
-    // }
-  } catch (error) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    getModuleLogger(LOGGER_MODULE).error(
-      "getEnvResources: could not get the '.env' file resources",
-      { exception: toText(new Error(error?.message as string)) },
-      { filePath: envFilePath }
-    );
-    throw error;
-  }
+/**
+ * Returns the key value pair of all .env file 
+ * @param envFilePath 
+ * @returns 
+ */
+export function readEnvResources(envFilePath: string): TPROPERTIES {
+  return envfile.getDotEnvFileKeyValues(envFilePath);
 }
 
-export async function writeEnvResources(envFilePath: string, env: TPROPERTIES): Promise<void> {
+export function writeEnvResources(envFilePath: string, envResources: TPROPERTIES):void {
   // Update VCAP_SERVICES in the .env file
-  try {
-    // await access(envFilePath);
-    // const env = dotenv.parse(await readFile(envFilePath, { encoding: "utf-8" }));
-    // env[ENV_VCAP_RESOURCES] = stringify(vcapServices);
-    await writeFile(envFilePath, stringify(env), { encoding: "utf-8" });
-  } catch (error) {
-    getModuleLogger(LOGGER_MODULE).error(
-      "getEnvResources: could not get the '.env' file resources",
-      { exception: toText(new Error(error?.message as string)) },
-      { filePath: envFilePath }
-    );
-    throw error;
-  }
+   return envfile.writeDotEnvKeyValues(envFilePath, envResources);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -128,8 +178,8 @@ export async function removeResourceFromEnv(
 ): Promise<{ resourceName: string; envPath: string; resourceData: any }> {
   let instanceData;
   const envFilePath: string = bindContext.envPath.fsPath;
-  const env = await readEnvResources(envFilePath);
-  const vcapServicesObj: any = parse(env[ENV_VCAP_RESOURCES]);
+  const envProperties: TPROPERTIES = readEnvResources(envFilePath);
+  const vcapServicesObj: any = await getEnvResources(envFilePath);
   const bindResourceType =
     bindContext.depContext.type === types.DependencyType.runtimeservice
       ? bindContext.depContext.displayType
@@ -174,8 +224,7 @@ export async function removeResourceFromEnv(
   }
 
   // Update VCAP_SERVICES in the .env file
-  env[ENV_VCAP_RESOURCES] = stringify(vcapServicesObj);
-  await writeEnvResources(envFilePath, vcapServicesObj as TPROPERTIES);
+  writeEnvResources(envFilePath, _.assign(envProperties, {VCAP_SERVICES: JSON.stringify(vcapServicesObj)}));
   return { resourceName: instanceName, envPath: envFilePath, resourceData: instanceData };
 }
 
@@ -379,17 +428,6 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
     }
   }
 }
-
-// export async function writeProperties(filePath: string, properties: Record<string, string>): Promise<void> {
-//   let text = "";
-//   Object.keys(properties).forEach((key) => {
-//     const value = properties[key];
-//     if (value) {
-//       text += `${key}=${value.trim()}\n`;
-//     }
-//   });
-//   await fs.promises.writeFile(filePath, text);
-// }
 
 export function resolveFilterValue(value: string | undefined): string {
   // allowed patterns: 'hana'|' "hana ", " xsuaa"'|'["xsuaa", "hana"]'

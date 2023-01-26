@@ -2469,6 +2469,10 @@
   dependencies:
     ws "^7.2.3"
 
+"@sap/bas-sdk@https://0e2ed346b17c11413af2c74426ccead9a681980a@github.wdf.sap.corp/devx-wing/bas-sdk.git#vcap":
+  version "3.1.0"
+  resolved "https://0e2ed346b17c11413af2c74426ccead9a681980a@github.wdf.sap.corp/devx-wing/bas-sdk.git#b2441526e3141a91c6aaf92aed475ca9d7732cf6"
+
 "@sap/cf-tools@3.0.3":
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/@sap/cf-tools/-/cf-tools-3.0.3.tgz#73fdba8b1d3f7edaf4cc66ae7e8154267cb5aa6d"

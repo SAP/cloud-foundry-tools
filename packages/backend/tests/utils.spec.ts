@@ -56,8 +56,8 @@ describe("utils unit tests", () => {
     });
   });
 
-  describe("getEnvResources", () => {
-    it("ok:: sanity with valid VCAP_SERVICES value", async () => {
+  describe("getEnvResources -  should returns proper VCAP_SERVICES", () => {
+    it("ok:: sanity with valid VCAP_SERVICES value - value is not wrapped with quotes/double quotes (for backward compatability)", async () => {
       sandbox.stub(fsSync, "existsSync").returns(true);
       const envFilePath: string = path.join(__dirname, "resources", ".testValidEnv");
       const vcapServicesObj = await utils.getEnvResources(envFilePath);
@@ -77,177 +77,180 @@ describe("utils unit tests", () => {
       }
     });
 
-    // it("ok:: '.env' file does not exist", async () => {
-    //   sandbox.stub(fsSync, "existsSync").returns(false);
-    //   const envFilePath: string = path.join(__dirname, "resources", ".notExists");
-    //   expect(await utils.getEnvResources(envFilePath)).to.be.null;
-    // });
+    it("ok:: '.env' file does not exist", async () => {
+      sandbox.stub(fsSync, "existsSync").returns(false);
+      const envFilePath: string = path.join(__dirname, "resources", ".notExists");
+      let vcapServicesObj;
+      try {
+        vcapServicesObj = await utils.getEnvResources(envFilePath);
+        fail("test should fail here");
+      } catch (e) {
+        expect(vcapServicesObj).to.be.null;
+      }
+    });
 
     it("ok:: '.env' file without VCAP_SERVICES key", async () => {
       const envFilePath: string = path.join(__dirname, "resources", ".envNoVCAP");
-      expect(await utils.getEnvResources(envFilePath)).to.be.undefined;
+      expect(await utils.getEnvResources(envFilePath)).to.be.null;
     });
+
   });
 
-  // describe("Tests for removeResourceFromEnv", () => {
-  //   const envFilePath: string = path.join(__dirname, "resources", ".envtest");
-  //   const propReader = PropertiesReader(envFilePath);
-  //   let vcapServicesObjBeforeChange: any;
-  //   before(() => {
-  //     sandbox = sinon.createSandbox();
-  //     vcapServicesObjBeforeChange = propReader.get(utils.ENV_VCAP_RESOURCES);
-  //   });
+  describe("Tests for removeResourceFromEnv", () => {
+    const envFilePath: string = path.join(__dirname, "resources", ".envtest");
+    let vcapServicesObjBeforeChange: any;
+    before(() => {
+      sandbox = sinon.createSandbox();
+      vcapServicesObjBeforeChange = utils.getEnvResources(envFilePath);
+    });
 
-  //   afterEach(async () => {
-  //     sandbox.restore();
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //     propReader.set(utils.ENV_VCAP_RESOURCES, vcapServicesObjBeforeChange);
-  //     await propReader.save(envFilePath);
-  //   });
+    afterEach(() => {
+      sandbox.restore();
+      utils.writeEnvResources(envFilePath, {VCAP_SERVICES: JSON.stringify(vcapServicesObjBeforeChange)});
+    });
 
-  //   // does not work on linux ?! - clarification needed
-  //   it("Test removeResourceFromEnv - exception thrown", async () => {
-  //     const bindContext: any = {
-  //       envPath: {
-  //         fsPath: envFilePath + "_readonly",
-  //       },
-  //       depContext: {
-  //         type: "hana",
-  //         data: {
-  //           resourceTag: "tag-not-found:",
-  //         },
-  //         displayName: "bookshop-hdi-container",
-  //       },
-  //     };
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //     fsSync.chmodSync(bindContext.envPath.fsPath, 0o444);
-  //     try {
-  //       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //       await utils.removeResourceFromEnv(bindContext);
-  //       fail("test should fail here");
-  //     } catch (e) {
-  //       // ...
-  //     }
-  //   });
+    // does not work on linux ?! - clarification needed
+    it("Test removeResourceFromEnv - exception thrown", async () => {
+      const bindContext: any = {
+        envPath: {
+          fsPath: envFilePath + "_readonly",
+        },
+        depContext: {
+          type: "hana",
+          data: {
+            resourceTag: "tag-not-found:",
+          },
+          displayName: "bookshop-hdi-container",
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      fsSync.chmodSync(bindContext.envPath.fsPath, 0o444);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        await utils.removeResourceFromEnv(bindContext);
+        fail("test should fail here");
+      } catch (e) {
+        // ...
+      }
+    });
 
-  //   it("ok:: remove resource when it is not tagged", async () => {
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //     const bindContext: any = {
-  //       envPath: {
-  //         fsPath: envFilePath,
-  //       },
-  //       depContext: {
-  //         type: "xsuaa",
-  //       },
-  //     };
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //     await utils.removeResourceFromEnv(bindContext);
-  //     const envPropertiesAfterChange = PropertiesReader(envFilePath);
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include("xsuaa");
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include('"instance_name":"hdi-test-instance"');
-  //   });
+    it("ok:: remove resource when it is not tagged", async () => {
+      const bindContext: any = {
+        envPath: {
+          fsPath: envFilePath,
+        },
+        depContext: {
+          type: "xsuaa",
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await utils.removeResourceFromEnv(bindContext);
+      const envResources = JSON.stringify(await utils.getEnvResources(envFilePath));
+      expect(envResources).to.not.include("xsuaa");
+      expect(envResources).to.include('"instance_name":"hdi-test-instance"');
+    });
 
-  //   it("ok:: remove resource when it is not tagged by wrong type", async () => {
-  //     const bindContext: any = {
-  //       envPath: {
-  //         fsPath: envFilePath,
-  //       },
-  //       depContext: {
-  //         type: "_xsuaa",
-  //       },
-  //     };
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //     await utils.removeResourceFromEnv(bindContext);
-  //     assert.deepEqual(PropertiesReader(envFilePath).get(utils.ENV_VCAP_RESOURCES), vcapServicesObjBeforeChange);
-  //   });
+    it("ok:: remove resource when it is not tagged by wrong type", async () => {
+      const bindContext: any = {
+        envPath: {
+          fsPath: envFilePath,
+        },
+        depContext: {
+          type: "_xsuaa",
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await utils.removeResourceFromEnv(bindContext);
+      assert.deepEqual(utils.getEnvResources(envFilePath), vcapServicesObjBeforeChange);
+    });
 
-  //   it("ok:: remove resource when it has a tag", async () => {
-  //     const bindContext: any = {
-  //       envPath: {
-  //         fsPath: envFilePath,
-  //       },
-  //       depContext: {
-  //         type: "hana",
-  //         data: {
-  //           resourceTag: "mta-resource-name:",
-  //           resourceName: "bookshop-hdi-container",
-  //         },
-  //         displayName: "bookshop-hdi-container",
-  //       },
-  //     };
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //     await utils.removeResourceFromEnv(bindContext);
-  //     const envPropertiesAfterChange = PropertiesReader(envFilePath);
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include(
-  //       '"instance_name":"hdi-test-instance"'
-  //     );
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include("xsuaa");
-  //   });
+    it("ok:: remove resource when it has a tag", async () => {
+      const bindContext: any = {
+        envPath: {
+          fsPath: envFilePath,
+        },
+        depContext: {
+          type: "hana",
+          data: {
+            resourceTag: "mta-resource-name:",
+            resourceName: "bookshop-hdi-container",
+          },
+          displayName: "bookshop-hdi-container",
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await utils.removeResourceFromEnv(bindContext);
+      const envPropertiesAfterChange = JSON.stringify(await utils.getEnvResources(envFilePath));
+      expect(envPropertiesAfterChange).to.not.include(
+        '"instance_name":"hdi-test-instance"'
+      );
+      expect(envPropertiesAfterChange).to.include("xsuaa");
+    });
 
-  //   it("ok:: remove resource when it has a tag, resource type has more then 1 instance (e.g. two dependencies bound to different instances)", async () => {
-  //     let envPropertiesAfterChange;
-  //     const bindContext: any = {
-  //       envPath: {
-  //         fsPath: envFilePath,
-  //       },
-  //       depContext: {
-  //         type: "hanatest",
-  //         data: {
-  //           resourceTag: "mta-resource-name:",
-  //           resourceName: "hana1-mta",
-  //         },
-  //         displayName: "hana1-mta",
-  //       },
-  //     };
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //     await utils.removeResourceFromEnv(bindContext);
-  //     envPropertiesAfterChange = PropertiesReader(envFilePath);
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include("hanatest");
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include('"instance_name":"hana-2"');
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include('"instance_name":"hana-1"');
+    it("ok:: remove resource when it has a tag, resource type has more then 1 instance (e.g. two dependencies bound to different instances)", async () => {
+      let envPropertiesAfterChange;
+      const bindContext: any = {
+        envPath: {
+          fsPath: envFilePath,
+        },
+        depContext: {
+          type: "hanatest",
+          data: {
+            resourceTag: "mta-resource-name:",
+            resourceName: "hana1-mta",
+          },
+          displayName: "hana1-mta",
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await utils.removeResourceFromEnv(bindContext);
+      envPropertiesAfterChange = JSON.stringify(await utils.getEnvResources(envFilePath));
+      expect(envPropertiesAfterChange).to.include("hanatest");
+      expect(envPropertiesAfterChange).to.include('"instance_name":"hana-2"');
+      expect(envPropertiesAfterChange).to.not.include('"instance_name":"hana-1"');
 
-  //     // Another remove should remove this key completely and not leave an empty array
-  //     const bindContext2: any = {
-  //       envPath: {
-  //         fsPath: envFilePath,
-  //       },
-  //       depContext: {
-  //         type: "hanatest",
-  //         data: {
-  //           resourceTag: "mta-resource-name:",
-  //           resourceName: "hana2-mta",
-  //         },
-  //         displayName: "hana2-mta",
-  //       },
-  //     };
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //     await utils.removeResourceFromEnv(bindContext2);
-  //     envPropertiesAfterChange = PropertiesReader(envFilePath);
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include("hanatest");
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include('"instance_name":"hana-2"');
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include('"instance_name":"hana-1"');
-  //   });
+      // Another remove should remove this key completely and not leave an empty array
+      const bindContext2: any = {
+        envPath: {
+          fsPath: envFilePath,
+        },
+        depContext: {
+          type: "hanatest",
+          data: {
+            resourceTag: "mta-resource-name:",
+            resourceName: "hana2-mta",
+          },
+          displayName: "hana2-mta",
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await utils.removeResourceFromEnv(bindContext2);
+      envPropertiesAfterChange = JSON.stringify(await utils.getEnvResources(envFilePath));
+      expect(envPropertiesAfterChange).to.not.include("hanatest");
+      expect(envPropertiesAfterChange).to.not.include('"instance_name":"hana-2"');
+      expect(envPropertiesAfterChange).to.not.include('"instance_name":"hana-1"');
+    });
 
-  //   it("ok:: remove resource when it has a tag but it has not been found", async () => {
-  //     const bindContext: any = {
-  //       envPath: {
-  //         fsPath: envFilePath,
-  //       },
-  //       depContext: {
-  //         type: "hana",
-  //         data: {
-  //           resourceTag: "tag-not-found:",
-  //         },
-  //         displayName: "bookshop-hdi-container",
-  //       },
-  //     };
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  //     await utils.removeResourceFromEnv(bindContext);
-  //     const envPropertiesAfterChange = PropertiesReader(envFilePath);
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include('"instance_name":"hdi-test-instance"');
-  //     expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include("xsuaa");
-  //   });
-  // });
+    it("ok:: remove resource when it has a tag but it has not been found", async () => {
+      const bindContext: any = {
+        envPath: {
+          fsPath: envFilePath,
+        },
+        depContext: {
+          type: "hana",
+          data: {
+            resourceTag: "tag-not-found:",
+          },
+          displayName: "bookshop-hdi-container",
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await utils.removeResourceFromEnv(bindContext);
+      const envPropertiesAfterChange = JSON.stringify(await utils.getEnvResources(envFilePath));
+      expect(envPropertiesAfterChange).to.include('"instance_name":"hdi-test-instance"');
+      expect(envPropertiesAfterChange).to.include("xsuaa");
+    });
+  });
 
   describe("API for creation service", () => {
     const plan = "application";
