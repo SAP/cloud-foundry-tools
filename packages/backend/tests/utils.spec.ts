@@ -93,7 +93,6 @@ describe("utils unit tests", () => {
       const envFilePath: string = path.join(__dirname, "resources", ".envNoVCAP");
       expect(await utils.getEnvResources(envFilePath)).to.be.null;
     });
-
   });
 
   describe("Tests for removeResourceFromEnv", () => {
@@ -106,7 +105,7 @@ describe("utils unit tests", () => {
 
     afterEach(() => {
       sandbox.restore();
-      utils.writeEnvResources(envFilePath, {VCAP_SERVICES: JSON.stringify(vcapServicesObjBeforeChange)});
+      utils.writeEnvResources(envFilePath, { VCAP_SERVICES: JSON.stringify(vcapServicesObjBeforeChange) });
     });
 
     // does not work on linux ?! - clarification needed
@@ -181,9 +180,7 @@ describe("utils unit tests", () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
       const envPropertiesAfterChange = JSON.stringify(await utils.getEnvResources(envFilePath));
-      expect(envPropertiesAfterChange).to.not.include(
-        '"instance_name":"hdi-test-instance"'
-      );
+      expect(envPropertiesAfterChange).to.not.include('"instance_name":"hdi-test-instance"');
       expect(envPropertiesAfterChange).to.include("xsuaa");
     });
 

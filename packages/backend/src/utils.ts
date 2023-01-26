@@ -8,7 +8,7 @@ import * as dotenv from "dotenv";
 import { parse } from "comment-json";
 import { EOL, platform } from "os";
 // TODO: uncomment this when APIs of envFile will be available
-// import { envfile } from "@sap/bas-sdk"; 
+// import { envfile } from "@sap/bas-sdk";
 
 // TODO : delete this section, just a workaround for consuming the method exactly the same way as if it was used by importing from @sap/bas-sdk
 //------------------------------------------------------//
@@ -16,37 +16,35 @@ export const envfile = {
   // TODO: this implementation is currently in node. It writes the given envResources in .env file from scratch
   // i.e envResources includes all the exact key value pairs that should be in the .env file at the end.
   writeDotEnvKeyValues: (envFilePath: string, envResources: TPROPERTIES): void => {
-      // TODO: this is not good! writing to env not via standard way
-      // Different write here then from the bind!!!
-      // DO not delete properties that are not mentioned in envResources but override the onces that are given!!
-      // let mergedKeyValues: TPROPERTIES = {};
-      try {
-        // IF .env file exists - take all key values from it first
-        // if (fs.existsSync(envFilePath)) {
-        //   mergedKeyValues = envfile.getDotEnvFileKeyValues(envFilePath);
-        // }
-        // Object.keys(envResources).forEach((key) => {
-        //   const value = envResources[key];
-        //   if (value) {
-        //     // Override key with new given key/value pairs
-        //     mergedKeyValues[key] = value;
-        //     // text += `${key}=${value.trim()}\n`;
-        //   }
-        // });
-        let text = "";
-        Object.keys(envResources).forEach((key) => {
-          const value = envResources[key];
-          if (value) {
-            // TODO - we want to write differently in case key=VCAP_SERVICES?
-            text += `${key}=${value.trim()}\n`;
-          }
-        });
-        fs.writeFileSync(envFilePath, text, { encoding: "utf-8" });
-      } catch (err) {
-          throw new Error(
-              `Could not write to the '.env' file: ${envFilePath}. Error: ${err}`
-          );
-      }
+    // TODO: this is not good! writing to env not via standard way
+    // Different write here then from the bind!!!
+    // DO not delete properties that are not mentioned in envResources but override the onces that are given!!
+    // let mergedKeyValues: TPROPERTIES = {};
+    try {
+      // IF .env file exists - take all key values from it first
+      // if (fs.existsSync(envFilePath)) {
+      //   mergedKeyValues = envfile.getDotEnvFileKeyValues(envFilePath);
+      // }
+      // Object.keys(envResources).forEach((key) => {
+      //   const value = envResources[key];
+      //   if (value) {
+      //     // Override key with new given key/value pairs
+      //     mergedKeyValues[key] = value;
+      //     // text += `${key}=${value.trim()}\n`;
+      //   }
+      // });
+      let text = "";
+      Object.keys(envResources).forEach((key) => {
+        const value = envResources[key];
+        if (value) {
+          // TODO - we want to write differently in case key=VCAP_SERVICES?
+          text += `${key}=${value.trim()}\n`;
+        }
+      });
+      fs.writeFileSync(envFilePath, text, { encoding: "utf-8" });
+    } catch (err) {
+      throw new Error(`Could not write to the '.env' file: ${envFilePath}. Error: ${err}`);
+    }
   },
   getDotEnvFileKeyValues: (envFilePath: string) => {
     const envFileContent = fs.readFileSync(envFilePath, { encoding: "utf8" });
@@ -60,9 +58,7 @@ export const envfile = {
         if (vcapServiceValue) {
           return JSON.parse(vcapServiceValue);
         } else {
-          console.log(
-            `The ${envFilePath} file is missing a key '${ENV_VCAP_RESOURCES}'.`
-          );
+          console.log(`The ${envFilePath} file is missing a key '${ENV_VCAP_RESOURCES}'.`);
           return null;
         }
       } else {
@@ -70,11 +66,9 @@ export const envfile = {
         return null;
       }
     } catch (err) {
-      throw new Error(
-        `Could not get the '${ENV_VCAP_RESOURCES}' value from '${envFilePath}'. Error: ${err}`
-      );
+      throw new Error(`Could not get the '${ENV_VCAP_RESOURCES}' value from '${envFilePath}'. Error: ${err}`);
     }
-  }
+  },
 };
 //-------------------------------------------------------------------------------------------------------//
 
@@ -134,25 +128,25 @@ export type TPROPERTIES = { [name: string]: string };
 
 /**
  * Returns the VCAP_SERVICES object parsed
- * @param envFilePath 
- * @returns 
+ * @param envFilePath
+ * @returns
  */
 export function getEnvResources(envFilePath: string): Promise<any> {
   return envfile.getVCapServices(envFilePath);
 }
 
 /**
- * Returns the key value pair of all .env file 
- * @param envFilePath 
- * @returns 
+ * Returns the key value pair of all .env file
+ * @param envFilePath
+ * @returns
  */
 export function readEnvResources(envFilePath: string): TPROPERTIES {
   return envfile.getDotEnvFileKeyValues(envFilePath);
 }
 
-export function writeEnvResources(envFilePath: string, envResources: TPROPERTIES):void {
+export function writeEnvResources(envFilePath: string, envResources: TPROPERTIES): void {
   // Update VCAP_SERVICES in the .env file
-   return envfile.writeDotEnvKeyValues(envFilePath, envResources);
+  return envfile.writeDotEnvKeyValues(envFilePath, envResources);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -224,7 +218,7 @@ export async function removeResourceFromEnv(
   }
 
   // Update VCAP_SERVICES in the .env file
-  writeEnvResources(envFilePath, _.assign(envProperties, {VCAP_SERVICES: JSON.stringify(vcapServicesObj)}));
+  writeEnvResources(envFilePath, _.assign(envProperties, { VCAP_SERVICES: JSON.stringify(vcapServicesObj) }));
   return { resourceName: instanceName, envPath: envFilePath, resourceData: instanceData };
 }
 

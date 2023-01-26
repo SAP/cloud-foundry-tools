@@ -15,8 +15,7 @@ enum ChiselKeys {
 function getEnvProperties(filePath: string): TPROPERTIES | void {
   try {
     return readEnvResources(filePath);
-  }
-  catch (e) {
+  } catch (e) {
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     getModuleLogger(LOGGER_MODULE).error(
       "checkAndCreateChiselTask: propertiesReader : environment file is broken or not exists",
