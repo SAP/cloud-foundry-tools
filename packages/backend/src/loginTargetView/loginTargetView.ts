@@ -23,9 +23,8 @@ import * as _ from "lodash";
 import { messages } from "../messages";
 import { join, sep } from "path";
 
-export let _rpc: RpcExtension;
+let _rpc: RpcExtension;
 
-let commandPallet = false;
 let currentTarget: ITarget | undefined;
 let initTarget: { endpoint: string | undefined; org?: string | undefined; space?: string | undefined };
 let panel: vscode.WebviewPanel | undefined;
@@ -35,7 +34,7 @@ let cmdLoginResult: string | undefined;
 const LOGGER_MODULE = "loginTargetView";
 
 export function openLoginView(
-  opts: { isSplit: boolean; isCommandPallet?: boolean; isLoginOnly?: boolean },
+  opts: { isSplit: boolean; isLoginOnly?: boolean },
   endpoint?: string,
   org?: string,
   space?: string
@@ -46,7 +45,6 @@ export function openLoginView(
     org: org,
     space: space,
   };
-  commandPallet = opts.isCommandPallet ?? false;
   isLoginOnly = opts.isLoginOnly;
   // Every time the view is opened need to recalculate the login result
   cmdLoginResult = undefined;
@@ -133,11 +131,10 @@ async function getTarget(): Promise<ITarget | undefined> {
   //logged in then need to show the target section
 }
 
-async function getCFDefaultLandscape(): Promise<string> {
-  const apiFromEnv = _.get(process, "env.CF_API_ENDPOINT", "") as string;
-  const apiFromFile = (await cfGetConfigFileField("Target")) as string;
-
-  return apiFromEnv || apiFromFile;
+function getCFDefaultLandscape(): Promise<string> {
+  return cfGetConfigFileField("Target").then((cfgEndpoint: string) => {
+    return cfgEndpoint || _.get(process, "env.CF_API_ENDPOINT", "");
+  });
 }
 
 function calculatePasscodeUrl(endpoint: string): string {
@@ -184,38 +181,36 @@ function getSelectedTarget() {
 }
 
 function getOrgs(): Promise<Organization[]> {
-  try {
-    const orgs: Promise<Organization[]> = invokeLongFunctionWithProgressForm(cfGetAvailableOrgs);
-    getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableOrgs: get avaliable orgs succeeded");
-    return orgs;
-  } catch (error) {
-    getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableOrgs: get avaliable orgs failed", error);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return Promise.resolve([]);
-  }
+  return cfGetAvailableOrgs()
+    .then((orgs: Organization[]) => {
+      getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableOrgs: get avaliable orgs succeeded");
+      return orgs;
+    })
+    .catch((error) => {
+      getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableOrgs: get avaliable orgs failed", error);
+      return [];
+    });
 }
 
-async function getSpaces(org: string): Promise<Space[]> {
-  try {
-    const spaces: Promise<Space[]> = invokeLongFunctionWithProgressForm(cfGetAvailableSpaces, org);
-    getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableSpaces: get avaliable spaces succeeded");
-    return spaces;
-  } catch (error) {
-    getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableSpaces: get avaliable spaces failed", error);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return Promise.resolve([]);
-  }
+function getSpaces(org: string): Promise<Space[]> {
+  return cfGetAvailableSpaces(org)
+    .then((spaces: Space[]) => {
+      getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableSpaces: get avaliable spaces succeeded");
+      return spaces;
+    })
+    .catch((error) => {
+      getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableSpaces: get avaliable spaces failed", error);
+      return [];
+    });
 }
 
 async function applyTarget(org: string, space: string) {
   try {
-    await invokeLongFunctionWithProgressForm(cfSetOrgSpace, org, space);
+    await cfSetOrgSpace(org, space);
     cmdLoginResult = OK;
     void vscode.window.showInformationMessage(messages.success_set_org_space);
     getModuleLogger(LOGGER_MODULE).debug("executeSetOrgSpace: set org & spaces succeeded");
-    if (!commandPallet) {
-      panel?.dispose();
-    }
+    panel?.dispose();
   } catch (error) {
     cmdLoginResult = undefined;
     getModuleLogger(LOGGER_MODULE).error("executeSetOrgSpace: set org & spaces failed", error);
@@ -223,20 +218,24 @@ async function applyTarget(org: string, space: string) {
   }
 }
 
-function openPasscodeLink(url: string) {
-  void vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(url));
+function openPasscodeLink(endpoint: string) {
+  void vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(calculatePasscodeUrl(endpoint)));
 }
 
 export async function invokeLongFunctionWithProgressForm(longFunction: Function, ...args: any): Promise<any> {
-  await _rpc.invoke("setBusyIndicator", [true]);
   try {
+    await _rpc.invoke("setBusyIndicator", [true]);
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-    const ret = await longFunction(...args);
+    return await longFunction(...args);
+  } finally {
     await _rpc.invoke("setBusyIndicator", [false]);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return ret;
-  } catch (error) {
-    await _rpc.invoke("setBusyIndicator", [false]);
-    throw error;
   }
 }
+
+// for testing purpose only
+export const internal = {
+  getCFDefaultLandscape,
+  getOrgs,
+  getSpaces,
+  calculatePasscodeUrl,
+};

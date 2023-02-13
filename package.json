@@ -26,7 +26,7 @@
   },
   "scripts": {
     "release:version": "lerna version",
-    "release:publish": "lerna publish from-git --yes",
+    "release:publish": "lerna publish from-git --yes --no-verify-access",
     "ci": "npm-run-all legal:* coverage:clean format:validate lint:validate ci:subpackages coverage:merge",
     "ci:subpackages": "lerna run ci",
     "ci:artifacts_only": "lerna run ci:artifacts_only",

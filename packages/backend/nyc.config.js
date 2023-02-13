@@ -1,10 +1,10 @@
 const baseNycConfig = require("../../nyc.config");
 
 module.exports = Object.assign(baseNycConfig, {
-  branches: 77,
-  lines: 75,
-  functions: 72,
-  statements: 75,
+  branches: 78,
+  lines: 77,
+  functions: 75,
+  statements: 77,
   include: ["**/src/**"],
   exclude: ["**/src/run-configuration-*", "**/src/sql-tools.ts", "**/src/logger/logger-wrapper.ts", "**/usage/*.ts"],
 });

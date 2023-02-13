@@ -2,9 +2,7 @@
   <v-app id="app">
     <Header class="app" />
 
-    <div :style="{ display: progressVisibility }">
-      <vscode-progress-ring></vscode-progress-ring>
-    </div>
+    <vscode-progress-ring class="progress-ring" :style="{ display: progressVisibility }"></vscode-progress-ring>
 
     <div class="app" :style="{ display: formVisibility }">
       <div style="visibility: none">
@@ -94,7 +92,7 @@ export default {
       this.isLoggedIn = val;
     },
     updateTargetOrg(org) {
-      this.curretOrg = org;
+      this.currentOrg = org;
     },
     updateTargetSpace(space) {
       this.currentSpace = space;
@@ -148,5 +146,9 @@ export default {
 <style scoped>
 .app {
   padding-left: 16px;
+}
+.progress-ring {
+  margin-top: 25%;
+  margin-left: 50%;
 }
 </style>

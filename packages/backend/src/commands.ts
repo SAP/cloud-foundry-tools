@@ -231,14 +231,14 @@ export async function cmdLogin(
   weak = false,
   target = true,
   extEndPoint?: string,
-  opts?: { isSplit: boolean; isCommandPallet?: boolean; isLoginOnly?: boolean }
+  opts?: { isSplit: boolean; isLoginOnly?: boolean }
 ): Promise<string | undefined> {
   try {
     let endpoint: string | undefined = extEndPoint;
     let space: string | undefined = "";
     let org: string | undefined = "";
 
-    opts = opts ?? { isSplit: true, isCommandPallet: false, isLoginOnly: true };
+    opts = opts ?? { isSplit: true, isLoginOnly: true };
 
     let result = weak ? (_.get(await pickCfTargetWithProgress(), "user") ? OK : undefined) : undefined;
     if (!result) {

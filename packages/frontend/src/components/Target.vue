@@ -13,29 +13,18 @@
     </div>
     <br /><br />
     <span class="subtitle-color-field">Select Cloud Foundry Organization </span><span class="text-danger">*</span><br />
-    <vscode-dropdown class="mt-8 dropdown" position="below" @change="changeOrg">
-      <vscode-option v-for="o in orgs" :key="o.guid" :value="o.guid" :selected="o.selected">{{
-        o.label
-      }}</vscode-option>
-    </vscode-dropdown>
+    <v-select class="mt-8" v-model="selectedOrg" :options="optOrganizations" :clearable="false" />
     <br /><br />
     <span class="subtitle-color-field">Select Cloud Foundry Space </span><span class="text-danger">*</span><br />
-    <vscode-dropdown class="mt-8 dropdown" position="below" @change="changeSpace">
-      <vscode-option v-for="s in spaces" :key="s.guid" :value="s.guid" :selected="s.selected">{{
-        s.label
-      }}</vscode-option>
-    </vscode-dropdown>
+    <v-select class="mt-8" v-model="selectedSpace" :options="optSpaces" :clearable="false" />
     <br /><br />
 
-    <vscode-button class="mt-8" @click="setTarget" v-bind:disabled="disableApplyButton">Apply</vscode-button>
+    <vscode-button class="mt-8" @click="setTarget" v-bind:disabled="statusApplyButton">Apply</vscode-button>
   </div>
 </template>
 <script>
-import { provideVSCodeDesignSystem, vsCodeButton, vsCodeDropdown, vsCodeOption } from "@vscode/webview-ui-toolkit";
-
-provideVSCodeDesignSystem().register(vsCodeDropdown());
+import { provideVSCodeDesignSystem, vsCodeButton } from "@vscode/webview-ui-toolkit";
 provideVSCodeDesignSystem().register(vsCodeButton());
-provideVSCodeDesignSystem().register(vsCodeOption());
 
 export default {
   name: "Target",
@@ -43,7 +32,6 @@ export default {
   data() {
     return {
       areOrgAndSpaceSet: "",
-      disableApplyButton: true,
       orgs: [],
       spaces: [],
       selectedOrg: {},
@@ -53,8 +41,12 @@ export default {
     };
   },
   updated() {
-    this.currentOrg === "" ? (this.currentOrg = this.target.currentOrg) : "";
-    this.currentSpace === "" ? (this.currentSpace = this.target.currentSpace) : "";
+    if (this.currentOrg === "") {
+      this.currentOrg = this.target?.currentOrg;
+    }
+    if (this.currentSpace === "") {
+      this.currentSpace = this.target?.currentSpace;
+    }
   },
   watch: {
     isLoggedIn(newVal) {
@@ -66,6 +58,10 @@ export default {
     currentSpace(newSpace) {
       this.$emit("updateTargetSpace", newSpace);
     },
+    selectedOrg(v) {
+      this.selectSpace(undefined);
+      this.$emit("updateTargetOrg", v?.label);
+    },
   },
   computed: {
     loggedInVisibility() {
@@ -74,16 +70,31 @@ export default {
     orgAndSpaceSetVisibility() {
       return this.areOrgAndSpaceSet || (this.target.currentOrg && this.target.currentSpace) ? "" : "none";
     },
+    statusApplyButton() {
+      return (
+        this.selectedOrg.label === undefined ||
+        this.selectedSpace.label === undefined ||
+        (this.selectedOrg.label === this.currentOrg && this.selectedSpace.label === this.currentSpace)
+      );
+    },
+    optOrganizations() {
+      return this.orgs;
+    },
+    optSpaces() {
+      return this.spaces;
+    },
   },
   methods: {
     getOrgAndSpace() {
       this.rpc.invoke("getSelectedTarget").then((target) => {
         this.rpc.invoke("getOrgs").then((orgs) => {
-          this.disableApplyButton = true;
-
           const orgsWithSelected = orgs.map((org) => {
             if (org.label === target.org) {
-              this.selectedOrg = { label: org.label, guid: org.guid };
+              this.selectedOrg = {
+                label: org.label,
+                guid: org.guid,
+                selected: true,
+              };
             }
             return {
               guid: org.guid,
@@ -91,11 +102,13 @@ export default {
               selected: org.label === target.org,
             };
           });
-          this.orgs = [{ label: " ", guid: "0", selected: true }].concat(orgsWithSelected);
-
+          this.orgs = orgsWithSelected;
           if (!this.selectedOrg || !this.selectedOrg.guid) {
             if (this.orgs && this.orgs[0]) {
-              this.selectedOrg = { label: this.orgs[0].label, guid: this.orgs[0].guid };
+              this.selectedOrg = {
+                label: this.orgs[0].label,
+                guid: this.orgs[0].guid,
+              };
             }
           }
           if (this.selectedOrg && this.selectedOrg.guid) {
@@ -113,34 +126,13 @@ export default {
             selected: targetSpace ? space.label === targetSpace : false,
           };
         });
-        this.spaces = [{ label: " ", guid: "0", selected: true }].concat(spacesWithSelected);
-
-        if (targetSpace == undefined || !this.selectedSpace || !this.selectedSpace.guid) {
-          this.selectedSpace = {
-            label: this.spaces[0].label,
-            guid: this.spaces[0].guid,
-          };
-        }
+        this.selectedSpace.label = undefined;
+        this.spaces = spacesWithSelected;
       });
-      this.statusApplyButton();
-    },
-    changeOrg(val) {
-      this.selectedOrg = this.orgs.find((org) => org.guid === val.target.value);
-      this.selectSpace(undefined);
-      this.statusApplyButton();
     },
     changeSpace(val) {
       this.selectedSpace = this.spaces.find((space) => space.guid === val.target.value);
-      this.statusApplyButton();
-    },
-    statusApplyButton() {
-      if (this.selectedSpace.label == this.currentSpace) {
-        this.disableApplyButton = true;
-      } else if (this.selectedOrg.guid != "0" && this.selectedSpace.guid != "0") {
-        this.disableApplyButton = false;
-      } else {
-        this.disableApplyButton = true;
-      }
+      this.selectedSpace.selected = true;
     },
     setEndpoint(val) {
       this.endpoint = val.target.value;
@@ -153,7 +145,6 @@ export default {
         this.areOrgAndSpaceSet = true;
         this.currentOrg = org;
         this.currentSpace = space;
-        this.disableApplyButton = true;
         console.log("update target display");
       });
     },
@@ -163,7 +154,7 @@ export default {
 
 <style>
 .subtitle-color-field {
-  color: var(--vscode-editorCodeLens-foreground, #999999);
+  color: var(--vscode-descriptionForeground, #717171);
 }
 .mt-8 {
   margin-top: 8px;
@@ -179,7 +170,19 @@ export default {
 .text-danger {
   color: red;
 }
-.dropdown {
-  width: 300px;
+.v-select .vs__dropdown-toggle,
+.vs__dropdown-menu {
+  background: var(--vscode-editor-background);
+  width: fit-content;
+  min-width: 400px;
+  border-color: var(--vscode-input-foreground);
+}
+.v-select,
+.vs__selected {
+  color: var(--vscode-editor-foreground);
+}
+.v-select .vs__open-indicator,
+.vs__clear {
+  fill: var(--vscode-scrollbarSlider-activeBackground);
 }
 </style>

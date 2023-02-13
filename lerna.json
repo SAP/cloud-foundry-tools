@@ -8,8 +8,8 @@
     },
     "version": {
       "message": "chore(release): release %s",
-      "allowBranch": "master"
+      "allowBranch": "main"
     }
   },
-  "version": "7.0.1"
+  "version": "7.1.1"
 }

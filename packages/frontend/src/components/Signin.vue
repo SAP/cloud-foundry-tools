@@ -16,7 +16,7 @@
       <br />
       <div class="mt-8">{{ endpoint }}</div>
       <br /><br />
-      <vscode-button class="sign-out-button" @click="SignoutClicked">Sign out</vscode-button>
+      <vscode-button class="sign-out-button" @click="SignoutClicked">Sign Out</vscode-button>
     </div>
 
     <!-- authentication area -->
@@ -27,6 +27,7 @@
       <vscode-text-field
         class="pt-8"
         size="50"
+        type="Url"
         :value="this.target.defaultEndpoint"
         @input="setEndpoint"
       ></vscode-text-field>
@@ -38,13 +39,13 @@
         name="mdi-help-circle-outline"
         align-self=""
         size="16"
-        fill="var(--vscode-inputValidation-infoBorder, #4f9cea)"
+        fill="var(--vscode-textLink-foreground, #006ab1)"
         v-tooltip="{
           content:
-            ' Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header or cookie.',
+            ' Single sign-on (SSO) is a token-based authentication method <br />in which an SSO token is passed in an HTTP header or cookie.',
           placement: 'right',
           class: 'tooltip-custom',
-          size: '10%',
+          size: '5',
         }"
       >
       </v-mdi>
@@ -60,7 +61,7 @@
         <v-mdi
           name="mdi-help-circle-outline"
           size="16"
-          fill="var(--vscode-inputValidation-infoBorder, #4f9cea)"
+          fill="var(--vscode-textLink-foreground, #006ab1)"
           v-tooltip="{
             content:
               ' Your SSO passcode is generated in a seperate browser page. <br />Copy it and paste it back in SAP Business Application Studio.',
@@ -76,7 +77,7 @@
         <br />
         <vscode-text-field
           class="pt-8"
-          size="50"
+          size="47"
           placeholder="Enter your passcode"
           v-on:keyup="btnStatus"
           v-model="passcode"
@@ -84,13 +85,23 @@
           @input="(p) => (passcode = p.target.value)"
           :value="passcode"
         >
-          <span slot="end" class="codicon codicon-clippy" @click="paste"></span>
+          <span
+            slot="end"
+            class="codicon codicon-clippy"
+            @click="paste"
+            v-tooltip="{
+              content: 'Paste the generated passcode',
+              placement: 'right',
+              class: 'tooltip-custom',
+              size: '10%',
+            }"
+          ></span>
         </vscode-text-field>
       </div>
       <br />
 
       <div id="credentials-div" :style="{ display: credentialsVisibility }">
-        <span class="subtitle-color-field">Enter your Username </span><span class="text-danger">*</span>
+        <span class="subtitle-color-field">Enter your username </span><span class="text-danger">*</span>
         <br />
         <vscode-text-field
           class="pt-8"
@@ -193,7 +204,7 @@ export default {
       else this.disableButton = true;
     },
     setEndpoint(val) {
-      this.endpoint = val.target.value;
+      this.endpoint = val.target.value.replace(/ /g, "");
     },
     paste() {
       navigator.clipboard.readText().then((clipText) => {
@@ -234,7 +245,7 @@ export default {
       });
     },
     openPasscodeLink() {
-      this.rpc.invoke("openPasscodeLink", [this.target.passcodeUrl]).then(() => {
+      this.rpc.invoke("openPasscodeLink", [this.endpoint]).then(() => {
         console.log("opening passcode url");
       });
     },
@@ -258,21 +269,21 @@ export default {
   color: red;
 }
 .subtitle-color-field {
-  color: var(--vscode-editorCodeLens-foreground, #999999);
+  color: var(--vscode-descriptionForeground, #717171);
 }
 /* mdi-icon */
 svg.mdi-icon {
   vertical-align: bottom;
 }
 .tooltip .tooltip-inner {
-  width: 284px;
+  width: auto;
   background-color: black;
-  color: #fff;
-  text-align: center;
-  padding: 10px 10px 20px 10px;
-  border-radius: 6px;
-  box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
-  text-align: left;
+  color: white;
+  font-size: 10px !important;
+  padding: 8px 8px 8px 8px;
+  border-radius: 5px;
+  box-shadow: rgba(0, 0, 0, 0.22) 5px 5px 5px;
+  opacity: 1 !important;
 }
 .pr-4 {
   padding-right: 4px;
@@ -280,5 +291,8 @@ svg.mdi-icon {
 }
 .pt-8 {
   padding-top: 8px;
+}
+.pt-8::part(control)::placeholder {
+  font-style: italic;
 }
 </style>
