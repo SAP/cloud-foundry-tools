@@ -59,13 +59,41 @@ export function toText(e: Error): string {
   return _.get(e, "message") || _.get(e, "name", _.toString(e));
 }
 
+export function isVCAPSurroundedWithQuotes(envFilePath: string) {
+  try {
+    if (existsSync(envFilePath)) {
+      const vcapProperty = PropertiesReader(envFilePath).getRaw(ENV_VCAP_RESOURCES);
+      if (vcapProperty) {
+        return _.startsWith(vcapProperty, "'") && _.endsWith(vcapProperty, "'");
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    getModuleLogger(LOGGER_MODULE).error(
+      "getEnvResources: could not get the '.env' file resources",
+      { exception: toText(new Error(error?.message as string)) },
+      { filePath: envFilePath }
+    );
+    throw error;
+  }
+}
+
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getEnvResources(envFilePath: string): Promise<any> {
   try {
     if (existsSync(envFilePath)) {
       const envProperties = PropertiesReader(envFilePath);
-      const vcapProperty = envProperties.getRaw(ENV_VCAP_RESOURCES);
+      let vcapProperty = envProperties.getRaw(ENV_VCAP_RESOURCES);
       if (vcapProperty) {
+        // In case VCAP_SERVICES is wrapped with single quotes - unwrap it
+        if (_.startsWith(vcapProperty, "'") && _.endsWith(vcapProperty, "'")) {
+          vcapProperty = vcapProperty.substring(1, vcapProperty.length-1);
+        }
         return Promise.resolve(JSON.parse(vcapProperty));
       } else {
         getModuleLogger(LOGGER_MODULE).debug(
@@ -161,7 +189,11 @@ export async function removeResourceFromEnv(
 
   // Update VCAP_SERVICES in the .env file
   const envProperties = PropertiesReader(envFilePath);
-  envProperties.set(ENV_VCAP_RESOURCES, JSON.stringify(vcapServicesObj));
+
+  // If VCAP_SERVICES was already wrapped with single quotes - maintain them when writing back
+  const quote = isVCAPSurroundedWithQuotes(envFilePath) ? "'": "";
+  envProperties.set(ENV_VCAP_RESOURCES, quote + JSON.stringify(vcapServicesObj) + quote);
+  
   await envProperties.save(envFilePath);
   return { resourceName: instanceName, envPath: envFilePath, resourceData: instanceData };
 }
