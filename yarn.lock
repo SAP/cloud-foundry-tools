@@ -2469,10 +2469,6 @@
   dependencies:
     ws "^7.2.3"
 
-"@sap/bas-sdk@https://0e2ed346b17c11413af2c74426ccead9a681980a@github.wdf.sap.corp/devx-wing/bas-sdk.git#vcap":
-  version "3.1.0"
-  resolved "https://0e2ed346b17c11413af2c74426ccead9a681980a@github.wdf.sap.corp/devx-wing/bas-sdk.git#b2441526e3141a91c6aaf92aed475ca9d7732cf6"
-
 "@sap/cf-tools@3.0.3":
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/@sap/cf-tools/-/cf-tools-3.0.3.tgz#73fdba8b1d3f7edaf4cc66ae7e8154267cb5aa6d"
@@ -2638,13 +2634,6 @@
   integrity sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==
   dependencies:
     "@types/node" "*"
-
-"@types/dotenv@^8.2.0":
-  version "8.2.0"
-  resolved "https://registry.yarnpkg.com/@types/dotenv/-/dotenv-8.2.0.tgz#5cd64710c3c98e82d9d15844375a33bf1b45d053"
-  integrity sha512-ylSC9GhfRH7m1EUXBXofhgx4lUWmFeQDINW5oLuS+gxWdfUeW4zJdeVTYVkexEW+e2VUvlZR2kGnGGipAWR7kw==
-  dependencies:
-    dotenv "*"
 
 "@types/eslint-scope@^3.7.3":
   version "3.7.3"
@@ -6570,11 +6559,6 @@ dotenv-expand@^5.1.0:
   version "5.1.0"
   resolved "https://registry.yarnpkg.com/dotenv-expand/-/dotenv-expand-5.1.0.tgz#3fbaf020bfd794884072ea26b1e9791d45a629f0"
   integrity sha512-YXQl1DSa4/PQyRfgrv6aoNjhasp/p4qs9FjJ4q4cQk+8m4r6k4ZSiEyytKG8f8W9gi8WsQtIObNmKd+tMzNTmA==
-
-dotenv@*, dotenv@16.0.3:
-  version "16.0.3"
-  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.0.3.tgz#115aec42bac5053db3c456db30cc243a5a836a07"
-  integrity sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==
 
 dotenv@^8.2.0:
   version "8.6.0"

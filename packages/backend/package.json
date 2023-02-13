@@ -334,7 +334,8 @@
     "@vscode-logging/types": "0.1.4",
     "@vscode-logging/wrapper": "1.0.2",
     "comment-json": "4.2.2",
-    "lodash": "4.17.21"
+    "lodash": "4.17.21",
+    "dotenv": "16.0.3"
   },
   "devDependencies": {
     "@types/chai": "^4.3.1",

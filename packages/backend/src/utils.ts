@@ -4,73 +4,13 @@ import * as fs from "fs";
 import { messages } from "./messages";
 import * as types from "@sap/wing-run-config-types";
 import * as _ from "lodash";
-import * as dotenv from "dotenv";
 import { parse } from "comment-json";
 import { EOL, platform } from "os";
+import { envfile } from "./envUtils";
 // TODO: uncomment this when APIs of envFile will be available
 // import { envfile } from "@sap/bas-sdk";
 
-// TODO : delete this section, just a workaround for consuming the method exactly the same way as if it was used by importing from @sap/bas-sdk
-//------------------------------------------------------//
-export const envfile = {
-  // TODO: this implementation is currently in node. It writes the given envResources in .env file from scratch
-  // i.e envResources includes all the exact key value pairs that should be in the .env file at the end.
-  writeDotEnvKeyValues: (envFilePath: string, envResources: TPROPERTIES): void => {
-    // TODO: this is not good! writing to env not via standard way
-    // Different write here then from the bind!!!
-    // DO not delete properties that are not mentioned in envResources but override the onces that are given!!
-    // let mergedKeyValues: TPROPERTIES = {};
-    try {
-      // IF .env file exists - take all key values from it first
-      // if (fs.existsSync(envFilePath)) {
-      //   mergedKeyValues = envfile.getDotEnvFileKeyValues(envFilePath);
-      // }
-      // Object.keys(envResources).forEach((key) => {
-      //   const value = envResources[key];
-      //   if (value) {
-      //     // Override key with new given key/value pairs
-      //     mergedKeyValues[key] = value;
-      //     // text += `${key}=${value.trim()}\n`;
-      //   }
-      // });
-      let text = "";
-      Object.keys(envResources).forEach((key) => {
-        const value = envResources[key];
-        if (value) {
-          // TODO - we want to write differently in case key=VCAP_SERVICES?
-          text += `${key}=${value.trim()}\n`;
-        }
-      });
-      fs.writeFileSync(envFilePath, text, { encoding: "utf-8" });
-    } catch (err) {
-      throw new Error(`Could not write to the '.env' file: ${envFilePath}. Error: ${err}`);
-    }
-  },
-  getDotEnvFileKeyValues: (envFilePath: string) => {
-    const envFileContent = fs.readFileSync(envFilePath, { encoding: "utf8" });
-    return dotenv.parse(envFileContent);
-  },
-  getVCapServices: (envFilePath: string) => {
-    try {
-      if (fs.existsSync(envFilePath)) {
-        const envProperties = envfile.getDotEnvFileKeyValues(envFilePath);
-        const vcapServiceValue: string = envProperties[ENV_VCAP_RESOURCES];
-        if (vcapServiceValue) {
-          return JSON.parse(vcapServiceValue);
-        } else {
-          console.log(`The ${envFilePath} file is missing a key '${ENV_VCAP_RESOURCES}'.`);
-          return null;
-        }
-      } else {
-        console.log(`The ${envFilePath} file does not exist.`);
-        return null;
-      }
-    } catch (err) {
-      throw new Error(`Could not get the '${ENV_VCAP_RESOURCES}' value from '${envFilePath}'. Error: ${err}`);
-    }
-  },
-};
-//-------------------------------------------------------------------------------------------------------//
+
 
 import {
   IServiceQuery,
@@ -170,6 +110,7 @@ function findServiceByResourceNameTag(vcapServices: any, yamlResourceName: strin
 export async function removeResourceFromEnv(
   bindContext: types.IBindContext
 ): Promise<{ resourceName: string; envPath: string; resourceData: any }> {
+  // TODO - we have maintain upon removal the single quotes if they were exists
   let instanceData;
   const envFilePath: string = bindContext.envPath.fsPath;
   const envProperties: TPROPERTIES = readEnvResources(envFilePath);

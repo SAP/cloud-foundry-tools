@@ -66,6 +66,7 @@ interface BindLocalData {
 export interface CmdOptions {
   silent?: boolean;
   "skip-reload"?: boolean;
+  "quote-vcap"?: boolean;
 }
 
 export function cmdReloadTargets(): Promise<void> {
@@ -130,20 +131,22 @@ type BindArgs = {
 
 async function doBind(opts: BindArgs) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function runWithProgress(
+  async function runWithProgressLocalServices(
     fnc: (
       filePath: string,
       instanceNames: string[],
       tags?: string[],
       serviceKeyNames?: string[],
-      sserviceKeyParams?: unknown[]
+      sserviceKeyParams?: unknown[],
+      quoteVcap?: boolean
     ) => Promise<void>,
     args: [
       filePath: string,
       instanceNames: string[],
       tags?: string[],
       serviceKeyNames?: string[],
-      sserviceKeyParams?: unknown[]
+      sserviceKeyParams?: unknown[],
+      quoteVcap?: boolean
     ]
   ) {
     await vscode.window.withProgress(
@@ -155,6 +158,39 @@ async function doBind(opts: BindArgs) {
       },
       () => fnc.apply(null, args)
     );
+    
+    if (!opts.options?.silent) {
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+      void vscode.window.showInformationMessage(messages.service_bound_successful(_.join(args[1], ",")));
+    }
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+    getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", `${_.join(args[1], ",")}`);
+  }
+
+  async function runWithProgressLocalUps(
+    fnc: (
+      filePath: string,
+      instanceNames: string[],
+      tags?: string[],
+      quoteVcap?: boolean
+    ) => Promise<void>,
+    args: [
+      filePath: string,
+      instanceNames: string[],
+      tags?: string[],
+      quoteVcap?: boolean
+    ]
+  ) {
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: messages.binding_service_to_file,
+        cancellable: false,
+        // eslint-disable-next-line prefer-spread
+      },
+      () => fnc.apply(null, args)
+    );
+    
     if (!opts.options?.silent) {
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       void vscode.window.showInformationMessage(messages.service_bound_successful(_.join(args[1], ",")));
@@ -165,16 +201,18 @@ async function doBind(opts: BindArgs) {
   const ups = _.filter(opts.instances, ["serviceName", eServiceTypes.user_provided]);
   const services = _.difference(opts.instances, ups);
   if (_.size(services)) {
-    await runWithProgress(cfBindLocalServices, [
+    await runWithProgressLocalServices(cfBindLocalServices, [
       opts.envPath.path.fsPath,
       _.map(services, "label"),
       opts.tags,
       opts.serviceKeyNames,
       opts.serviceKeyParams,
+      opts.options?.["quote-vcap"]
     ]);
   }
   if (_.size(ups)) {
-    await runWithProgress(cfBindLocalUps, [opts.envPath.path.fsPath, _.map(ups, "label"), opts.tags]);
+    // TODO: support here also opts.options?.["quote-vcap"]
+    await runWithProgressLocalUps(cfBindLocalUps, [opts.envPath.path.fsPath, _.map(ups, "label"), opts.tags, opts.options?.["quote-vcap"]]);
   }
   if (!opts.envPath.ignore) {
     void updateGitIgnoreList(opts.envPath.path.fsPath);
