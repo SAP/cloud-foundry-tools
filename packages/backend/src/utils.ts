@@ -82,7 +82,6 @@ export function isVCAPSurroundedWithQuotes(envFilePath: string) {
   }
 }
 
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getEnvResources(envFilePath: string): Promise<any> {
   try {
@@ -92,7 +91,7 @@ export function getEnvResources(envFilePath: string): Promise<any> {
       if (vcapProperty) {
         // In case VCAP_SERVICES is wrapped with single quotes - unwrap it
         if (_.startsWith(vcapProperty, "'") && _.endsWith(vcapProperty, "'")) {
-          vcapProperty = vcapProperty.substring(1, vcapProperty.length-1);
+          vcapProperty = vcapProperty.substring(1, vcapProperty.length - 1);
         }
         return Promise.resolve(JSON.parse(vcapProperty));
       } else {
@@ -191,9 +190,9 @@ export async function removeResourceFromEnv(
   const envProperties = PropertiesReader(envFilePath);
 
   // If VCAP_SERVICES was already wrapped with single quotes - maintain them when writing back
-  const quote = isVCAPSurroundedWithQuotes(envFilePath) ? "'": "";
+  const quote = isVCAPSurroundedWithQuotes(envFilePath) ? "'" : "";
   envProperties.set(ENV_VCAP_RESOURCES, quote + JSON.stringify(vcapServicesObj) + quote);
-  
+
   await envProperties.save(envFilePath);
   return { resourceName: instanceName, envPath: envFilePath, resourceData: instanceData };
 }

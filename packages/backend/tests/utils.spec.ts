@@ -116,7 +116,6 @@ describe("utils unit tests", () => {
     });
 
     it("ok:: remove resource when VCAP is surrounded with single quotes and leave single quotes after removal", async () => {
-      
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const bindContext: any = {
         envPath: {
@@ -130,17 +129,15 @@ describe("utils unit tests", () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
       const vcapServicesObjAfterChange: string | null = PropertiesReader(envFilePath).getRaw(utils.ENV_VCAP_RESOURCES);
-      
+
       if (vcapServicesObjAfterChange) {
         expect(vcapServicesObjAfterChange).to.not.include("hana");
         expect(_.startsWith(vcapServicesObjAfterChange, "'")).to.be.true;
         expect(_.endsWith(vcapServicesObjAfterChange, "'")).to.be.true;
-      }
-      else {
+      } else {
         expect(fail("VCAP_SERVICES must exists and be empty after removing the last dependency"));
       }
     });
-
   });
 
   describe("Tests for removeResourceFromEnv", () => {
@@ -201,10 +198,9 @@ describe("utils unit tests", () => {
       expect(vcapProperty).to.not.include("xsuaa");
       expect(vcapProperty).to.include('"instance_name":"hdi-test-instance"');
       expect(vcapProperty).to.not.include("xsuaa");
-      
+
       expect(_.startsWith(vcapProperty, "'")).to.be.false;
       expect(_.endsWith(vcapProperty, "'")).to.be.false;
-      
     });
 
     it("ok:: remove resource when it is not tagged by wrong type", async () => {

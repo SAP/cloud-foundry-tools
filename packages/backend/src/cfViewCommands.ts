@@ -130,8 +130,6 @@ type BindArgs = {
 };
 
 async function doBind(opts: BindArgs) {
-
-
   async function runWithProgressLocalServices(
     fnc: (
       filePath: string,
@@ -168,18 +166,8 @@ async function doBind(opts: BindArgs) {
   }
 
   async function runWithProgressLocalUps(
-    fnc: (
-      filePath: string,
-      instanceNames: string[],
-      tags?: string[],
-      quoteVcap?: boolean
-    ) => Promise<void>,
-    args: [
-      filePath: string,
-      instanceNames: string[],
-      tags?: string[],
-      quoteVcap?: boolean
-    ]
+    fnc: (filePath: string, instanceNames: string[], tags?: string[], quoteVcap?: boolean) => Promise<void>,
+    args: [filePath: string, instanceNames: string[], tags?: string[], quoteVcap?: boolean]
   ) {
     await vscode.window.withProgress(
       {
@@ -206,11 +194,16 @@ async function doBind(opts: BindArgs) {
       opts.tags,
       opts.serviceKeyNames,
       opts.serviceKeyParams,
-      opts.options?.["quote-vcap"]
+      opts.options?.["quote-vcap"],
     ]);
   }
   if (_.size(ups)) {
-    await runWithProgressLocalUps(cfBindLocalUps, [opts.envPath.path.fsPath, _.map(ups, "label"), opts.tags, opts.options?.["quote-vcap"]]);
+    await runWithProgressLocalUps(cfBindLocalUps, [
+      opts.envPath.path.fsPath,
+      _.map(ups, "label"),
+      opts.tags,
+      opts.options?.["quote-vcap"],
+    ]);
   }
   if (!opts.envPath.ignore) {
     void updateGitIgnoreList(opts.envPath.path.fsPath);
