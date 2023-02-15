@@ -130,80 +130,33 @@ type BindArgs = {
 };
 
 async function doBind(opts: BindArgs) {
-  async function runWithProgressLocalServices(
-    fnc: (
-      filePath: string,
-      instanceNames: string[],
-      tags?: string[],
-      serviceKeyNames?: string[],
-      sserviceKeyParams?: unknown[],
-      quoteVcap?: boolean
-    ) => Promise<void>,
-    args: [
-      filePath: string,
-      instanceNames: string[],
-      tags?: string[],
-      serviceKeyNames?: string[],
-      sserviceKeyParams?: unknown[],
-      quoteVcap?: boolean
-    ]
-  ) {
-    await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: messages.binding_service_to_file,
-        cancellable: false,
-        // eslint-disable-next-line prefer-spread
-      },
-      () => fnc.apply(null, args)
-    );
+  
+  async function withProgress(cb: () => Thenable<void>, services: string[]) {
+    await vscode.window.withProgress({
+      location: vscode.ProgressLocation.Notification,
+      title: messages.binding_service_to_file,
+      cancellable: false,
+    }, cb);
+    const serviceNames = _.join(services, ",");
     if (!opts.options?.silent) {
-      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      void vscode.window.showInformationMessage(messages.service_bound_successful(_.join(args[1], ",")));
+      void vscode.window.showInformationMessage(messages.service_bound_successful(serviceNames));
     }
-    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-    getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", `${_.join(args[1], ",")}`);
+    getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", serviceNames);
   }
 
-  async function runWithProgressLocalUps(
-    fnc: (filePath: string, instanceNames: string[], tags?: string[], quoteVcap?: boolean) => Promise<void>,
-    args: [filePath: string, instanceNames: string[], tags?: string[], quoteVcap?: boolean]
-  ) {
-    await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: messages.binding_service_to_file,
-        cancellable: false,
-        // eslint-disable-next-line prefer-spread
-      },
-      () => fnc.apply(null, args)
-    );
-    if (!opts.options?.silent) {
-      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      void vscode.window.showInformationMessage(messages.service_bound_successful(_.join(args[1], ",")));
-    }
-    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-    getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", `${_.join(args[1], ",")}`);
-  }
   const ups = _.filter(opts.instances, ["serviceName", eServiceTypes.user_provided]);
   const services = _.difference(opts.instances, ups);
   if (_.size(services)) {
-    await runWithProgressLocalServices(cfBindLocalServices, [
-      opts.envPath.path.fsPath,
-      _.map(services, "label"),
-      opts.tags,
-      opts.serviceKeyNames,
-      opts.serviceKeyParams,
-      opts.options?.["quote-vcap"],
-    ]);
+    const labels = _.map(services, "label");
+    const cb = () => { 
+      return cfBindLocalServices(opts.envPath.path.fsPath, labels, opts.tags, opts.serviceKeyNames, opts.serviceKeyParams, opts.options?.["quote-vcap"]);
+    }
+    await withProgress(cb, labels);
   }
   if (_.size(ups)) {
-    await runWithProgressLocalUps(cfBindLocalUps, [
-      opts.envPath.path.fsPath,
-      _.map(ups, "label"),
-      opts.tags,
-      opts.options?.["quote-vcap"],
-    ]);
+    const labels = _.map(ups, "label");
+    const cb = () => cfBindLocalUps(opts.envPath.path.fsPath, labels, opts.tags, opts.options?.["quote-vcap"]);
+    await withProgress(cb, labels);
   }
   if (!opts.envPath.ignore) {
     void updateGitIgnoreList(opts.envPath.path.fsPath);
@@ -489,8 +442,8 @@ class EnvPathHelper {
     return _.get(env, "fsPath")
       ? (env as vscode.Uri)
       : _.get(env, "path")
-      ? (env.path as vscode.Uri)
-      : vscode.Uri.file("");
+        ? (env.path as vscode.Uri)
+        : vscode.Uri.file("");
   }
   static getIgnore(env: vscode.Uri | TEnvPath): boolean {
     return (_.get(env, "ignore") as boolean) || false;
