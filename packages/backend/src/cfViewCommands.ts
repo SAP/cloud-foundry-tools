@@ -130,13 +130,15 @@ type BindArgs = {
 };
 
 async function doBind(opts: BindArgs) {
-  
   async function withProgress(cb: () => Thenable<void>, services: string[]) {
-    await vscode.window.withProgress({
-      location: vscode.ProgressLocation.Notification,
-      title: messages.binding_service_to_file,
-      cancellable: false,
-    }, cb);
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: messages.binding_service_to_file,
+        cancellable: false,
+      },
+      cb
+    );
     const serviceNames = _.join(services, ",");
     if (!opts.options?.silent) {
       void vscode.window.showInformationMessage(messages.service_bound_successful(serviceNames));
@@ -148,7 +150,15 @@ async function doBind(opts: BindArgs) {
   const services = _.difference(opts.instances, ups);
   if (_.size(services)) {
     const labels = _.map(services, "label");
-    const cb = () => cfBindLocalServices(opts.envPath.path.fsPath, labels, opts.tags, opts.serviceKeyNames, opts.serviceKeyParams, opts.options?.["quote-vcap"]);
+    const cb = () =>
+      cfBindLocalServices(
+        opts.envPath.path.fsPath,
+        labels,
+        opts.tags,
+        opts.serviceKeyNames,
+        opts.serviceKeyParams,
+        opts.options?.["quote-vcap"]
+      );
     await withProgress(cb, labels);
   }
   if (_.size(ups)) {
@@ -440,8 +450,8 @@ class EnvPathHelper {
     return _.get(env, "fsPath")
       ? (env as vscode.Uri)
       : _.get(env, "path")
-        ? (env.path as vscode.Uri)
-        : vscode.Uri.file("");
+      ? (env.path as vscode.Uri)
+      : vscode.Uri.file("");
   }
   static getIgnore(env: vscode.Uri | TEnvPath): boolean {
     return (_.get(env, "ignore") as boolean) || false;

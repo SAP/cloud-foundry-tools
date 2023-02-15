@@ -63,7 +63,7 @@ describe("run-configuration tests package", () => {
         vcapObject: {
           hdi_type: BindState.cloud,
         },
-        isQuotedVcap: false
+        isQuotedVcap: false,
       };
       sandbox.stub(utils, "getEnvResources").withArgs(bindContext.envPath.fsPath).resolves(getEnvResourcesResult);
       expect(await new DependencyHandler("test.Handler.id").getBindState(bindContext)).to.be.equal(BindState.cloud);
@@ -74,7 +74,7 @@ describe("run-configuration tests package", () => {
         vcapObject: {
           type: BindState.cloud,
         },
-        isQuotedVcap: false
+        isQuotedVcap: false,
       };
       sandbox.stub(utils, "getEnvResources").withArgs(bindContext.envPath.fsPath).resolves(getEnvResourcesResult);
       expect(await new DependencyHandler("test.Handler.id").getBindState(bindContext)).to.be.equal(BindState.notbound);

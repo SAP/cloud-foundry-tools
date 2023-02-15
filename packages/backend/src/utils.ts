@@ -82,7 +82,7 @@ export function isVCAPSurroundedWithQuotes(envFilePath: string) {
   }
 }
 
-export function getEnvResources(envFilePath: string): Promise<{vcapObject: any, isQuotedVcap: boolean}> {
+export function getEnvResources(envFilePath: string): Promise<{ vcapObject: any; isQuotedVcap: boolean }> {
   try {
     let isQuotedVcap = false;
     if (existsSync(envFilePath)) {
@@ -94,20 +94,20 @@ export function getEnvResources(envFilePath: string): Promise<{vcapObject: any, 
           vcapProperty = vcapProperty.substring(1, vcapProperty.length - 1);
           isQuotedVcap = true;
         }
-        return Promise.resolve({vcapObject: JSON.parse(vcapProperty), isQuotedVcap});
+        return Promise.resolve({ vcapObject: JSON.parse(vcapProperty), isQuotedVcap });
       } else {
         getModuleLogger(LOGGER_MODULE).debug(
           "getEnvResources: the '.env' file is missing a key <%s>",
           ENV_VCAP_RESOURCES,
           { filePath: envFilePath }
         );
-        return Promise.resolve({vcapObject: null, isQuotedVcap});
+        return Promise.resolve({ vcapObject: null, isQuotedVcap });
       }
     } else {
       getModuleLogger(LOGGER_MODULE).debug("getEnvResources: the '.env' file does not exist", {
         filePath: envFilePath,
       });
-      return Promise.resolve({vcapObject: null, isQuotedVcap});
+      return Promise.resolve({ vcapObject: null, isQuotedVcap });
     }
   } catch (error) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
