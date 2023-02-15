@@ -59,29 +59,6 @@ export function toText(e: Error): string {
   return _.get(e, "message") || _.get(e, "name", _.toString(e));
 }
 
-export function isVCAPSurroundedWithQuotes(envFilePath: string) {
-  try {
-    if (existsSync(envFilePath)) {
-      const vcapProperty = PropertiesReader(envFilePath).getRaw(ENV_VCAP_RESOURCES);
-      if (vcapProperty) {
-        return _.startsWith(vcapProperty, "'") && _.endsWith(vcapProperty, "'");
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  } catch (error) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    getModuleLogger(LOGGER_MODULE).error(
-      "getEnvResources: could not get the '.env' file resources",
-      { exception: toText(new Error(error?.message as string)) },
-      { filePath: envFilePath }
-    );
-    throw error;
-  }
-}
-
 export function getEnvResources(envFilePath: string): Promise<{ vcapObject: any; isQuotedVcap: boolean }> {
   try {
     let isQuotedVcap = false;
