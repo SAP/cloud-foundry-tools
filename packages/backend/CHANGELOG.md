@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [7.2.0](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.1.1...v7.2.0) (2023-02-15)
+
+
+### Features
+
+* support bind/unbind with quoted VCAP_SERVICES ([#253](https://github.com/sap-staging/cloud-foundry-tools/issues/253)) ([6cabac6](https://github.com/sap-staging/cloud-foundry-tools/commit/6cabac6a5c5b42435d86a90ce2e78c0f942db55a))
+
+
+
+
+
 ## [7.1.1](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.1.0...v7.1.1) (2022-11-16)
 
 **Note:** Version bump only for package vscode-wing-cf-tools
