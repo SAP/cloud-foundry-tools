@@ -148,9 +148,7 @@ async function doBind(opts: BindArgs) {
   const services = _.difference(opts.instances, ups);
   if (_.size(services)) {
     const labels = _.map(services, "label");
-    const cb = () => { 
-      return cfBindLocalServices(opts.envPath.path.fsPath, labels, opts.tags, opts.serviceKeyNames, opts.serviceKeyParams, opts.options?.["quote-vcap"]);
-    }
+    const cb = () => cfBindLocalServices(opts.envPath.path.fsPath, labels, opts.tags, opts.serviceKeyNames, opts.serviceKeyParams, opts.options?.["quote-vcap"]);
     await withProgress(cb, labels);
   }
   if (_.size(ups)) {

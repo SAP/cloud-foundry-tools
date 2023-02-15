@@ -61,7 +61,8 @@ describe("utils unit tests", () => {
     it("ok:: sanity with valid VCAP_SERVICES value", async () => {
       sandbox.stub(fsSync, "existsSync").returns(true);
       const envFilePath: string = path.join(__dirname, "resources", ".testValidEnv");
-      const vcapServicesObj = await utils.getEnvResources(envFilePath);
+      const envResources = await utils.getEnvResources(envFilePath);
+      const vcapServicesObj = envResources.vcapObject;
       expect(vcapServicesObj).to.not.be.empty;
       expect(vcapServicesObj.hana).to.exist;
     });
@@ -69,7 +70,17 @@ describe("utils unit tests", () => {
     it("ok:: sanity with valid VCAP_SERVICES value surrounded with single quotes", async () => {
       sandbox.stub(fsSync, "existsSync").returns(true);
       const envFilePath: string = path.join(__dirname, "resources", ".testValidEnvVCAPWithQuotes");
-      const vcapServicesObj = await utils.getEnvResources(envFilePath);
+      const envResources = await utils.getEnvResources(envFilePath);
+      const vcapServicesObj = envResources.vcapObject;
+      expect(vcapServicesObj).to.not.be.empty;
+      expect(vcapServicesObj.hana).to.exist;
+    });
+
+    it("ok:: sanity with valid VCAP_SERVICES value surrounded with single quotes and spaces", async () => {
+      sandbox.stub(fsSync, "existsSync").returns(true);
+      const envFilePath: string = path.join(__dirname, "resources", ".testValidEnvVCAPWithQuotesAndSpaces");
+      const envResources = await utils.getEnvResources(envFilePath);
+      const vcapServicesObj = envResources.vcapObject;
       expect(vcapServicesObj).to.not.be.empty;
       expect(vcapServicesObj.hana).to.exist;
     });
@@ -79,7 +90,8 @@ describe("utils unit tests", () => {
       const envFilePath: string = path.join(__dirname, "resources", ".testInValidVCAP");
       let vcapServicesObj;
       try {
-        vcapServicesObj = await utils.getEnvResources(envFilePath);
+        const envResources = await utils.getEnvResources(envFilePath);
+        vcapServicesObj = envResources.vcapObject;
         fail("test should fail here");
       } catch (e) {
         expect(vcapServicesObj).to.be.undefined;
@@ -89,13 +101,13 @@ describe("utils unit tests", () => {
     it("ok:: '.env' file does not exist", async () => {
       sandbox.stub(fsSync, "existsSync").returns(false);
       const envFilePath: string = path.join(__dirname, "resources", ".notExists");
-      expect(await utils.getEnvResources(envFilePath)).to.be.null;
+      expect((await utils.getEnvResources(envFilePath)).vcapObject).to.be.null;
     });
 
     it("ok:: '.env' file without VCAP_SERVICES key", async () => {
       sandbox.stub(fsSync, "existsSync").returns(true);
       const envFilePath: string = path.join(__dirname, "resources", ".envNoVCAP");
-      expect(await utils.getEnvResources(envFilePath)).to.be.null;
+      expect((await utils.getEnvResources(envFilePath)).vcapObject).to.be.null;
     });
   });
 
