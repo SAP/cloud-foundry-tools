@@ -1,7 +1,6 @@
 import * as _ from "lodash";
 import { getModuleLogger } from "./logger/logger-wrapper";
-import { toText, writeProperties } from "./utils";
-import * as PropertiesReader from "properties-reader";
+import { readEnvResources, toText, TPROPERTIES, writeEnvResources } from "./utils";
 
 const LOGGER_MODULE = "chisel";
 
@@ -13,9 +12,9 @@ enum ChiselKeys {
   TUNNEL_PARAM = "TUNNEL_PARAM",
 }
 
-function initReader(filePath: string): PropertiesReader.Reader | undefined {
+function getEnvProperties(filePath: string): TPROPERTIES | void {
   try {
-    return PropertiesReader(filePath);
+    return readEnvResources(filePath);
   } catch (e) {
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     getModuleLogger(LOGGER_MODULE).error(
@@ -28,9 +27,9 @@ function initReader(filePath: string): PropertiesReader.Reader | undefined {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function checkAndCreateChiselTask(filePath: string, name: string): any | undefined {
-  const envProperties = initReader(filePath);
+  const envProperties = getEnvProperties(filePath);
   if (envProperties) {
-    const chiselUrl = envProperties.get(ChiselKeys.CHISEL_URL);
+    const chiselUrl = envProperties[ChiselKeys.CHISEL_URL];
     if (_.isEmpty(chiselUrl)) {
       getModuleLogger(LOGGER_MODULE).debug("checkAndCreateChiselTask: empty chisel_url", { filePath: filePath });
       return undefined;
@@ -50,19 +49,18 @@ export function checkAndCreateChiselTask(filePath: string, name: string): any | 
         "client",
         "--auth",
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `${envProperties.get(ChiselKeys.CHISEL_USER)}:${envProperties.get(ChiselKeys.CHISEL_PASSWORD)}`,
+        `${envProperties[ChiselKeys.CHISEL_USER]}:${envProperties[ChiselKeys.CHISEL_PASSWORD]}`,
         chiselUrl,
-        envProperties.get(ChiselKeys.TUNNEL_PARAM),
+        envProperties[ChiselKeys.TUNNEL_PARAM],
       ],
     };
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function dropChiselProperties(propObj: any): Record<string, string> {
   const properties: Record<string, string> = {};
-  _.each(_.keys(propObj), (key) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  Object.keys(propObj).forEach((key) => {
     if (!(Object as any).values(ChiselKeys).includes(key)) {
       const value = propObj[key];
       if (!_.isEmpty(value)) {
@@ -73,17 +71,18 @@ function dropChiselProperties(propObj: any): Record<string, string> {
   return properties;
 }
 
-export async function deleteChiselParamsFromFile(filePath: string): Promise<boolean> {
-  const envProperties = initReader(filePath);
+export function deleteChiselParamsFromFile(filePath: string): boolean {
+  const envProperties = getEnvProperties(filePath);
   if (!envProperties) {
     return false;
   }
-  const chiselUrl = envProperties.get(ChiselKeys.CHISEL_URL);
+  const chiselUrl = envProperties[ChiselKeys.CHISEL_URL];
   if (_.isEmpty(chiselUrl)) {
     return false;
   }
   try {
-    await writeProperties(filePath, dropChiselProperties(envProperties.getAllProperties()));
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    writeEnvResources(filePath, dropChiselProperties(envProperties));
     getModuleLogger(LOGGER_MODULE).debug(
       `deleteChiselParamsFromFile: override the paramters to ${filePath} file without chisel parameters`
     );

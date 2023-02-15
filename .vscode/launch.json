@@ -10,7 +10,12 @@
       "request": "launch",
       "name": "backend unit tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/mocha",
-      "args": ["--timeout", "999999", "--colors", "${workspaceFolder}/packages/backend/out/tests/**/*.spec.js"],
+      "args": [
+        "--timeout",
+        "999999",
+        "--colors",
+        "${workspaceFolder}/packages/backend/out/tests/**/*.spec.js"
+      ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "protocol": "inspector"
@@ -23,8 +28,12 @@
       "env": {
         "CF_API_ENDPOINT": "https://api.cf.sap.hana.ondemand.com"
       },
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/backend"],
-      "outFiles": ["${workspaceFolder}/packages/backend/dist/**/*.js"],
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/backend"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/backend/dist/**/*.js"
+      ],
       "resolveSourceMapLocations": [
         "${workspaceFolder}/packages/backend/**",
         "${workspaceFolder}/**",
@@ -46,7 +55,9 @@
       "disableOptimisticBPs": true,
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "outFiles": ["${workspaceFolder}/packages/frontend/src/**/*.js"],
+      "outFiles": [
+        "${workspaceFolder}/packages/frontend/src/**/*.js"
+      ],
       "port": 9229
     }
   ]

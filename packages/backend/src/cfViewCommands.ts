@@ -66,6 +66,7 @@ interface BindLocalData {
 export interface CmdOptions {
   silent?: boolean;
   "skip-reload"?: boolean;
+  "quote-vcap"?: boolean;
 }
 
 export function cmdReloadTargets(): Promise<void> {
@@ -129,52 +130,33 @@ type BindArgs = {
 };
 
 async function doBind(opts: BindArgs) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async function runWithProgress(
-    fnc: (
-      filePath: string,
-      instanceNames: string[],
-      tags?: string[],
-      serviceKeyNames?: string[],
-      sserviceKeyParams?: unknown[]
-    ) => Promise<void>,
-    args: [
-      filePath: string,
-      instanceNames: string[],
-      tags?: string[],
-      serviceKeyNames?: string[],
-      sserviceKeyParams?: unknown[]
-    ]
-  ) {
-    await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: messages.binding_service_to_file,
-        cancellable: false,
-        // eslint-disable-next-line prefer-spread
-      },
-      () => fnc.apply(null, args)
-    );
+  
+  async function withProgress(cb: () => Thenable<void>, services: string[]) {
+    await vscode.window.withProgress({
+      location: vscode.ProgressLocation.Notification,
+      title: messages.binding_service_to_file,
+      cancellable: false,
+    }, cb);
+    const serviceNames = _.join(services, ",");
     if (!opts.options?.silent) {
-      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      void vscode.window.showInformationMessage(messages.service_bound_successful(_.join(args[1], ",")));
+      void vscode.window.showInformationMessage(messages.service_bound_successful(serviceNames));
     }
-    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-    getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", `${_.join(args[1], ",")}`);
+    getModuleLogger(LOGGER_MODULE).info("The service %s has been bound.", serviceNames);
   }
+
   const ups = _.filter(opts.instances, ["serviceName", eServiceTypes.user_provided]);
   const services = _.difference(opts.instances, ups);
   if (_.size(services)) {
-    await runWithProgress(cfBindLocalServices, [
-      opts.envPath.path.fsPath,
-      _.map(services, "label"),
-      opts.tags,
-      opts.serviceKeyNames,
-      opts.serviceKeyParams,
-    ]);
+    const labels = _.map(services, "label");
+    const cb = () => { 
+      return cfBindLocalServices(opts.envPath.path.fsPath, labels, opts.tags, opts.serviceKeyNames, opts.serviceKeyParams, opts.options?.["quote-vcap"]);
+    }
+    await withProgress(cb, labels);
   }
   if (_.size(ups)) {
-    await runWithProgress(cfBindLocalUps, [opts.envPath.path.fsPath, _.map(ups, "label"), opts.tags]);
+    const labels = _.map(ups, "label");
+    const cb = () => cfBindLocalUps(opts.envPath.path.fsPath, labels, opts.tags, opts.options?.["quote-vcap"]);
+    await withProgress(cb, labels);
   }
   if (!opts.envPath.ignore) {
     void updateGitIgnoreList(opts.envPath.path.fsPath);
@@ -460,8 +442,8 @@ class EnvPathHelper {
     return _.get(env, "fsPath")
       ? (env as vscode.Uri)
       : _.get(env, "path")
-      ? (env.path as vscode.Uri)
-      : vscode.Uri.file("");
+        ? (env.path as vscode.Uri)
+        : vscode.Uri.file("");
   }
   static getIgnore(env: vscode.Uri | TEnvPath): boolean {
     return (_.get(env, "ignore") as boolean) || false;
@@ -503,7 +485,7 @@ export async function cmdBindLocal(
       if (instanceName) {
         const chiselTask = await checkAndCreateChiselTask(filePath.fsPath, instanceName);
         if (chiselTask) {
-          await deleteChiselParamsFromFile(filePath.fsPath);
+          deleteChiselParamsFromFile(filePath.fsPath);
         }
         return chiselTask ? { instanceName, chiselTask } : { instanceName };
       }

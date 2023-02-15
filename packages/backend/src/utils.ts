@@ -4,9 +4,14 @@ import * as fs from "fs";
 import { messages } from "./messages";
 import * as types from "@sap/wing-run-config-types";
 import * as _ from "lodash";
-import * as PropertiesReader from "properties-reader";
 import { parse } from "comment-json";
 import { EOL, platform } from "os";
+import { envfile } from "./envUtils";
+// TODO: uncomment this when APIs of envFile will be available
+// import { envfile } from "@sap/bas-sdk";
+
+
+
 import {
   IServiceQuery,
   ServiceInstanceInfo,
@@ -17,7 +22,7 @@ import {
   cfGetTarget,
 } from "@sap/cf-tools";
 import { getModuleLogger } from "./logger/logger-wrapper";
-import { existsSync } from "fs";
+// import { writeFile } from "fs/promises";
 
 export const isWindows = platform().includes("win");
 type TypeValidationResult = string | undefined | null;
@@ -59,37 +64,29 @@ export function toText(e: Error): string {
   return _.get(e, "message") || _.get(e, "name", _.toString(e));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type TPROPERTIES = { [name: string]: string };
+
+/**
+ * Returns the VCAP_SERVICES object parsed
+ * @param envFilePath
+ * @returns
+ */
 export function getEnvResources(envFilePath: string): Promise<any> {
-  try {
-    if (existsSync(envFilePath)) {
-      const envProperties = PropertiesReader(envFilePath);
-      const vcapProperty = envProperties.getRaw(ENV_VCAP_RESOURCES);
-      if (vcapProperty) {
-        return Promise.resolve(JSON.parse(vcapProperty));
-      } else {
-        getModuleLogger(LOGGER_MODULE).debug(
-          "getEnvResources: the '.env' file is missing a key <%s>",
-          ENV_VCAP_RESOURCES,
-          { filePath: envFilePath }
-        );
-        return Promise.resolve(null);
-      }
-    } else {
-      getModuleLogger(LOGGER_MODULE).debug("getEnvResources: the '.env' file does not exist", {
-        filePath: envFilePath,
-      });
-      return Promise.resolve(null);
-    }
-  } catch (error) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    getModuleLogger(LOGGER_MODULE).error(
-      "getEnvResources: could not get the '.env' file resources",
-      { exception: toText(new Error(error?.message as string)) },
-      { filePath: envFilePath }
-    );
-    throw error;
-  }
+  return envfile.getVCapServices(envFilePath);
+}
+
+/**
+ * Returns the key value pair of all .env file
+ * @param envFilePath
+ * @returns
+ */
+export function readEnvResources(envFilePath: string): TPROPERTIES {
+  return envfile.getDotEnvFileKeyValues(envFilePath);
+}
+
+export function writeEnvResources(envFilePath: string, envResources: TPROPERTIES): void {
+  // Update VCAP_SERVICES in the .env file
+  return envfile.writeDotEnvKeyValues(envFilePath, envResources);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,9 +110,11 @@ function findServiceByResourceNameTag(vcapServices: any, yamlResourceName: strin
 export async function removeResourceFromEnv(
   bindContext: types.IBindContext
 ): Promise<{ resourceName: string; envPath: string; resourceData: any }> {
+  // TODO - we have maintain upon removal the single quotes if they were exists
   let instanceData;
   const envFilePath: string = bindContext.envPath.fsPath;
-  const vcapServicesObj = await getEnvResources(envFilePath);
+  const envProperties: TPROPERTIES = readEnvResources(envFilePath);
+  const vcapServicesObj: any = await getEnvResources(envFilePath);
   const bindResourceType =
     bindContext.depContext.type === types.DependencyType.runtimeservice
       ? bindContext.depContext.displayType
@@ -160,9 +159,7 @@ export async function removeResourceFromEnv(
   }
 
   // Update VCAP_SERVICES in the .env file
-  const envProperties = PropertiesReader(envFilePath);
-  envProperties.set(ENV_VCAP_RESOURCES, JSON.stringify(vcapServicesObj));
-  await envProperties.save(envFilePath);
+  writeEnvResources(envFilePath, _.assign(envProperties, { VCAP_SERVICES: JSON.stringify(vcapServicesObj) }));
   return { resourceName: instanceName, envPath: envFilePath, resourceData: instanceData };
 }
 
@@ -365,17 +362,6 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
       }
     }
   }
-}
-
-export async function writeProperties(filePath: string, properties: Record<string, string>): Promise<void> {
-  let text = "";
-  Object.keys(properties).forEach((key) => {
-    const value = properties[key];
-    if (value) {
-      text += `${key}=${value.trim()}\n`;
-    }
-  });
-  await fs.promises.writeFile(filePath, text);
 }
 
 export function resolveFilterValue(value: string | undefined): string {

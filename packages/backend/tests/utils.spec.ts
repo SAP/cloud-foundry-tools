@@ -13,7 +13,6 @@ mockVscode(nsVsMock.testVscode, "src/utils.ts");
 import * as utils from "../src/utils";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
 import { ServiceInstanceInfo, eFilters, ITarget } from "@sap/cf-tools";
-import * as PropertiesReader from "properties-reader";
 import * as messages from "../src/messages";
 
 describe("utils unit tests", () => {
@@ -57,8 +56,8 @@ describe("utils unit tests", () => {
     });
   });
 
-  describe("getEnvResources", () => {
-    it("ok:: sanity with valid VCAP_SERVICES value", async () => {
+  describe("getEnvResources -  should returns proper VCAP_SERVICES", () => {
+    it("ok:: sanity with valid VCAP_SERVICES value - value is not wrapped with quotes/double quotes (for backward compatability)", async () => {
       sandbox.stub(fsSync, "existsSync").returns(true);
       const envFilePath: string = path.join(__dirname, "resources", ".testValidEnv");
       const vcapServicesObj = await utils.getEnvResources(envFilePath);
@@ -81,11 +80,16 @@ describe("utils unit tests", () => {
     it("ok:: '.env' file does not exist", async () => {
       sandbox.stub(fsSync, "existsSync").returns(false);
       const envFilePath: string = path.join(__dirname, "resources", ".notExists");
-      expect(await utils.getEnvResources(envFilePath)).to.be.null;
+      let vcapServicesObj;
+      try {
+        vcapServicesObj = await utils.getEnvResources(envFilePath);
+        fail("test should fail here");
+      } catch (e) {
+        expect(vcapServicesObj).to.be.null;
+      }
     });
 
     it("ok:: '.env' file without VCAP_SERVICES key", async () => {
-      sandbox.stub(fsSync, "existsSync").returns(true);
       const envFilePath: string = path.join(__dirname, "resources", ".envNoVCAP");
       expect(await utils.getEnvResources(envFilePath)).to.be.null;
     });
@@ -93,18 +97,15 @@ describe("utils unit tests", () => {
 
   describe("Tests for removeResourceFromEnv", () => {
     const envFilePath: string = path.join(__dirname, "resources", ".envtest");
-    const propReader = PropertiesReader(envFilePath);
     let vcapServicesObjBeforeChange: any;
     before(() => {
       sandbox = sinon.createSandbox();
-      vcapServicesObjBeforeChange = propReader.get(utils.ENV_VCAP_RESOURCES);
+      vcapServicesObjBeforeChange = utils.getEnvResources(envFilePath);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
       sandbox.restore();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      propReader.set(utils.ENV_VCAP_RESOURCES, vcapServicesObjBeforeChange);
-      await propReader.save(envFilePath);
+      utils.writeEnvResources(envFilePath, { VCAP_SERVICES: JSON.stringify(vcapServicesObjBeforeChange) });
     });
 
     // does not work on linux ?! - clarification needed
@@ -133,7 +134,6 @@ describe("utils unit tests", () => {
     });
 
     it("ok:: remove resource when it is not tagged", async () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const bindContext: any = {
         envPath: {
           fsPath: envFilePath,
@@ -144,9 +144,9 @@ describe("utils unit tests", () => {
       };
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
-      const envPropertiesAfterChange = PropertiesReader(envFilePath);
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include("xsuaa");
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include('"instance_name":"hdi-test-instance"');
+      const envResources = JSON.stringify(await utils.getEnvResources(envFilePath));
+      expect(envResources).to.not.include("xsuaa");
+      expect(envResources).to.include('"instance_name":"hdi-test-instance"');
     });
 
     it("ok:: remove resource when it is not tagged by wrong type", async () => {
@@ -160,7 +160,7 @@ describe("utils unit tests", () => {
       };
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
-      assert.deepEqual(PropertiesReader(envFilePath).get(utils.ENV_VCAP_RESOURCES), vcapServicesObjBeforeChange);
+      assert.deepEqual(utils.getEnvResources(envFilePath), vcapServicesObjBeforeChange);
     });
 
     it("ok:: remove resource when it has a tag", async () => {
@@ -179,11 +179,9 @@ describe("utils unit tests", () => {
       };
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
-      const envPropertiesAfterChange = PropertiesReader(envFilePath);
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include(
-        '"instance_name":"hdi-test-instance"'
-      );
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include("xsuaa");
+      const envPropertiesAfterChange = JSON.stringify(await utils.getEnvResources(envFilePath));
+      expect(envPropertiesAfterChange).to.not.include('"instance_name":"hdi-test-instance"');
+      expect(envPropertiesAfterChange).to.include("xsuaa");
     });
 
     it("ok:: remove resource when it has a tag, resource type has more then 1 instance (e.g. two dependencies bound to different instances)", async () => {
@@ -203,10 +201,10 @@ describe("utils unit tests", () => {
       };
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
-      envPropertiesAfterChange = PropertiesReader(envFilePath);
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include("hanatest");
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include('"instance_name":"hana-2"');
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include('"instance_name":"hana-1"');
+      envPropertiesAfterChange = JSON.stringify(await utils.getEnvResources(envFilePath));
+      expect(envPropertiesAfterChange).to.include("hanatest");
+      expect(envPropertiesAfterChange).to.include('"instance_name":"hana-2"');
+      expect(envPropertiesAfterChange).to.not.include('"instance_name":"hana-1"');
 
       // Another remove should remove this key completely and not leave an empty array
       const bindContext2: any = {
@@ -224,10 +222,10 @@ describe("utils unit tests", () => {
       };
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext2);
-      envPropertiesAfterChange = PropertiesReader(envFilePath);
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include("hanatest");
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include('"instance_name":"hana-2"');
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include('"instance_name":"hana-1"');
+      envPropertiesAfterChange = JSON.stringify(await utils.getEnvResources(envFilePath));
+      expect(envPropertiesAfterChange).to.not.include("hanatest");
+      expect(envPropertiesAfterChange).to.not.include('"instance_name":"hana-2"');
+      expect(envPropertiesAfterChange).to.not.include('"instance_name":"hana-1"');
     });
 
     it("ok:: remove resource when it has a tag but it has not been found", async () => {
@@ -245,9 +243,9 @@ describe("utils unit tests", () => {
       };
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
-      const envPropertiesAfterChange = PropertiesReader(envFilePath);
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include('"instance_name":"hdi-test-instance"');
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include("xsuaa");
+      const envPropertiesAfterChange = JSON.stringify(await utils.getEnvResources(envFilePath));
+      expect(envPropertiesAfterChange).to.include('"instance_name":"hdi-test-instance"');
+      expect(envPropertiesAfterChange).to.include("xsuaa");
     });
   });
 
