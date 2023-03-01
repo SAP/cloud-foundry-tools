@@ -15,11 +15,11 @@ import {
   ServiceTypeInfo,
   cfGetManagedServiceInstances,
   cfGetTarget,
-  Cli,
+  // Cli,
 } from "@sap/cf-tools";
 import { getModuleLogger } from "./logger/logger-wrapper";
 import { fileSync } from "tmp";
-import { Url } from "url";
+// import { Url } from "url";
 import { execSync, ExecSyncOptionsWithStringEncoding } from "child_process";
 import { merge, trimEnd } from "lodash";
 
@@ -63,27 +63,32 @@ export function toText(e: Error): string {
   return _.get(e, "message") || _.get(e, "name", _.toString(e));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getEnvResources(envFilePath: string): Promise<any> {
+export function getEnvResources(envFilePath: string): Promise<{ vcapObject: any; isQuotedVcap: boolean }> {
   try {
+    let isQuotedVcap = false;
     if (fs.existsSync(envFilePath)) {
       const envProperties = PropertiesReader(envFilePath);
-      const vcapProperty = envProperties.getRaw(ENV_VCAP_RESOURCES);
+      let vcapProperty = envProperties.getRaw(ENV_VCAP_RESOURCES);
       if (vcapProperty) {
-        return Promise.resolve(JSON.parse(vcapProperty));
+        // In case VCAP_SERVICES is wrapped with single quotes - unwrap it
+        if (_.startsWith(vcapProperty, "'") && _.endsWith(vcapProperty, "'")) {
+          vcapProperty = vcapProperty.substring(1, vcapProperty.length - 1);
+          isQuotedVcap = true;
+        }
+        return Promise.resolve({ vcapObject: JSON.parse(vcapProperty), isQuotedVcap });
       } else {
         getModuleLogger(LOGGER_MODULE).debug(
           "getEnvResources: the '.env' file is missing a key <%s>",
           ENV_VCAP_RESOURCES,
           { filePath: envFilePath }
         );
-        return Promise.resolve(null);
+        return Promise.resolve({ vcapObject: null, isQuotedVcap });
       }
     } else {
       getModuleLogger(LOGGER_MODULE).debug("getEnvResources: the '.env' file does not exist", {
         filePath: envFilePath,
       });
-      return Promise.resolve(null);
+      return Promise.resolve({ vcapObject: null, isQuotedVcap });
     }
   } catch (error) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -119,7 +124,8 @@ export async function removeResourceFromEnv(
 ): Promise<{ resourceName: string; envPath: string; resourceData: any }> {
   let instanceData;
   const envFilePath: string = bindContext.envPath.fsPath;
-  const vcapServicesObj = await getEnvResources(envFilePath);
+  const envResources = await getEnvResources(envFilePath);
+  const vcapServicesObj = envResources.vcapObject;
   const bindResourceType =
     bindContext.depContext.type === types.DependencyType.runtimeservice
       ? bindContext.depContext.displayType
@@ -165,7 +171,11 @@ export async function removeResourceFromEnv(
 
   // Update VCAP_SERVICES in the .env file
   const envProperties = PropertiesReader(envFilePath);
-  envProperties.set(ENV_VCAP_RESOURCES, JSON.stringify(vcapServicesObj));
+
+  // If VCAP_SERVICES was already wrapped with single quotes - maintain them when writing back
+  const quote = envResources.isQuotedVcap ? "'" : "";
+  envProperties.set(ENV_VCAP_RESOURCES, quote + JSON.stringify(vcapServicesObj) + quote);
+
   await envProperties.save(envFilePath);
   return { resourceName: instanceName, envPath: envFilePath, resourceData: instanceData };
 }
@@ -457,7 +467,7 @@ function exec(cmd: string, opt?: { cwd?: string }): string | undefined {
       )
     );
   } catch (e) {
-    getModuleLogger(LOGGER_MODULE).error(e.toString());
+    getModuleLogger(LOGGER_MODULE).error(<any>e.toString());
   }
 }
 
@@ -484,12 +494,14 @@ export type TCisOAuth = {
 
 export function obtainCisOAuthToken(data: TCisOAuth): string | undefined {
   let cert, key;
+  let certName = "",
+    keyName = "";
   try {
     cert = makeFile({ nameExt: `.pem`, content: data.cert });
     key = makeFile({ nameExt: `.pem`, content: data.key });
     const dirName = path.dirname(cert);
-    const certName = path.basename(cert);
-    const keyName = path.basename(cert);
+    certName = path.basename(cert);
+    keyName = path.basename(cert);
     // const oauth = exec(`curl --cert ${cert} --key ${key} -XPOST ${data.certUrl.href}oauth/token -d "grant_type=client_credentials&client_id=${data.clientId}"`, {cwd: path.dirname(cert)});
     const oauth = exec(
       `curl --cert ${certName} --key ${keyName} -XPOST ${data.certUrl.href}oauth/token -d "grant_type=client_credentials&client_id=${data.clientId}"`,
@@ -501,8 +513,8 @@ export function obtainCisOAuthToken(data: TCisOAuth): string | undefined {
   } catch (e) {
     getModuleLogger(LOGGER_MODULE).error(e.toString());
   } finally {
-    fs.unlink(certName);
-    fs.unlink(keyName);
+    fs.unlink(certName, () => {});
+    fs.unlink(keyName, () => {});
   }
 }
 

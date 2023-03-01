@@ -26,6 +26,7 @@ import {
 } from "@sap/cf-tools";
 import * as cfView from "../src/cfView";
 import * as https from "https";
+import * as fspath from "path";
 import { messages } from "../src/messages";
 import { fail } from "assert";
 import { DisplayServices, ServiceQueryOptions, UpsServiceQueryOprions } from "../src/utils";
@@ -50,10 +51,6 @@ describe("cfViewCommands tests", () => {
     sandbox = createSandbox();
   });
 
-  after(() => {
-    sandbox.restore();
-  });
-
   beforeEach(() => {
     cfViewMock = sandbox.mock(cfView.CFView);
     vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
@@ -68,6 +65,7 @@ describe("cfViewCommands tests", () => {
   });
 
   afterEach(() => {
+    sandbox.restore();
     cfLocalMock.verify();
     cfLocalUtilsMock.verify();
     vscodeWindowMock.verify();
@@ -576,6 +574,59 @@ describe("cfViewCommands tests", () => {
       expect(await cfViewCommands.cmdBindLocal(service, emptyPath)).to.be.undefined;
     });
 
+    it("ok:: path selected, service is CFService type, quote-vcap is false", async () => {
+      const emptyPath = nsVsMock.testVscode.Uri.file("");
+      sandbox.stub(nsVsMock.testVscode.workspace, "workspaceFolders").value(undefined);
+      vscodeWindowMock
+        .expects("showOpenDialog")
+        .withExactArgs({
+          openLabel: "Select folder for .env file",
+          canSelectFiles: false,
+          canSelectFolders: true,
+          canSelectMany: false,
+          defaultUri: nsVsMock.testVscode.workspace.workspaceFolders,
+        })
+        .resolves([{ fsPath: `other${fspath.sep}path` }]);
+      const otherService = { contextValue: "cf-service", label: "my-service" };
+      vscodeWindowMock
+        .expects("showInformationMessage")
+        .withExactArgs(messages.service_bound_successful(otherService.label))
+        .resolves();
+      const stubWithProgress = sandbox.stub(nsVsMock.testVscode.window, "withProgress");
+      expect(
+        await cfViewCommands.cmdBindLocal(
+          (otherService as unknown) as cfView.CFService,
+          {
+            path: emptyPath,
+            ignore: true,
+          },
+          undefined,
+          { "quote-vcap": false }
+        )
+      ).deep.equal({ instanceName: otherService.label });
+
+      cfLocalMock
+        .expects("cfBindLocalServices")
+        .withExactArgs(
+          `other${fspath.sep}path${fspath.sep}.env`,
+          [otherService.label],
+          undefined,
+          undefined,
+          undefined,
+          false
+        )
+        .resolves();
+      expect(stubWithProgress.calledOnce).to.be.true;
+      expect(stubWithProgress.args[0].length).to.be.equal(2);
+      expect(stubWithProgress.args[0][0]).to.be.deep.equal({
+        location: nsVsMock.testVscode.ProgressLocation.Notification,
+        title: messages.binding_service_to_file,
+        cancellable: false,
+      });
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+      expect(await stubWithProgress.args[0][1]({} as any, {} as any)).to.be.undefined;
+    });
+
     it("ok:: path selected, service is CFService type", async () => {
       const emptyPath = nsVsMock.testVscode.Uri.file("");
       sandbox.stub(nsVsMock.testVscode.workspace, "workspaceFolders").value(undefined);
@@ -588,26 +639,40 @@ describe("cfViewCommands tests", () => {
           canSelectMany: false,
           defaultUri: nsVsMock.testVscode.workspace.workspaceFolders,
         })
-        .resolves([{ fsPath: "other/path" }]);
+        .resolves([{ fsPath: `other${fspath.sep}path` }]);
       const otherService = { contextValue: "cf-service", label: "my-service" };
       vscodeWindowMock
         .expects("showInformationMessage")
         .withExactArgs(messages.service_bound_successful(otherService.label))
         .resolves();
-      vscodeWindowMock
-        .expects("withProgress")
-        .withArgs({
-          location: nsVsMock.testVscode.ProgressLocation.Notification,
-          title: messages.binding_service_to_file,
-          cancellable: false,
-        })
-        .resolves();
+      const stubWithProgress = sandbox.stub(nsVsMock.testVscode.window, "withProgress");
       expect(
         await cfViewCommands.cmdBindLocal((otherService as unknown) as cfView.CFService, {
           path: emptyPath,
           ignore: true,
         })
       ).deep.equal({ instanceName: otherService.label });
+
+      cfLocalMock
+        .expects("cfBindLocalServices")
+        .withExactArgs(
+          `other${fspath.sep}path${fspath.sep}.env`,
+          [otherService.label],
+          undefined,
+          undefined,
+          undefined,
+          undefined
+        )
+        .resolves();
+      expect(stubWithProgress.calledOnce).to.be.true;
+      expect(stubWithProgress.args[0].length).to.be.equal(2);
+      expect(stubWithProgress.args[0][0]).to.be.deep.equal({
+        location: nsVsMock.testVscode.ProgressLocation.Notification,
+        title: messages.binding_service_to_file,
+        cancellable: false,
+      });
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+      expect(await stubWithProgress.args[0][1]({} as any, {} as any)).to.be.undefined;
     });
 
     it("ok:: path selected, service is ServiceTypeInfo type, no ups, no services found", async () => {
@@ -698,6 +763,47 @@ describe("cfViewCommands tests", () => {
       expect(await cfViewCommands.cmdBindLocal(service, { path, ignore: true }, "not-existed")).to.be.undefined;
     });
 
+    it("ok:: path selected, service is ServiceTypeInfo type, no services, services found, ups selected, quote-vcap is true", async () => {
+      service[0].plan = "";
+      service[0].ups = { isShow: true };
+      opts.query = undefined;
+      opts.ups = service[0].ups;
+      const services: ServiceInstanceInfo[] = [
+        { serviceName: eServiceTypes.user_provided, label: "ups1" },
+        { serviceName: eServiceTypes.user_provided, label: "ups2" },
+      ];
+      commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves(services);
+      _.set(
+        commands,
+        "updateInstanceNameAndTags",
+        (availableServices: ServiceInstanceInfo[], serviceTypeInfo: ServiceTypeInfo[], instanceNames: string[]) => {
+          instanceNames.push(services[0].label);
+          return Promise.resolve(instanceNames[0]);
+        }
+      );
+      const stubWithProgress = sandbox.stub(nsVsMock.testVscode.window, "withProgress");
+      vscodeWindowMock
+        .expects("showInformationMessage")
+        .withExactArgs(messages.service_bound_successful(services[0].label))
+        .resolves();
+      expect(
+        await cfViewCommands.cmdBindLocal(service, { path, ignore: true }, undefined, { "quote-vcap": true })
+      ).deep.equal({
+        instanceName: services[0].label,
+      });
+
+      cfLocalMock.expects("cfBindLocalUps").withExactArgs("some/path", [services[0].label], [], true).resolves();
+      expect(stubWithProgress.calledOnce).to.be.true;
+      expect(stubWithProgress.args[0].length).to.be.equal(2);
+      expect(stubWithProgress.args[0][0]).to.be.deep.equal({
+        location: nsVsMock.testVscode.ProgressLocation.Notification,
+        title: messages.binding_service_to_file,
+        cancellable: false,
+      });
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+      expect(await stubWithProgress.args[0][1]({} as any, {} as any)).to.be.undefined;
+    });
+
     it("ok:: path selected, service is ServiceTypeInfo type, no services, services found, ups selected", async () => {
       service[0].plan = "";
       service[0].ups = { isShow: true };
@@ -716,14 +822,7 @@ describe("cfViewCommands tests", () => {
           return Promise.resolve(instanceNames[0]);
         }
       );
-      vscodeWindowMock
-        .expects("withProgress")
-        .withArgs({
-          location: nsVsMock.testVscode.ProgressLocation.Notification,
-          title: messages.binding_service_to_file,
-          cancellable: false,
-        })
-        .resolves();
+      const stubWithProgress = sandbox.stub(nsVsMock.testVscode.window, "withProgress");
       vscodeWindowMock
         .expects("showInformationMessage")
         .withExactArgs(messages.service_bound_successful(services[0].label))
@@ -731,6 +830,17 @@ describe("cfViewCommands tests", () => {
       expect(await cfViewCommands.cmdBindLocal(service, { path, ignore: true })).deep.equal({
         instanceName: services[0].label,
       });
+
+      cfLocalMock.expects("cfBindLocalUps").withExactArgs("some/path", [services[0].label], [], undefined).resolves();
+      expect(stubWithProgress.calledOnce).to.be.true;
+      expect(stubWithProgress.args[0].length).to.be.equal(2);
+      expect(stubWithProgress.args[0][0]).to.be.deep.equal({
+        location: nsVsMock.testVscode.ProgressLocation.Notification,
+        title: messages.binding_service_to_file,
+        cancellable: false,
+      });
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+      expect(await stubWithProgress.args[0][1]({} as any, {} as any)).to.be.undefined;
     });
 
     it("ok:: path selected, service is not ServiceTypeInfo type, no ups, services found, type selected", async () => {

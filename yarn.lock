@@ -2469,12 +2469,12 @@
   dependencies:
     ws "^7.2.3"
 
-"@sap/cf-tools@3.0.3":
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/@sap/cf-tools/-/cf-tools-3.0.3.tgz#73fdba8b1d3f7edaf4cc66ae7e8154267cb5aa6d"
-  integrity sha512-Z12MNlLKT6ZHKrNrzHewvTxFt/WQUiz3o3iCNNF8fgIFtt0wKKZ/8iLG0xZeaRbR7RdGNugWD40fjseAEWTMmw==
+"@sap/cf-tools@3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@sap/cf-tools/-/cf-tools-3.2.0.tgz#7e2d6e217b0b5f1c30506669a193b14e33a04ed7"
+  integrity sha512-iD/ttsBzKAqLShPuB4FsNcO6d5/Bl0gMSb/MXw2lYOGZE91IJ8PQDk1OF27fJ4e5ycK33ZkuD2xGxJygCBF7wQ==
   dependencies:
-    comment-json "4.2.2"
+    comment-json "4.2.3"
     lodash "4.17.21"
     properties-reader "2.2.0"
     url "0.11.0"
@@ -5307,6 +5307,17 @@ comment-json@*, comment-json@4.2.2:
   version "4.2.2"
   resolved "https://registry.yarnpkg.com/comment-json/-/comment-json-4.2.2.tgz#5fae70a94e0c8f84a077bd31df5aa5269252f293"
   integrity sha512-H8T+kl3nZesZu41zO2oNXIJWojNeK3mHxCLrsBNu6feksBXsgb+PtYz5daP5P86A0F3sz3840KVYehr04enISQ==
+  dependencies:
+    array-timsort "^1.0.3"
+    core-util-is "^1.0.3"
+    esprima "^4.0.1"
+    has-own-prop "^2.0.0"
+    repeat-string "^1.6.1"
+
+comment-json@4.2.3:
+  version "4.2.3"
+  resolved "https://registry.yarnpkg.com/comment-json/-/comment-json-4.2.3.tgz#50b487ebbf43abe44431f575ebda07d30d015365"
+  integrity sha512-SsxdiOf064DWoZLH799Ata6u7iV658A11PlWtZATDlXPpKGJnbJZ5Z24ybixAi+LUUqJ/GKowAejtC5GFUG7Tw==
   dependencies:
     array-timsort "^1.0.3"
     core-util-is "^1.0.3"

@@ -22,7 +22,7 @@ export class DependencyHandler implements types.IDependencyHandler {
     try {
       if (
         _.get(
-          await getEnvResources(_.get(bindContext, ["envPath", "fsPath"])),
+          (await getEnvResources(_.get(bindContext, ["envPath", "fsPath"]))).vcapObject,
           _.get(bindContext, ["depContext", "type"])
         )
       ) {

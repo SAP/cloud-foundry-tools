@@ -59,16 +59,24 @@ describe("run-configuration tests package", () => {
     });
 
     it("ok:: 'getBindState' - cloud type", async () => {
-      sandbox.stub(utils, "getEnvResources").withArgs(bindContext.envPath.fsPath).resolves({
-        hdi_type: BindState.cloud,
-      });
+      const getEnvResourcesResult = {
+        vcapObject: {
+          hdi_type: BindState.cloud,
+        },
+        isQuotedVcap: false,
+      };
+      sandbox.stub(utils, "getEnvResources").withArgs(bindContext.envPath.fsPath).resolves(getEnvResourcesResult);
       expect(await new DependencyHandler("test.Handler.id").getBindState(bindContext)).to.be.equal(BindState.cloud);
     });
 
     it("ok:: 'getBindState' - not defined", async () => {
-      sandbox.stub(utils, "getEnvResources").withArgs(bindContext.envPath.fsPath).resolves({
-        type: BindState.cloud,
-      });
+      const getEnvResourcesResult = {
+        vcapObject: {
+          type: BindState.cloud,
+        },
+        isQuotedVcap: false,
+      };
+      sandbox.stub(utils, "getEnvResources").withArgs(bindContext.envPath.fsPath).resolves(getEnvResourcesResult);
       expect(await new DependencyHandler("test.Handler.id").getBindState(bindContext)).to.be.equal(BindState.notbound);
     });
 
