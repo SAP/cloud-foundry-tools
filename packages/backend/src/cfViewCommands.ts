@@ -67,7 +67,6 @@ export interface CmdOptions {
   silent?: boolean;
   "skip-reload"?: boolean;
   "quote-vcap"?: boolean;
-  "retry-on-error"?: boolean;
 }
 
 export function cmdReloadTargets(): Promise<void> {
@@ -160,15 +159,7 @@ async function doBind(opts: BindArgs) {
         opts.serviceKeyParams,
         opts.options?.["quote-vcap"]
       );
-    try {
-      await withProgress(cb, labels);
-    } catch (e) {
-      if (opts.options?.["retry-on-error"]) {
-        await withProgress(cb, labels);
-      } else {
-        throw e;
-      }
-    }
+    await withProgress(cb, labels);
   }
   if (_.size(ups)) {
     const labels = _.map(ups, "label");

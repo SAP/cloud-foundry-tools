@@ -654,6 +654,7 @@ export async function updateInstanceNameAndTags(
     instanceName = await (serviceTypeInfo?.name === eServiceTypes.user_provided
       ? cmdCreateUps(serviceTypeInfo)
       : cmdCreateService(serviceTypeInfo));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   } else if (instanceName === `${CMD_BIND_TO_DEFAULT_SERVICE}${serviceTypeInfo?.allowCreate?.name}`) {
     const defaultInstance = _.find(availableServices, {
       label: serviceTypeInfo?.allowCreate?.name,
