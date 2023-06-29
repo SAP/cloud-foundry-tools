@@ -16,7 +16,7 @@
       <br />
       <div class="mt-8">{{ endpoint }}</div>
       <br /><br />
-      <vscode-button class="sign-out-button" @click="SignoutClicked">Sign Out</vscode-button>
+      <vscode-button @click="SignoutClicked">Sign Out</vscode-button>
     </div>
 
     <!-- authentication area -->
@@ -261,9 +261,6 @@ export default {
 }
 .logged-in-visibility {
   float: left;
-}
-.sign-out-button {
-  background-color: #444;
 }
 .text-danger {
   color: red;
