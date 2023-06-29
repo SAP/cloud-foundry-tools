@@ -16,7 +16,7 @@
       <br />
       <div class="mt-8">{{ endpoint }}</div>
       <br /><br />
-      <vscode-button @click="SignoutClicked">Sign out</vscode-button>
+      <vscode-button @click="SignoutClicked">Sign Out</vscode-button>
     </div>
 
     <!-- authentication area -->
