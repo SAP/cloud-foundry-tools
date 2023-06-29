@@ -61,7 +61,26 @@ describe("utils unit tests", () => {
     it("ok:: sanity with valid VCAP_SERVICES value", async () => {
       sandbox.stub(fsSync, "existsSync").returns(true);
       const envFilePath: string = path.join(__dirname, "resources", ".testValidEnv");
-      const vcapServicesObj = await utils.getEnvResources(envFilePath);
+      const envResources = await utils.getEnvResources(envFilePath);
+      const vcapServicesObj = envResources.vcapObject;
+      expect(vcapServicesObj).to.not.be.empty;
+      expect(vcapServicesObj.hana).to.exist;
+    });
+
+    it("ok:: sanity with valid VCAP_SERVICES value surrounded with single quotes", async () => {
+      sandbox.stub(fsSync, "existsSync").returns(true);
+      const envFilePath: string = path.join(__dirname, "resources", ".testValidEnvVCAPWithQuotes");
+      const envResources = await utils.getEnvResources(envFilePath);
+      const vcapServicesObj = envResources.vcapObject;
+      expect(vcapServicesObj).to.not.be.empty;
+      expect(vcapServicesObj.hana).to.exist;
+    });
+
+    it("ok:: sanity with valid VCAP_SERVICES value surrounded with single quotes and spaces", async () => {
+      sandbox.stub(fsSync, "existsSync").returns(true);
+      const envFilePath: string = path.join(__dirname, "resources", ".testValidEnvVCAPWithQuotesAndSpaces");
+      const envResources = await utils.getEnvResources(envFilePath);
+      const vcapServicesObj = envResources.vcapObject;
       expect(vcapServicesObj).to.not.be.empty;
       expect(vcapServicesObj.hana).to.exist;
     });
@@ -71,7 +90,8 @@ describe("utils unit tests", () => {
       const envFilePath: string = path.join(__dirname, "resources", ".testInValidVCAP");
       let vcapServicesObj;
       try {
-        vcapServicesObj = await utils.getEnvResources(envFilePath);
+        const envResources = await utils.getEnvResources(envFilePath);
+        vcapServicesObj = envResources.vcapObject;
         fail("test should fail here");
       } catch (e) {
         expect(vcapServicesObj).to.be.undefined;
@@ -81,13 +101,54 @@ describe("utils unit tests", () => {
     it("ok:: '.env' file does not exist", async () => {
       sandbox.stub(fsSync, "existsSync").returns(false);
       const envFilePath: string = path.join(__dirname, "resources", ".notExists");
-      expect(await utils.getEnvResources(envFilePath)).to.be.null;
+      expect((await utils.getEnvResources(envFilePath)).vcapObject).to.be.null;
     });
 
     it("ok:: '.env' file without VCAP_SERVICES key", async () => {
       sandbox.stub(fsSync, "existsSync").returns(true);
       const envFilePath: string = path.join(__dirname, "resources", ".envNoVCAP");
-      expect(await utils.getEnvResources(envFilePath)).to.be.null;
+      expect((await utils.getEnvResources(envFilePath)).vcapObject).to.be.null;
+    });
+  });
+
+  describe("Tests for removeResourceFromEnv when VCAP_SERVICES surrounded with quotes", () => {
+    const envFilePath: string = path.join(__dirname, "resources", ".testValidEnvVCAPWithQuotes");
+    const propReader = PropertiesReader(envFilePath);
+    let vcapServicesObjBeforeChange: any;
+    before(() => {
+      sandbox = sinon.createSandbox();
+      vcapServicesObjBeforeChange = propReader.get(utils.ENV_VCAP_RESOURCES);
+    });
+
+    afterEach(async () => {
+      sandbox.restore();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      propReader.set(utils.ENV_VCAP_RESOURCES, vcapServicesObjBeforeChange);
+      await propReader.save(envFilePath);
+    });
+
+    it("ok:: remove resource when VCAP is surrounded with single quotes and leave single quotes after removal", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const bindContext: any = {
+        envPath: {
+          fsPath: envFilePath,
+        },
+        depContext: {
+          type: "hana",
+        },
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await utils.removeResourceFromEnv(bindContext);
+      const vcapServicesObjAfterChange: string | null = PropertiesReader(envFilePath).getRaw(utils.ENV_VCAP_RESOURCES);
+
+      if (vcapServicesObjAfterChange) {
+        expect(vcapServicesObjAfterChange).to.not.include("hana");
+        expect(_.startsWith(vcapServicesObjAfterChange, "'")).to.be.true;
+        expect(_.endsWith(vcapServicesObjAfterChange, "'")).to.be.true;
+      } else {
+        expect(fail("VCAP_SERVICES must exists and be empty after removing the last dependency"));
+      }
     });
   });
 
@@ -132,7 +193,7 @@ describe("utils unit tests", () => {
       }
     });
 
-    it("ok:: remove resource when it is not tagged", async () => {
+    it("ok:: remove resource when it is not tagged & verify it is left unquoted as it was.", async () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const bindContext: any = {
         envPath: {
@@ -145,8 +206,13 @@ describe("utils unit tests", () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await utils.removeResourceFromEnv(bindContext);
       const envPropertiesAfterChange = PropertiesReader(envFilePath);
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.not.include("xsuaa");
-      expect(envPropertiesAfterChange.get(utils.ENV_VCAP_RESOURCES)).to.include('"instance_name":"hdi-test-instance"');
+      const vcapProperty: string = envPropertiesAfterChange.getRaw(utils.ENV_VCAP_RESOURCES) ?? "";
+      expect(vcapProperty).to.not.include("xsuaa");
+      expect(vcapProperty).to.include('"instance_name":"hdi-test-instance"');
+      expect(vcapProperty).to.not.include("xsuaa");
+
+      expect(_.startsWith(vcapProperty, "'")).to.be.false;
+      expect(_.endsWith(vcapProperty, "'")).to.be.false;
     });
 
     it("ok:: remove resource when it is not tagged by wrong type", async () => {

@@ -25,8 +25,8 @@
     ]
   },
   "scripts": {
-    "release:version": "lerna version",
-    "release:publish": "lerna publish from-git --yes",
+    "release:version": "yarn worktree:update && lerna version --force-publish",
+    "release:publish": "lerna publish from-git --yes --no-verify-access",
     "ci": "npm-run-all legal:* coverage:clean format:validate lint:validate ci:subpackages coverage:merge",
     "ci:subpackages": "lerna run ci",
     "ci:artifacts_only": "lerna run ci:artifacts_only",
@@ -40,7 +40,9 @@
     "coverage:merge": "node ./scripts/merge-coverage",
     "legal:delete": "lerna exec \"shx rm -rf .reuse LICENSES\" || true",
     "legal:copy": "lerna exec \"shx cp -r ../../.reuse .reuse && shx cp -r ../../LICENSES LICENSES\"",
-    "pwd-test": "pwd && find -name 'config.yml'"
+    "pwd-test": "pwd && find -name 'config.yml'",
+    "version": "yarn format:fix",
+    "worktree:update": "yarn && git fetch && git rebase"
   },
   "husky": {
     "hooks": {

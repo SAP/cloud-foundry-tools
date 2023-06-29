@@ -5,6 +5,13 @@ module.exports = {
   configureWebpack: {
     devtool: "source-map",
   },
+  css: {
+    loaderOptions: {
+      postcss: {
+        "postcss-preset-env": {},
+      },
+    },
+  },
   pages: {
     app: {
       // entry for the page

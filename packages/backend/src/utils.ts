@@ -59,27 +59,32 @@ export function toText(e: Error): string {
   return _.get(e, "message") || _.get(e, "name", _.toString(e));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getEnvResources(envFilePath: string): Promise<any> {
+export function getEnvResources(envFilePath: string): Promise<{ vcapObject: any; isQuotedVcap: boolean }> {
   try {
+    let isQuotedVcap = false;
     if (existsSync(envFilePath)) {
       const envProperties = PropertiesReader(envFilePath);
-      const vcapProperty = envProperties.getRaw(ENV_VCAP_RESOURCES);
+      let vcapProperty = envProperties.getRaw(ENV_VCAP_RESOURCES);
       if (vcapProperty) {
-        return Promise.resolve(JSON.parse(vcapProperty));
+        // In case VCAP_SERVICES is wrapped with single quotes - unwrap it
+        if (_.startsWith(vcapProperty, "'") && _.endsWith(vcapProperty, "'")) {
+          vcapProperty = vcapProperty.substring(1, vcapProperty.length - 1);
+          isQuotedVcap = true;
+        }
+        return Promise.resolve({ vcapObject: JSON.parse(vcapProperty), isQuotedVcap });
       } else {
         getModuleLogger(LOGGER_MODULE).debug(
           "getEnvResources: the '.env' file is missing a key <%s>",
           ENV_VCAP_RESOURCES,
           { filePath: envFilePath }
         );
-        return Promise.resolve(null);
+        return Promise.resolve({ vcapObject: null, isQuotedVcap });
       }
     } else {
       getModuleLogger(LOGGER_MODULE).debug("getEnvResources: the '.env' file does not exist", {
         filePath: envFilePath,
       });
-      return Promise.resolve(null);
+      return Promise.resolve({ vcapObject: null, isQuotedVcap });
     }
   } catch (error) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -115,7 +120,8 @@ export async function removeResourceFromEnv(
 ): Promise<{ resourceName: string; envPath: string; resourceData: any }> {
   let instanceData;
   const envFilePath: string = bindContext.envPath.fsPath;
-  const vcapServicesObj = await getEnvResources(envFilePath);
+  const envResources = await getEnvResources(envFilePath);
+  const vcapServicesObj = envResources.vcapObject;
   const bindResourceType =
     bindContext.depContext.type === types.DependencyType.runtimeservice
       ? bindContext.depContext.displayType
@@ -161,7 +167,11 @@ export async function removeResourceFromEnv(
 
   // Update VCAP_SERVICES in the .env file
   const envProperties = PropertiesReader(envFilePath);
-  envProperties.set(ENV_VCAP_RESOURCES, JSON.stringify(vcapServicesObj));
+
+  // If VCAP_SERVICES was already wrapped with single quotes - maintain them when writing back
+  const quote = envResources.isQuotedVcap ? "'" : "";
+  envProperties.set(ENV_VCAP_RESOURCES, quote + JSON.stringify(vcapServicesObj) + quote);
+
   await envProperties.save(envFilePath);
   return { resourceName: instanceName, envPath: envFilePath, resourceData: instanceData };
 }
