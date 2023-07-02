@@ -4,7 +4,7 @@ import { expect } from "chai";
 import * as proxyquire from "proxyquire";
 import { cfendpoint } from "@sap/bas-sdk";
 
-import { mock, SinonMock, stub } from "sinon";
+import { mock, SinonMock } from "sinon";
 
 describe("loginTargetView tests", () => {
   let cfApiMock: SinonMock;

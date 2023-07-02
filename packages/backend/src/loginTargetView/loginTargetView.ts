@@ -19,7 +19,6 @@ import {
   cfSetOrgSpace,
   Space,
 } from "@sap/cf-tools";
-import * as _ from "lodash";
 import { messages } from "../messages";
 import { join, sep } from "path";
 import { cfendpoint } from "@sap/bas-sdk";
