@@ -21,7 +21,8 @@
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "env": {
-        "CF_API_ENDPOINT": "https://api.cf.sap.hana.ondemand.com"
+        "CF_API_ENDPOINT": "https://api.cf.sap.hana.ondemand.com",
+        "TENANT_LANDSCAPE_LABEL": "cf-eu10-canary"
       },
       "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/backend"],
       "outFiles": ["${workspaceFolder}/packages/backend/dist/**/*.js"],
