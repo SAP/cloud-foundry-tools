@@ -336,7 +336,7 @@
     "comment-json": "4.2.2",
     "lodash": "4.17.21",
     "properties-reader": "2.2.0",
-    "@sap/bas-sdk": "3.4.0"
+    "@sap/bas-sdk": "3.4.1"
   },
   "devDependencies": {
     "@types/chai": "^4.3.1",
