@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [7.3.0](https://github.com/SAP/cloud-foundry-tools/compare/v7.2.2...v7.3.0) (2023-07-04)
+
+**Note:** Version bump only for package cloud-foundry-tools-frontend
+
 ## [7.2.2](https://github.com/SAP/cloud-foundry-tools/compare/v7.2.1...v7.2.2) (2023-06-29)
 
 ### Bug Fixes
