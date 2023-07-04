@@ -19,9 +19,9 @@ import {
   cfSetOrgSpace,
   Space,
 } from "@sap/cf-tools";
-import * as _ from "lodash";
 import { messages } from "../messages";
 import { join, sep } from "path";
+import { cfendpoint } from "@sap/bas-sdk";
 
 let _rpc: RpcExtension;
 
@@ -133,7 +133,7 @@ async function getTarget(): Promise<ITarget | undefined> {
 
 function getCFDefaultLandscape(): Promise<string> {
   return cfGetConfigFileField("Target").then((cfgEndpoint: string) => {
-    return cfgEndpoint || _.get(process, "env.CF_API_ENDPOINT", "");
+    return cfgEndpoint || cfendpoint.getCFEndpoint();
   });
 }
 

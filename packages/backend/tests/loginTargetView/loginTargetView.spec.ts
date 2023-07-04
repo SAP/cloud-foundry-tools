@@ -2,11 +2,13 @@ import { Organization, Space } from "@sap/cf-tools";
 import { fail } from "assert";
 import { expect } from "chai";
 import * as proxyquire from "proxyquire";
+import { cfendpoint } from "@sap/bas-sdk";
 
-import { mock, SinonMock, stub } from "sinon";
+import { mock, SinonMock } from "sinon";
 
 describe("loginTargetView tests", () => {
   let cfApiMock: SinonMock;
+  let cfendpointMock: SinonMock;
   const cfApiProxy = {
     cfGetConfigFileField: () => Promise.reject(new Error("not implemented")),
     cfGetAvailableOrgs: () => Promise.reject(new Error("not implemented")),
@@ -26,19 +28,17 @@ describe("loginTargetView tests", () => {
 
   beforeEach(() => {
     cfApiMock = mock(cfApiProxy);
+    cfendpointMock = mock(cfendpoint);
   });
 
   afterEach(() => {
     cfApiMock.verify();
+    cfendpointMock.verify();
   });
 
   describe("getCFDefaultLandscape", () => {
     const envEndpoint = "https://my.env.endpoint";
     const fileEndpoint = "https://my.test.endpoint";
-
-    beforeEach(() => {
-      stub(process, "env").value({ CF_API_ENDPOINT: envEndpoint });
-    });
 
     it("ok:: getCFDefaultLandscape - 'Target' is defined in .cf config file - return it first", async () => {
       cfApiMock.expects("cfGetConfigFileField").withExactArgs("Target").resolves(fileEndpoint);
@@ -47,6 +47,7 @@ describe("loginTargetView tests", () => {
 
     it("ok:: getCFDefaultLandscape - 'Target' is undefined in .cf config file - fetch from env", async () => {
       cfApiMock.expects("cfGetConfigFileField").withExactArgs("Target").resolves();
+      cfendpointMock.expects("getCFEndpoint").resolves(envEndpoint);
       expect(await internal.getCFDefaultLandscape()).to.be.equal(envEndpoint);
     });
 
