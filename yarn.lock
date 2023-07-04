@@ -2469,7 +2469,7 @@
   dependencies:
     ws "^7.2.3"
 
-"@sap/bas-sdk@^3.4.1":
+"@sap/bas-sdk@3.4.1":
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/@sap/bas-sdk/-/bas-sdk-3.4.1.tgz#bdedf0c234ac47a123aca8dae68accb24568fd27"
   integrity sha512-CoGapdViKpu4Kz947RGSuBFbtYCY9E6wWdZyc6097WR1LaThXpAU/p5pavRjMly1X4Aof2NlZ9/j7CdlJjHTfw==
