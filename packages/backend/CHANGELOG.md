@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [7.3.0](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.2.2...v7.3.0) (2023-07-04)
+
+### Features
+
+- support new functionality of bas-sdk cfendpoint api ([#260](https://github.com/sap-staging/cloud-foundry-tools/issues/260)) ([071fc6c](https://github.com/sap-staging/cloud-foundry-tools/commit/071fc6cd199c5177017daeada712a7ebb70582ca)), closes [#259](https://github.com/sap-staging/cloud-foundry-tools/issues/259)
+
 ## [7.2.2](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.2.1...v7.2.2) (2023-06-29)
 
 **Note:** Version bump only for package vscode-wing-cf-tools

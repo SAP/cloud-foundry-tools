@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [7.3.0](https://github.com/SAP/cloud-foundry-tools/compare/v7.2.2...v7.3.0) (2023-07-04)
+
+### Bug Fixes
+
+- yarn.lock issue ([e36b03e](https://github.com/SAP/cloud-foundry-tools/commit/e36b03e1ff9852b0706b95971cf6a4f20cc56b96))
+
+### Features
+
+- support new functionality of bas-sdk cfendpoint api ([#260](https://github.com/SAP/cloud-foundry-tools/issues/260)) ([071fc6c](https://github.com/SAP/cloud-foundry-tools/commit/071fc6cd199c5177017daeada712a7ebb70582ca)), closes [#259](https://github.com/SAP/cloud-foundry-tools/issues/259)
+
 ## [7.2.2](https://github.com/SAP/cloud-foundry-tools/compare/v7.2.1...v7.2.2) (2023-06-29)
 
 ### Bug Fixes
