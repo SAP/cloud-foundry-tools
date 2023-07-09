@@ -25,14 +25,19 @@
       <span class="subtitle-color-field">Enter Cloud Foundry Endpoint </span><span class="text-danger">*</span>
       <br />
       <vscode-text-field
+        id="cfEndpointInput"
         class="pt-8"
         size="50"
-        type="Url"
+        type="url"
+        ref="cfendpointInput"
         :value="this.target.defaultEndpoint"
         @input="setEndpoint"
+        v-on:keyup="btnStatus"
       ></vscode-text-field>
+      <div v-if="!isCFEndpointValid" class="error-container">
+        <div class="invalid-endpoint-error">Please enter a valid URL.</div>
+      </div>
       <br /><br />
-
       <span class="subtitle-color-field">Select authentication method </span>
 
       <v-mdi
@@ -168,6 +173,7 @@ export default {
       passcode: "",
       username: "",
       password: "",
+      isCFEndpointValid: true,
     };
   },
   updated() {
@@ -198,13 +204,19 @@ export default {
   },
   methods: {
     btnStatus() {
-      if (this.ssoOrCredentials == "Credentials" && this.username != "" && this.password != "")
-        this.disableButton = false;
-      else if (this.ssoOrCredentials == "SSO" && this.passcode != "") this.disableButton = false;
-      else this.disableButton = true;
+      if (this.endpoint && this.isCFEndpointValid) {
+        if (this.ssoOrCredentials == "Credentials" && this.username != "" && this.password != "") {
+          this.disableButton = false;
+        } else if (this.ssoOrCredentials == "SSO" && this.passcode != "") {
+          this.disableButton = false;
+        }
+      } else {
+        this.disableButton = true;
+      }
     },
     setEndpoint(val) {
       this.endpoint = val.target.value.replace(/ /g, "");
+      this.isCFEndpointValid = this.endpoint !== "" && this.$refs?.cfendpointInput?.control?.validity?.valid;
     },
     paste() {
       navigator.clipboard.readText().then((clipText) => {
@@ -287,9 +299,21 @@ svg.mdi-icon {
   padding-top: 16px;
 }
 .pt-8 {
-  padding-top: 8px;
+  margin-top: 8px;
 }
 .pt-8::part(control)::placeholder {
   font-style: italic;
+}
+
+#cfEndpointInput:invalid {
+  border: 1px solid var(--vscode-inputValidation-errorBorder, red);
+}
+.error-container {
+  margin-top: 4px;
+}
+.invalid-endpoint-error {
+  color: var(--vscode-inputValidation-errorBorder, red);
+  font-size: 13px;
+  font-family: var(--vscode-font-family, Arial, Helvetica, sans-serif);
 }
 </style>
