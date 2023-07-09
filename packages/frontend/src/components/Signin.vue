@@ -35,7 +35,7 @@
         v-on:keyup="btnStatus"
       ></vscode-text-field>
       <div v-if="!isCFEndpointValid" class="error-container">
-        <div class="invalid-endpoint-error">Please enter a valid URL.</div>
+        <div class="invalid-endpoint-error">You must provide a valid URL</div>
       </div>
       <br /><br />
       <span class="subtitle-color-field">Select authentication method </span>
