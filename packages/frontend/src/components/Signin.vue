@@ -27,6 +27,7 @@
       <vscode-text-field
         id="cfEndpointInput"
         class="pt-8"
+        :class="{ 'invalid-input-field': !isCFEndpointValid }"
         size="50"
         type="url"
         ref="cfendpointInput"
@@ -315,5 +316,8 @@ svg.mdi-icon {
   color: var(--vscode-inputValidation-errorBorder, red);
   font-size: 13px;
   font-family: var(--vscode-font-family, Arial, Helvetica, sans-serif);
+}
+.invalid-input-field {
+  border: 1px solid var(--vscode-inputValidation-errorBorder, red);
 }
 </style>
