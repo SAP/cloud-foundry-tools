@@ -210,6 +210,8 @@ export default {
           this.disableButton = false;
         } else if (this.ssoOrCredentials == "SSO" && this.passcode != "") {
           this.disableButton = false;
+        } else {
+          this.disableButton = true;
         }
       } else {
         this.disableButton = true;
