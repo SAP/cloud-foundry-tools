@@ -1,19 +1,17 @@
-import Vue from "vue";
+import { createApp } from "vue";
 import CFSignIn from "./App";
 import VueMdijs from "vue-mdijs";
 import { mdiCheckCircleOutline, mdiHelpCircleOutline, mdiCloseCircleOutline } from "@mdi/js";
-import { VTooltip, VPopover, VClosePopover } from "v-tooltip";
-import vSelect from "vue-select";
-import "vue-select/dist/vue-select.css";
+// import { VTooltip, VPopover, VClosePopover } from "v-tooltip";
 
-Vue.config.productionTip = false;
+const app = createApp(CFSignIn);
+app.config.compilerOptions.isCustomElement = (tag) => tag.startsWith("ui5-") || tag.startsWith("vscode-");
 VueMdijs.add({ mdiCheckCircleOutline, mdiHelpCircleOutline, mdiCloseCircleOutline });
-Vue.use(VueMdijs);
-Vue.directive("tooltip", VTooltip);
-Vue.directive("close-popover", VClosePopover);
-Vue.component("v-popover", VPopover);
-Vue.component("v-select", vSelect);
+app.use(VueMdijs);
 
-new Vue({
-  render: (h) => h(CFSignIn),
-}).$mount("#app");
+// app.directive("tooltip", VTooltip);
+// app.directive("close-popover", VClosePopover);
+// // eslint-disable-next-line vue/component-definition-name-casing
+// app.component("v-popover", VPopover);
+
+app.mount("#app");

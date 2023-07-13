@@ -1,12 +1,12 @@
 <template>
   <div>
-    <h1 wrapping-type="Normal">Cloud Foundry Sign In and Targets</h1>
+    <h1 wrapping-type="Normal">Cloud Foundry Sign In and Targets (Test Vue3)</h1>
     <span class="subtitle-field">
       Provide your Cloud Foundry parameters to sign in to the Cloud Foundry enviroment</span
     >
     <br />
     <br />
-    <vscode-divider role="separator"></vscode-divider>
+    <vscode-divider role="separator" />
     <br />
   </div>
 </template>
@@ -16,7 +16,7 @@ import { provideVSCodeDesignSystem, vsCodeDivider } from "@vscode/webview-ui-too
 provideVSCodeDesignSystem().register(vsCodeDivider());
 
 export default {
-  name: "Header",
+  name: "CFHeader",
   props: [],
 };
 </script>
