@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node_version: [14.x, 16.x]
+        node_version: [16.x, 18.x]
       # https://stackoverflow.com/questions/61070925/github-actions-disable-auto-cancel-when-job-fails
       fail-fast: false
 
