@@ -56,9 +56,9 @@
   "devDependencies": {
     "@babel/preset-env": "7.11.5",
     "@vscode/codicons": "^0.0.30",
-    "@vue/cli-plugin-babel": "4.5.4",
-    "@vue/cli-plugin-unit-jest": "4.5.4",
-    "@vue/cli-service": "4.5.4",
+    "@vue/cli-plugin-babel": "5.0.8",
+    "@vue/cli-plugin-unit-jest": "5.0.8",
+    "@vue/cli-service": "5.0.8",
     "@vue/compiler-sfc": "3.3.4",
     "@vue/test-utils": "1.0.5",
     "babel-eslint": "^10.0.1",
