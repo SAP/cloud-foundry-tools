@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.3.4](https://github.com/SAP/cloud-foundry-tools/compare/v7.3.3...v7.3.4) (2023-08-09)
+
+### Bug Fixes
+
+- update bas-sdk version ([ade94ba](https://github.com/SAP/cloud-foundry-tools/commit/ade94bae6f6992047bfb8e98a9594eb045033cae))
+- update yarn lock of bas sdk ([7957bbe](https://github.com/SAP/cloud-foundry-tools/commit/7957bbed47fb8bcc62cdf73f948ef1665fef62b3))
+
 ## [7.3.3](https://github.com/SAP/cloud-foundry-tools/compare/v7.3.2...v7.3.3) (2023-07-09)
 
 ### Bug Fixes
