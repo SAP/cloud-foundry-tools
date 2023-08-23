@@ -39,9 +39,26 @@ export function setTestConfigs(data: any) {
   configs = data;
 }
 
+export enum ViewColumn {
+  Active = -1,
+  Beside = -2,
+  One = 1,
+  Two = 2,
+  Three = 3,
+  Four = 4,
+  Five = 5,
+  Six = 6,
+  Seven = 7,
+  Eight = 8,
+  Nine = 9,
+}
+
 class Uri {
   public static file(testpath: string): vscode.Uri {
     return new Uri("file", "", testpath || (isWindows ? "\\" : "/"), "", "");
+  }
+  public static parse(testpath: string): vscode.Uri {
+    return new Uri("http", "", testpath || (isWindows ? "\\" : "/"), "", "");
   }
   public readonly path: string;
   public readonly scheme: string;
@@ -63,7 +80,7 @@ class Uri {
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public toString(skipEncoding?: boolean): string {
-    return "";
+    return this.fsPath;
   }
   public toJSON(): any {
     return {};
@@ -95,6 +112,7 @@ export function setTestSelectedQuickPicks(data: any) {
 
 export const testVscode = {
   Uri,
+  ViewColumn,
   RelativePattern,
   Progress: {
     report: () => {
@@ -156,6 +174,7 @@ export const testVscode = {
       return;
     },
     createStatusBarItem: () => "",
+    createWebviewPanel: () => Promise.resolve(),
   },
   workspace: {
     rootPath: path.resolve("."),
@@ -231,6 +250,11 @@ export const testVscode = {
     constructor(id: string, color?: vscode.ThemeColor) {
       this.id = id;
     }
+  },
+  WebviewPanel: {
+    webview: {
+      onDidReceiveMessage: () => {},
+    },
   },
 };
 
