@@ -5,9 +5,12 @@ import * as proxyquire from "proxyquire";
 import { cfendpoint } from "@sap/bas-sdk";
 
 import { mock, SinonMock } from "sinon";
+// import { internal} from "../../src/loginTargetView/loginTargetView";
+import * as nsVsMock from "./../ext/mockVscode";
 
 describe("loginTargetView tests", () => {
   let cfApiMock: SinonMock;
+  let mockCommands: SinonMock;
   let cfendpointMock: SinonMock;
   const cfApiProxy = {
     cfGetConfigFileField: () => Promise.reject(new Error("not implemented")),
@@ -17,22 +20,27 @@ describe("loginTargetView tests", () => {
   let internal: any;
 
   before(() => {
-    internal = proxyquire("../../src/loginTargetView/loginTargetView", {
+    const m = proxyquire("../../src/loginTargetView/loginTargetView", {
       vscode: {
+        ...nsVsMock.testVscode,
         "@noCallThru": true,
       },
       "@sap/cf-tools": cfApiProxy,
       "@noCallThru": true,
-    }).internal;
+    });
+    internal = m.internal;
+    internal._rpc = { invoke: () => Promise.resolve() };
   });
 
   beforeEach(() => {
     cfApiMock = mock(cfApiProxy);
+    mockCommands = mock(nsVsMock.testVscode.commands);
     cfendpointMock = mock(cfendpoint);
   });
 
   afterEach(() => {
     cfApiMock.verify();
+    mockCommands.verify();
     cfendpointMock.verify();
   });
 
@@ -42,7 +50,8 @@ describe("loginTargetView tests", () => {
 
     it("ok:: getCFDefaultLandscape - 'Target' is defined in .cf config file - return it first", async () => {
       cfApiMock.expects("cfGetConfigFileField").withExactArgs("Target").resolves(fileEndpoint);
-      expect(await internal.getCFDefaultLandscape()).to.be.equal(fileEndpoint);
+      const instance = new internal.LoginTarget({ webview: { onDidReceiveMessage: () => {} } });
+      expect(await instance["getCFDefaultLandscape"]()).to.be.equal(fileEndpoint);
     });
 
     it("ok:: getCFDefaultLandscape - 'Target' is undefined in .cf config file - fetch from env", async () => {
@@ -92,5 +101,14 @@ describe("loginTargetView tests", () => {
   it("ok:: calculatePasscodeUrl", () => {
     const endpoint = "https://api.cf.test.org.my.com";
     expect(internal.calculatePasscodeUrl(endpoint)).to.be.equal("https://login.cf.test.org.my.com/passcode");
+  });
+
+  it.only("", () => {
+    // const mockRpc = mock(internal._rpc);
+    // mockRpc.expects("invoke").resolves();
+    // m.invokeLongFunctionWithProgressForm(f);
+    const instance = new internal.LoginTarget({ webview: { onDidReceiveMessage: () => {} } });
+    mockCommands.expects("executeCommand").resolves();
+    const result = instance.openPasscodeLink("cf.api.test.sap.com");
   });
 });

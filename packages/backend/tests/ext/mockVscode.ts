@@ -43,6 +43,9 @@ class Uri {
   public static file(testpath: string): vscode.Uri {
     return new Uri("file", "", testpath || (isWindows ? "\\" : "/"), "", "");
   }
+  public static parse(testpath: string): vscode.Uri {
+    return new Uri("file", "", testpath || (isWindows ? "\\" : "/"), "", "");
+  }
   public readonly path: string;
   public readonly scheme: string;
   public readonly authority: string;
