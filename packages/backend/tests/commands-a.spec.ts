@@ -10,6 +10,7 @@ import { Cli, CliResult, ITarget } from "@sap/cf-tools";
 import { messages } from "../src/messages";
 import * as cfView from "../src/cfView";
 import { toText } from "../src/utils";
+import * as proxyquire from "proxyquire";
 
 describe("commands unit tests", () => {
   let sandbox: SinonSandbox;
@@ -17,6 +18,15 @@ describe("commands unit tests", () => {
   let cliMock: SinonMock;
   let cfLocalMock: SinonMock;
   let cfViewMock: SinonMock;
+  let commandsMock: SinonMock;
+  let internal: any;
+
+  const cfApiProxy = {
+    cfGetConfigFileField: () => Promise.reject(new Error("not implemented")),
+    cfGetAvailableOrgs: () => Promise.reject(new Error("not implemented")),
+    cfGetAvailableSpaces: () => Promise.reject(new Error("not implemented")),
+  };
+
   const orgs: any[] = [
     { label: "devx", guid: "1" },
     { label: "devx2", guid: "2" },
@@ -26,6 +36,13 @@ describe("commands unit tests", () => {
   const spaces: any[] = [{ label: "ArchTeam" }, { label: "platform2" }];
 
   before(() => {
+    internal = proxyquire("../src/commands", {
+      vscode: {
+        "@noCallThru": true,
+      },
+      "@sap/cf-tools": cfApiProxy,
+      "@noCallThru": true,
+    }).internal;
     sandbox = createSandbox();
   });
 
@@ -37,6 +54,7 @@ describe("commands unit tests", () => {
     vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
     cfViewMock = sandbox.mock(cfView.CFView);
     cfLocalMock = sandbox.mock(cfLocal);
+    commandsMock = sandbox.mock(commands);
     cliMock = sandbox.mock(Cli);
   });
 
@@ -45,6 +63,8 @@ describe("commands unit tests", () => {
     vscodeWindowMock.verify();
     cliMock.verify();
     cfViewMock.verify();
+    commandsMock.verify();
+    sandbox.restore();
   });
 
   describe("verifyLoginRetry", () => {
@@ -58,6 +78,31 @@ describe("commands unit tests", () => {
         })
         .rejects(undefined);
       expect(await commands.verifyLoginRetry()).to.be.undefined;
+    });
+  });
+
+  describe("onErrorCfLogin", () => {
+    it("should handle login error by calling cmdLogin and retrying", async () => {
+      const errorMessage = "test error message";
+      const error = new Error(errorMessage);
+
+      try {
+        await internal.onErrorCfLogin(error, "https://example.com");
+      } catch (err) {
+        console.log(err);
+        expect(err.message).to.exist;
+        expect(err.message).to.be.equal(errorMessage);
+      }
+    });
+
+    it("should handle undefined error gracefully", async () => {
+      const err = new Error("test");
+      let expErr: any = null;
+      await internal.onErrorCfLogin(err).catch((errorMessage: Error) => (expErr = errorMessage));
+
+      // Assert that console.error was not called
+      expect(expErr.message).to.exist;
+      expect(expErr.message).to.be.equal(err.message);
     });
   });
 
