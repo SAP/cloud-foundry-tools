@@ -80,7 +80,7 @@ class Uri {
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public toString(skipEncoding?: boolean): string {
-    return "";
+    return this.fsPath;
   }
   public toJSON(): any {
     return {};

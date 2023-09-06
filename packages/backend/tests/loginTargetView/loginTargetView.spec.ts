@@ -9,10 +9,10 @@ import * as nsVsMock from "./../ext/mockVscode";
 import { mockVscode } from "../ext/mockUtil";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
 import { messages } from "../../src/messages";
-import * as extension from "../../src/extension";
+// import * as extension from "../../src/extension";
 import * as path from "path";
 import * as fs from "fs";
-import { openLoginView } from "../../src/loginTargetView/loginTargetView";
+// import { openLoginView } from "../../src/loginTargetView/loginTargetView";
 
 nsVsMock.setTestRoots(["/", "/some_path"]);
 
@@ -25,7 +25,7 @@ describe("loginTargetView tests", () => {
   let cfApiMock: SinonMock;
   let cfFsMock: SinonMock;
   let cfExtensionMock: SinonMock;
-  let cfPathMock: SinonMock;
+  // let cfPathMock: SinonMock;
   let cfendpointMock: SinonMock;
   let vscodeWindowMock: SinonMock;
   let cfLocalMock: SinonMock;
@@ -40,7 +40,7 @@ describe("loginTargetView tests", () => {
   let internal: any;
   let loginTargetInstance: typeof internal.LoginTarget;
 
-  const panelMock = {
+  const panelObj = {
     viewType: "myViewType",
     title: "My Webview Panel",
     webview: {
@@ -62,22 +62,33 @@ describe("loginTargetView tests", () => {
     dispose: () => {},
   };
 
+  // const extension = {
+  //   getPath: () =>  { throw new Error("not implemented"); }
+  // };
+  let internalModule: any;
+  const extensionPath = "api.cf.sap.hana.ondemand.com:8090";
+
   before(() => {
     sandbox = createSandbox();
-    internal = proxyquire("../../src/loginTargetView/loginTargetView", {
+    internalModule = proxyquire("../../src/loginTargetView/loginTargetView", {
       vscode: {
         ...nsVsMock.testVscode,
         "@noCallThru": true,
       },
       "@sap/cf-tools": cfApiProxy,
+      "../extension": {
+        getPath: () => extensionPath,
+        "@noCallThru": true,
+      },
       "@noCallThru": true,
-    }).internal;
+    });
+    internal = internalModule.internal;
   });
 
   beforeEach(() => {
     cfApiMock = mock(cfApiProxy);
-    cfExtensionMock = mock(extension);
-    cfPathMock = mock(path);
+    // cfExtensionMock = mock(extension);
+    // cfPathMock = mock(path);
     cfFsMock = mock(fs);
     cfendpointMock = mock(cfendpoint);
     cfLocalMock = sandbox.mock(cfLocal);
@@ -87,7 +98,7 @@ describe("loginTargetView tests", () => {
 
   afterEach(() => {
     cfApiMock.verify();
-    cfPathMock.verify();
+    // cfPathMock.verify();
     cfFsMock.verify();
     cfendpointMock.verify();
     sandbox.restore();
@@ -96,37 +107,32 @@ describe("loginTargetView tests", () => {
     vscodeCommandsMock.verify();
   });
 
+  let htmlContext = "<html><link href=</link><script src=></script><img src=></img></html>";
+
   describe("openLoginView", () => {
-    it("should open login view and handle login", async () => {
-      vscodeWindowMock.expects("createWebviewPanel").returns(panelMock);
-      cfExtensionMock.expects("getPath").returns("api.cf.sap.hana.ondemand.com:8090");
-      cfExtensionMock.expects("getPath").returns("api.cf.sap.hana.ondemand.com:8090");
-      cfPathMock.expects("join").returns("example");
-      cfPathMock
-        .expects("join")
-        .withArgs("api.cf.sap.hana.ondemand.com:8090/dist/media", "index.html")
-        .returns("api.cf.sap.hana.ondemand.com:8090/dist/media/index.html");
-      cfPathMock
-        .expects("join")
-        .withArgs("api.cf.sap.hana.ondemand.com:8090", "dist", "media")
-        .returns("api.cf.sap.hana.ondemand.com:8090/dist/media");
-      cfPathMock
-        .expects("join")
-        .withArgs("api.cf.sap.hana.ondemand.com:8090/dist/media", "\\")
-        .returns("api.cf.sap.hana.ondemand.com:8090/dist/media");
-      cfFsMock.expects("readFileSync").returns("readFileSync");
+    it.only("should open login view and handle login", async () => {
+      const panelMock = sandbox.mock(panelObj);
+      panelMock.expects("reveal").returns(undefined);
+      vscodeWindowMock
+        .expects("createWebviewPanel")
+        .withExactArgs("cfLogin", "Cloud Foundry Sign In", nsVsMock.testVscode.ViewColumn.Beside, {
+          enableScripts: true,
+          localResourceRoots: [nsVsMock.testVscode.Uri.file(path.join(extensionPath, "dist", "media"))],
+        })
+        .returns(panelObj);
+      cfFsMock
+        .expects("readFileSync")
+        .withExactArgs(path.join(extensionPath, "dist", "media", "index.html"), "utf8")
+        .returns(htmlContext);
 
       // Stub the rpcInvokeStub for invoking long function with progress form
       sandbox.stub(RpcExtension.prototype, "invoke").resolves(OK);
 
-      // internal.setPanel(panelMock);
-
-      // Call the openLoginView function
-      const resultPromise = openLoginView({ isSplit: true });
-      const result = await resultPromise;
-
-      // Wait for the resultPromise to be resolved
-      expect(result).to.deep.equal(OK); // You might want to adjust this expectation based on your use case
+      expect(await internalModule.openLoginView({ isSplit: true })).to.equal(OK);
+      const linkRef = panelObj.webview.html.match(/<link href=(.*)<\/link>/);
+      expect(linkRef).to.be.ok;
+      expect(linkRef![1]).to.be.equal(path.join(extensionPath, "dist", "media", "/"));
+      panelMock.verify();
     });
   });
 
@@ -138,7 +144,7 @@ describe("loginTargetView tests", () => {
   describe("getOrgs", () => {
     it("should fetch orgs successfully", async () => {
       const orgs: Organization[] = [{ label: "org", guid: "guid" }];
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       cfApiMock.expects("cfGetAvailableOrgs").resolves(orgs);
 
@@ -148,7 +154,7 @@ describe("loginTargetView tests", () => {
     });
 
     it("should handle error when fetching orgs", async () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       cfApiMock.expects("cfGetAvailableOrgs").rejects(new Error("Failed to fetch orgs"));
 
@@ -165,7 +171,7 @@ describe("loginTargetView tests", () => {
 
   describe("getTarget", () => {
     it("should fetch target successfully", async () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
       const api = {
         user: "user",
         space: "space",
@@ -181,7 +187,7 @@ describe("loginTargetView tests", () => {
     });
 
     it("should handle error when fetching target", async () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       const cfLogoutStub = sandbox.stub().rejects(new Error("Logout error"));
       mockPrivateMethod(loginTargetInstance, cfLogoutStub, "invokeLongFunctionWithProgressForm");
@@ -194,7 +200,7 @@ describe("loginTargetView tests", () => {
 
   describe("init", () => {
     it("should initialize with target when logged in", async () => {
-      const loginTargetInstance = new internal.LoginTarget(panelMock);
+      const loginTargetInstance = new internal.LoginTarget(panelObj);
 
       const cfGetTargetStub = sandbox
         .stub(loginTargetInstance, "getTarget")
@@ -223,7 +229,7 @@ describe("loginTargetView tests", () => {
     it("should fetch spaces successfully", async () => {
       const org = "org-1";
       const spaces: Space[] = [{ label: "space", guid: "guid", orgGUID: "orgGUID" }];
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       cfApiMock.expects("cfGetAvailableSpaces").withExactArgs(org).resolves(spaces);
 
@@ -234,7 +240,7 @@ describe("loginTargetView tests", () => {
 
     it("should handle error when fetching spaces", async () => {
       const org = "org-1";
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       cfApiMock.expects("cfGetAvailableSpaces").withExactArgs(org).rejects(new Error("Failed to fetch spaces"));
 
@@ -252,7 +258,7 @@ describe("loginTargetView tests", () => {
         space: "my-space",
       };
 
-      const loginTargetInstance = new internal.LoginTarget(panelMock);
+      const loginTargetInstance = new internal.LoginTarget(panelObj);
       loginTargetInstance["currentTarget"] = expectedTarget;
 
       const result = loginTargetInstance.getSelectedTarget();
@@ -263,7 +269,7 @@ describe("loginTargetView tests", () => {
     });
 
     it("should return undefined when no target is selected", () => {
-      const loginTargetInstance = new internal.LoginTarget(panelMock);
+      const loginTargetInstance = new internal.LoginTarget(panelObj);
       loginTargetInstance["currentTarget"] = undefined;
 
       const result = loginTargetInstance.getSelectedTarget();
@@ -281,7 +287,7 @@ describe("loginTargetView tests", () => {
 
   describe("logoutClick", () => {
     it("logoutClick should fail and return false", async () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       const cfLogoutStub = sandbox.stub().rejects(new Error("Logout error"));
       mockPrivateMethod(loginTargetInstance, cfLogoutStub, "invokeLongFunctionWithProgressForm");
@@ -293,7 +299,7 @@ describe("loginTargetView tests", () => {
     });
 
     it("should handle successful logout", async () => {
-      const loginTargetInstance = new internal.LoginTarget(panelMock);
+      const loginTargetInstance = new internal.LoginTarget(panelObj);
 
       // Mock the cfLogout function to resolve successfully
       const cfLogoutStub = sandbox.stub().resolves();
@@ -327,7 +333,7 @@ describe("loginTargetView tests", () => {
 
   describe("loginClick", () => {
     it("should handle successful login", async () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       // Mock the long function (cfLogin) to return a success result
       const cfLoginStub = sandbox.stub().resolves(OK);
@@ -345,7 +351,7 @@ describe("loginTargetView tests", () => {
     });
 
     it("should handle failed login and show error message", async () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       const loginResult = "Failed";
       const showMessageStub = vscodeWindowMock
@@ -365,7 +371,7 @@ describe("loginTargetView tests", () => {
     });
 
     it("should handle login exception and show error message", async () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       // Mock the long function (cfLogin) to throw an error
       const cfLoginStub = sandbox.stub().rejects(new Error("Login error"));
@@ -387,7 +393,7 @@ describe("loginTargetView tests", () => {
     it("ok:: applyTarget - successful set org and space", async () => {
       const org = "my-org";
       const space = "my-space";
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       // Mock the cfSetOrgSpace function to resolve successfully
       const cfSetOrgSpaceStub = sandbox.stub().resolves(OK);
@@ -403,7 +409,7 @@ describe("loginTargetView tests", () => {
     });
 
     it("should handle applyTarget exception and show error message", async () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       // Mock the cfSetOrgSpace function to resolve successfully
       cfApiProxy.cfSetOrgSpace = sandbox.stub().throws("err");
@@ -422,7 +428,7 @@ describe("loginTargetView tests", () => {
   describe("openPasscodeLink", () => {
     it("should open passcode link in vscode", async () => {
       const endpoint = "https://api.cf.test.org.my.com";
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
 
       vscodeCommandsMock.expects("executeCommand").resolves();
 
@@ -440,7 +446,7 @@ describe("loginTargetView tests", () => {
 
   describe("invokeLongFunctionWithProgressForm", () => {
     it("should invoke long function with progress form", async () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
       const longFunctionStub = sandbox.stub().resolves("result");
       const rpcInvokeStub = sandbox.stub(RpcExtension.prototype, "invoke");
 
@@ -453,7 +459,7 @@ describe("loginTargetView tests", () => {
     });
 
     it("should handle error when invoking long function", async () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
       const longFunctionStub = sandbox.stub().rejects(new Error("Function failed"));
       const rpcInvokeStub = sandbox.stub(RpcExtension.prototype, "invoke");
 
@@ -474,20 +480,20 @@ describe("loginTargetView tests", () => {
     const fileEndpoint = "https://my.test.endpoint";
 
     it("ok:: getCFDefaultLandscape - 'Target' is defined in .cf config file - return it first", async () => {
-      const loginTargetInstance = new internal.LoginTarget(panelMock);
+      const loginTargetInstance = new internal.LoginTarget(panelObj);
       cfApiMock.expects("cfGetConfigFileField").withExactArgs("Target").resolves(fileEndpoint);
       expect(await loginTargetInstance.getCFDefaultLandscape()).to.be.equal(fileEndpoint);
     });
 
     it("ok:: getCFDefaultLandscape - 'Target' is undefined in .cf config file - fetch from env", async () => {
-      const loginTargetInstance = new internal.LoginTarget(panelMock);
+      const loginTargetInstance = new internal.LoginTarget(panelObj);
       cfApiMock.expects("cfGetConfigFileField").withExactArgs("Target").resolves();
       cfendpointMock.expects("getCFEndpoint").resolves(envEndpoint);
       expect(await loginTargetInstance.getCFDefaultLandscape()).to.be.equal(envEndpoint);
     });
 
     it("fail:: getCFDefaultLandscape - cfGetConfigFileField is rejected", () => {
-      const loginTargetInstance = new internal.LoginTarget(panelMock);
+      const loginTargetInstance = new internal.LoginTarget(panelObj);
       const error = new Error("cfGetConfigFileField rejected");
       cfApiMock.expects("cfGetConfigFileField").withExactArgs("Target").rejects(error);
       return loginTargetInstance
@@ -502,14 +508,14 @@ describe("loginTargetView tests", () => {
   });
 
   function testPrivateMethodCalculatePasscodeUrl(endpoint: string) {
-    const loginTargetInstance = new internal.LoginTarget(panelMock);
+    const loginTargetInstance = new internal.LoginTarget(panelObj);
     // Call the private method through the instance
     return loginTargetInstance["calculatePasscodeUrl"](endpoint);
   }
 
   describe("calculatePasscodeUrl", () => {
     it("ok:: calculatePasscodeUrl", () => {
-      loginTargetInstance = new internal.LoginTarget(panelMock);
+      loginTargetInstance = new internal.LoginTarget(panelObj);
       const endpoint = "https://api.cf.test.org.my.com";
       expect(testPrivateMethodCalculatePasscodeUrl(endpoint)).to.be.equal("https://login.cf.test.org.my.com/passcode");
     });
