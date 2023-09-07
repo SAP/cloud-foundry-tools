@@ -3,7 +3,7 @@ import { fail } from "assert";
 import * as proxyquire from "proxyquire";
 import { createSandbox, mock, SinonMock, SinonSandbox } from "sinon";
 import { cfendpoint } from "@sap/bas-sdk";
-import { CredentialsLoginOptions, OK, Organization, Space, SSOLoginOptions } from "@sap/cf-tools";
+import { OK, Organization, Space, SSOLoginOptions } from "@sap/cf-tools";
 import { RpcExtension } from "@sap-devx/webview-rpc/out.ext/rpc-extension";
 import * as nsVsMock from "./../ext/mockVscode";
 import { mockVscode } from "../ext/mockUtil";
@@ -59,7 +59,7 @@ describe("loginTargetView tests", () => {
   };
 
   let internalModule: any;
-  const extensionPath = "api.cf.sap.hana.ondemand.com:8090";
+  const extensionPath = "api.sap.test.ondemand.com";
 
   before(() => {
     sandbox = createSandbox();
@@ -89,13 +89,12 @@ describe("loginTargetView tests", () => {
 
   afterEach(() => {
     cfApiMock.verify();
-    // cfPathMock.verify();
     cfFsMock.verify();
     cfendpointMock.verify();
-    sandbox.restore();
     cfLocalMock.verify();
     vscodeWindowMock.verify();
     vscodeCommandsMock.verify();
+    sandbox.restore();
   });
 
   const htmlContext = "<html><link href=</link><script src=></script><img src=></img></html>";
@@ -124,11 +123,6 @@ describe("loginTargetView tests", () => {
     });
   });
 
-  function testPrivateMethodGetOrgs(loginTargetInstance: typeof internal.LoginTarget) {
-    // Call the private method through the instance
-    return loginTargetInstance["getOrgs"]();
-  }
-
   describe("getOrgs", () => {
     it("should fetch orgs successfully", async () => {
       const orgs: Organization[] = [{ label: "org", guid: "guid" }];
@@ -136,7 +130,7 @@ describe("loginTargetView tests", () => {
 
       cfApiMock.expects("cfGetAvailableOrgs").resolves(orgs);
 
-      const result = await testPrivateMethodGetOrgs(loginTargetInstance);
+      const result = await loginTargetInstance.getOrgs();
 
       expect(result).to.deep.equal(orgs);
     });
@@ -146,16 +140,11 @@ describe("loginTargetView tests", () => {
 
       cfApiMock.expects("cfGetAvailableOrgs").rejects(new Error("Failed to fetch orgs"));
 
-      const result = await testPrivateMethodGetOrgs(loginTargetInstance);
+      const result = await loginTargetInstance.getOrgs();
 
       expect(result).to.deep.equal([]);
     });
   });
-
-  function testPrivateMethodGetTarget(loginTargetInstance: typeof internal.LoginTarget) {
-    // Call the private method through the instance
-    return loginTargetInstance["getTarget"]();
-  }
 
   describe("getTarget", () => {
     it("should fetch target successfully", async () => {
@@ -168,21 +157,20 @@ describe("loginTargetView tests", () => {
       const cfLogoutStub = sandbox.stub().resolves(api);
       mockPrivateMethod(loginTargetInstance, cfLogoutStub, "invokeLongFunctionWithProgressForm");
 
-      const result = await testPrivateMethodGetTarget(loginTargetInstance);
+      const result = await loginTargetInstance.getTarget();
 
-      expect(result.user).to.deep.equal(api.user);
-      expect(result.space).to.deep.equal(api.space);
+      expect(result.user).to.equal(api.user);
+      expect(result.space).to.equal(api.space);
     });
 
     it("should handle error when fetching target", async () => {
       loginTargetInstance = new internal.LoginTarget(panelObj);
-
       const cfLogoutStub = sandbox.stub().rejects(new Error("Logout error"));
       mockPrivateMethod(loginTargetInstance, cfLogoutStub, "invokeLongFunctionWithProgressForm");
 
-      const result = await testPrivateMethodGetTarget(loginTargetInstance);
+      const result = await loginTargetInstance.getTarget();
 
-      expect(result).to.deep.equal(undefined);
+      expect(result).to.equal(undefined);
     });
   });
 
@@ -192,26 +180,21 @@ describe("loginTargetView tests", () => {
 
       const cfGetTargetStub = sandbox
         .stub(loginTargetInstance, "getTarget")
-        .resolves({ "api endpoint": "https://api.example.com", org: "my-org", space: "my-space" });
+        .resolves({ "api endpoint": extensionPath, org: "my-org", space: "my-space" });
       mockPrivateMethod(loginTargetInstance, cfGetTargetStub, "getTarget");
 
-      const cfDefaultLandscape = sandbox.stub().resolves("https://api.example.com");
+      const cfDefaultLandscape = sandbox.stub().resolves(extensionPath);
       mockPrivateMethod(loginTargetInstance, cfDefaultLandscape, "getCFDefaultLandscape");
 
-      const result = await loginTargetInstance["init"]();
+      const result = await loginTargetInstance.init();
 
-      expect(result.defaultEndpoint).to.equal("https://api.example.com");
+      expect(result.defaultEndpoint).to.equal(extensionPath);
       expect(result.isLoggedIn).to.be.true;
-      expect(result.passcodeUrl).to.equal("https://login.example.com/passcode");
+      expect(result.passcodeUrl).to.equal("login.sap.test.ondemand.com/passcode");
       expect(result.currentOrg).to.equal("my-org");
       expect(result.currentSpace).to.equal("my-space");
     });
   });
-
-  function testPrivateMethodGetSpaces(loginTargetInstance: typeof internal.LoginTarget, org: any) {
-    // Call the private method through the instance
-    return loginTargetInstance["getSpaces"](org);
-  }
 
   describe("getSpaces", () => {
     it("should fetch spaces successfully", async () => {
@@ -221,7 +204,7 @@ describe("loginTargetView tests", () => {
 
       cfApiMock.expects("cfGetAvailableSpaces").withExactArgs(org).resolves(spaces);
 
-      const result = await testPrivateMethodGetSpaces(loginTargetInstance, org);
+      const result = await loginTargetInstance.getSpaces(org);
 
       expect(result).to.deep.equal(spaces);
     });
@@ -232,7 +215,7 @@ describe("loginTargetView tests", () => {
 
       cfApiMock.expects("cfGetAvailableSpaces").withExactArgs(org).rejects(new Error("Failed to fetch spaces"));
 
-      const result = await testPrivateMethodGetSpaces(loginTargetInstance, org);
+      const result = await loginTargetInstance.getSpaces(org);
 
       expect(result).to.deep.equal([]);
     });
@@ -241,7 +224,7 @@ describe("loginTargetView tests", () => {
   describe("getSelectedTarget", () => {
     it("should return selected target", () => {
       const expectedTarget = {
-        "api endpoint": "https://api.example.com",
+        "api endpoint": extensionPath,
         org: "my-org",
         space: "my-space",
       };
@@ -268,11 +251,6 @@ describe("loginTargetView tests", () => {
     });
   });
 
-  function testPrivateMethodLogoutClick(loginTargetInstance: typeof internal.LoginTarget) {
-    // Call the private method through the instance
-    return loginTargetInstance["logoutClick"]();
-  }
-
   describe("logoutClick", () => {
     it("logoutClick should fail and return false", async () => {
       loginTargetInstance = new internal.LoginTarget(panelObj);
@@ -280,7 +258,7 @@ describe("loginTargetView tests", () => {
       const cfLogoutStub = sandbox.stub().rejects(new Error("Logout error"));
       mockPrivateMethod(loginTargetInstance, cfLogoutStub, "invokeLongFunctionWithProgressForm");
 
-      const result = await testPrivateMethodLogoutClick(loginTargetInstance);
+      const result = await loginTargetInstance.logoutClick();
 
       expect(result).to.be.false;
       // Additional assertions could be made here if desired
@@ -302,23 +280,6 @@ describe("loginTargetView tests", () => {
     });
   });
 
-  function testPrivateMethodLoginClick(
-    loginTargetInstance: typeof internal.LoginTarget,
-    payload: SSOLoginOptions | CredentialsLoginOptions
-  ) {
-    // Call the private method through the instance
-    return loginTargetInstance["loginClick"](payload);
-  }
-
-  function mockPrivateMethod(
-    loginTargetInstance: typeof internal.LoginTarget,
-    cfLoginStub: any,
-    nameofPrivateMethod: string
-  ) {
-    // Call the private method through the instance
-    return (loginTargetInstance[nameofPrivateMethod] = cfLoginStub);
-  }
-
   describe("loginClick", () => {
     it("should handle successful login", async () => {
       loginTargetInstance = new internal.LoginTarget(panelObj);
@@ -331,9 +292,9 @@ describe("loginTargetView tests", () => {
         .withExactArgs(messages.login_success)
         .resolves();
 
-      const result = await testPrivateMethodLoginClick(loginTargetInstance, {} as SSOLoginOptions);
+      const result = await loginTargetInstance.loginClick({} as SSOLoginOptions);
 
-      expect(result).to.be.deep;
+      expect(result).to.be.true;
       expect(showMessageStub.calledOnceWith(messages.login_success)).to.be.true;
       expect(cfLoginStub.calledOnce).to.be.true;
     });
@@ -351,7 +312,7 @@ describe("loginTargetView tests", () => {
       const cfLoginStub = sandbox.stub().resolves(loginResult);
       mockPrivateMethod(loginTargetInstance, cfLoginStub, "invokeLongFunctionWithProgressForm");
 
-      const result = await testPrivateMethodLoginClick(loginTargetInstance, {} as SSOLoginOptions);
+      const result = await loginTargetInstance.loginClick({} as SSOLoginOptions);
 
       expect(result).to.be.false;
       expect(showMessageStub.calledOnceWith(messages.login_failed)).to.be.true;
@@ -365,17 +326,12 @@ describe("loginTargetView tests", () => {
       const cfLoginStub = sandbox.stub().rejects(new Error("Login error"));
       mockPrivateMethod(loginTargetInstance, cfLoginStub, "invokeLongFunctionWithProgressForm");
 
-      const result = await testPrivateMethodLoginClick(loginTargetInstance, {} as SSOLoginOptions);
+      const result = await loginTargetInstance.loginClick({} as SSOLoginOptions);
 
       expect(result).to.be.false;
       expect(cfLoginStub.calledOnce).to.be.true;
     });
   });
-
-  function testPrivateMethodApplyTarget(loginTargetInstance: typeof internal.LoginTarget, org: any, space: any) {
-    // Call the private method through the instance
-    return loginTargetInstance["applyTarget"](org, space);
-  }
 
   describe("applyTarget", () => {
     it("ok:: applyTarget - successful set org and space", async () => {
@@ -389,7 +345,7 @@ describe("loginTargetView tests", () => {
 
       vscodeWindowMock.expects("showInformationMessage").withExactArgs(messages.success_set_org_space).resolves();
 
-      const result = await testPrivateMethodApplyTarget(loginTargetInstance, org, space);
+      const result = await loginTargetInstance.applyTarget(org, space);
 
       // Check if cfSetOrgSpace was called with the correct arguments
       expect(cfSetOrgSpaceStub.calledOnceWith(org, space)).to.be.true;
@@ -402,35 +358,21 @@ describe("loginTargetView tests", () => {
       // Mock the cfSetOrgSpace function to resolve successfully
       cfApiProxy.cfSetOrgSpace = sandbox.stub().throws("err");
 
-      const result = await testPrivateMethodApplyTarget(loginTargetInstance, null, null);
+      const result = await loginTargetInstance.applyTarget(null, null);
 
       expect(result).to.equal("Error");
     });
   });
 
-  function testPrivateMethodOpenPasscodeLink(loginTargetInstance: typeof internal.LoginTarget, endpoint: any) {
-    // Call the private method through the instance
-    return loginTargetInstance["openPasscodeLink"](endpoint);
-  }
-
   describe("openPasscodeLink", () => {
     it("should open passcode link in vscode", async () => {
-      const endpoint = "https://api.cf.test.org.my.com";
       loginTargetInstance = new internal.LoginTarget(panelObj);
 
       vscodeCommandsMock.expects("executeCommand").resolves();
 
-      await testPrivateMethodOpenPasscodeLink(loginTargetInstance, endpoint);
+      await loginTargetInstance.openPasscodeLink(extensionPath);
     });
   });
-
-  function testPrivateMethodInvokeLongFunctionWithProgressForm(
-    loginTargetInstance: typeof internal.LoginTarget,
-    longFunctionStub: any
-  ) {
-    // Call the private method through the instance
-    return loginTargetInstance["invokeLongFunctionWithProgressForm"](longFunctionStub, "arg1", "arg2");
-  }
 
   describe("invokeLongFunctionWithProgressForm", () => {
     it("should invoke long function with progress form", async () => {
@@ -438,7 +380,7 @@ describe("loginTargetView tests", () => {
       const longFunctionStub = sandbox.stub().resolves("result");
       const rpcInvokeStub = sandbox.stub(RpcExtension.prototype, "invoke");
 
-      const result = await testPrivateMethodInvokeLongFunctionWithProgressForm(loginTargetInstance, longFunctionStub);
+      const result = await loginTargetInstance.invokeLongFunctionWithProgressForm(longFunctionStub, "arg1", "arg2");
 
       expect(result).to.equal("result");
       expect(rpcInvokeStub.calledTwice).to.be.true;
@@ -452,7 +394,7 @@ describe("loginTargetView tests", () => {
       const rpcInvokeStub = sandbox.stub(RpcExtension.prototype, "invoke");
 
       try {
-        await testPrivateMethodInvokeLongFunctionWithProgressForm(loginTargetInstance, longFunctionStub);
+        await loginTargetInstance.invokeLongFunctionWithProgressForm(longFunctionStub, "arg1", "arg2");
         fail("Should have thrown an error");
       } catch (error) {
         expect(error.message).to.equal("Function failed");
@@ -495,17 +437,21 @@ describe("loginTargetView tests", () => {
     });
   });
 
-  function testPrivateMethodCalculatePasscodeUrl(endpoint: string) {
-    const loginTargetInstance = new internal.LoginTarget(panelObj);
-    // Call the private method through the instance
-    return loginTargetInstance["calculatePasscodeUrl"](endpoint);
-  }
-
   describe("calculatePasscodeUrl", () => {
     it("ok:: calculatePasscodeUrl", () => {
       loginTargetInstance = new internal.LoginTarget(panelObj);
-      const endpoint = "https://api.cf.test.org.my.com";
-      expect(testPrivateMethodCalculatePasscodeUrl(endpoint)).to.be.equal("https://login.cf.test.org.my.com/passcode");
+      expect(loginTargetInstance.calculatePasscodeUrl(extensionPath)).to.be.equal(
+        "login.sap.test.ondemand.com/passcode"
+      );
     });
   });
+
+  function mockPrivateMethod(
+    loginTargetInstance: typeof internal.LoginTarget,
+    cfLoginStub: any,
+    nameofPrivateMethod: string
+  ) {
+    // Call the private method through the instance
+    return (loginTargetInstance[nameofPrivateMethod] = cfLoginStub);
+  }
 });

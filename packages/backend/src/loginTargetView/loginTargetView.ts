@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import * as extension from "../extension";
-import * as path from "path";
 import { join, sep } from "path";
 import * as fs from "fs";
 import { RpcExtension } from "@sap-devx/webview-rpc/out.ext/rpc-extension";
@@ -22,13 +21,10 @@ import {
 } from "@sap/cf-tools";
 import { messages } from "../messages";
 import { cfendpoint } from "@sap/bas-sdk";
+import { toText } from "../utils";
 
 let loginTarget: LoginTarget | undefined;
-let initTarget: { endpoint: string | undefined; org?: string | undefined; space?: string | undefined } = {
-  endpoint: undefined,
-  org: undefined,
-  space: undefined,
-};
+let initTarget: { endpoint: string | undefined; org?: string | undefined; space?: string | undefined };
 let panel: vscode.WebviewPanel | undefined;
 let isLoginOnly: boolean | undefined;
 let cmdLoginResult: string | undefined;
@@ -58,7 +54,7 @@ export function openLoginView(
         ? panel
         : vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", split, {
             enableScripts: true,
-            localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],
+            localResourceRoots: [vscode.Uri.file(join(extension.getPath(), "dist", "media"))],
           });
       panel.reveal();
       panel.onDidDispose(() => {
@@ -116,12 +112,11 @@ class LoginTarget {
     try {
       return (await this.invokeLongFunctionWithProgressForm(cfGetTarget, false)) as ITarget;
     } catch (e) {
-      // getModuleLogger(LOGGER_MODULE).error("no auth token", { exception: toText(e) }, { options: options });
-      console.log("need to login...");
-      // not logged in so need to show the login section
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const errText = toText(e);
+      getModuleLogger(LOGGER_MODULE).error("getTarget failed", { exception: errText });
       return undefined;
     }
-    //logged in then need to show the target section
   }
 
   private getCFDefaultLandscape(): Promise<string> {
@@ -136,6 +131,9 @@ class LoginTarget {
 
   async init(): Promise<any> {
     this.currentTarget = await this.getTarget();
+    if (!initTarget) {
+      initTarget = { endpoint: undefined, org: undefined, space: undefined };
+    }
 
     initTarget.endpoint = initTarget?.endpoint
       ? initTarget?.endpoint
