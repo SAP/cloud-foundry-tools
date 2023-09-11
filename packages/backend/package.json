@@ -1,7 +1,7 @@
 {
   "name": "vscode-wing-cf-tools",
   "displayName": "Cloud Foundry Tools",
-  "version": "7.3.3",
+  "version": "7.3.4",
   "private": true,
   "description": "Vscode extension of Cloud Foundry tools",
   "categories": [
@@ -328,7 +328,7 @@
   },
   "dependencies": {
     "@sap-devx/webview-rpc": "^0.4.1",
-    "@sap/bas-sdk": "3.4.2",
+    "@sap/bas-sdk": "3.4.3",
     "@sap/cf-tools": "3.2.0",
     "@sap/swa-for-sapbas-vsx": "1.2.15",
     "@sap/wing-run-config-types": "4.2.0",
