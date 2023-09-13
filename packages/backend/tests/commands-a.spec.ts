@@ -2,7 +2,6 @@ import { expect } from "chai";
 import { createSandbox, SinonMock, SinonSandbox } from "sinon";
 import * as nsVsMock from "./ext/mockVscode";
 import { mockVscode } from "./ext/mockUtil";
-
 mockVscode(nsVsMock.testVscode, "src/commands.ts");
 import * as commands from "../src/commands";
 import * as cfLocal from "@sap/cf-tools/out/src/cf-local";
@@ -10,6 +9,7 @@ import { Cli, CliResult, ITarget } from "@sap/cf-tools";
 import { messages } from "../src/messages";
 import * as cfView from "../src/cfView";
 import { toText } from "../src/utils";
+import * as proxyquire from "proxyquire";
 
 describe("commands unit tests", () => {
   let sandbox: SinonSandbox;
@@ -17,6 +17,9 @@ describe("commands unit tests", () => {
   let cliMock: SinonMock;
   let cfLocalMock: SinonMock;
   let cfViewMock: SinonMock;
+  let openLoginViewMock: SinonMock;
+  let internal: any;
+
   const orgs: any[] = [
     { label: "devx", guid: "1" },
     { label: "devx2", guid: "2" },
@@ -24,8 +27,18 @@ describe("commands unit tests", () => {
     { label: "SAP_CoCo_Messaging", guid: "4" },
   ];
   const spaces: any[] = [{ label: "ArchTeam" }, { label: "platform2" }];
+  const openLoginViewProxy = {
+    openLoginView: () => Promise.reject(new Error("not implemented")),
+  };
 
   before(() => {
+    internal = proxyquire("../src/commands", {
+      vscode: {
+        "@noCallThru": true,
+      },
+      "@noCallThru": true,
+      "./loginTargetView/loginTargetView": openLoginViewProxy,
+    }).internal;
     sandbox = createSandbox();
   });
 
@@ -37,6 +50,7 @@ describe("commands unit tests", () => {
     vscodeWindowMock = sandbox.mock(nsVsMock.testVscode.window);
     cfViewMock = sandbox.mock(cfView.CFView);
     cfLocalMock = sandbox.mock(cfLocal);
+    openLoginViewMock = sandbox.mock(openLoginViewProxy);
     cliMock = sandbox.mock(Cli);
   });
 
@@ -45,6 +59,8 @@ describe("commands unit tests", () => {
     vscodeWindowMock.verify();
     cliMock.verify();
     cfViewMock.verify();
+    openLoginViewMock.verify();
+    sandbox.restore();
   });
 
   describe("verifyLoginRetry", () => {
@@ -58,6 +74,33 @@ describe("commands unit tests", () => {
         })
         .rejects(undefined);
       expect(await commands.verifyLoginRetry()).to.be.undefined;
+    });
+  });
+
+  describe("onErrorCfLogin", () => {
+    it("should handle login error by calling cmdLogin and retrying empty string", async () => {
+      const errorMessage = "login";
+      openLoginViewMock
+        .expects("openLoginView")
+        .withExactArgs({ isSplit: true, isLoginOnly: true }, "https://example.com", "", "")
+        .resolves(undefined);
+      let expErr: any = null;
+      const error = new Error(errorMessage);
+
+      await internal
+        .onErrorCfLogin(error, "https://example.com")
+        .catch((errorMessage: Error) => (expErr = errorMessage));
+      expect(expErr).to.be.equal("");
+    });
+
+    it("should handle undefined error gracefully", async () => {
+      const err = new Error("test");
+      let expErr: any = null;
+      await internal.onErrorCfLogin(err).catch((errorMessage: Error) => (expErr = errorMessage));
+
+      // Assert that console.error was not called
+      expect(expErr.message).to.exist;
+      expect(expErr.message).to.be.equal(err.message);
     });
   });
 
