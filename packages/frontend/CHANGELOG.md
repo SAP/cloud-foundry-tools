@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.3.4](https://github.com/SAP/cloud-foundry-tools/compare/v7.3.3...v7.3.4) (2023-08-09)
+
+**Note:** Version bump only for package cloud-foundry-tools-frontend
+
+## [7.3.3](https://github.com/SAP/cloud-foundry-tools/compare/v7.3.2...v7.3.3) (2023-07-09)
+
+### Bug Fixes
+
+- validate CF endpoint URL for security ([#262](https://github.com/SAP/cloud-foundry-tools/issues/262)) ([c675000](https://github.com/SAP/cloud-foundry-tools/commit/c675000514ced213ff21f6c4534161435b2ce794))
+
+## [7.3.2](https://github.com/SAP/cloud-foundry-tools/compare/v7.3.1...v7.3.2) (2023-07-06)
+
+**Note:** Version bump only for package cloud-foundry-tools-frontend
+
+## [7.3.1](https://github.com/SAP/cloud-foundry-tools/compare/v7.3.0...v7.3.1) (2023-07-04)
+
+**Note:** Version bump only for package cloud-foundry-tools-frontend
+
+# [7.3.0](https://github.com/SAP/cloud-foundry-tools/compare/v7.2.2...v7.3.0) (2023-07-04)
+
+**Note:** Version bump only for package cloud-foundry-tools-frontend
+
+## [7.2.2](https://github.com/SAP/cloud-foundry-tools/compare/v7.2.1...v7.2.2) (2023-06-29)
+
+### Bug Fixes
+
+- sign out button in fiori themes ([#259](https://github.com/SAP/cloud-foundry-tools/issues/259)) ([d4bfa2e](https://github.com/SAP/cloud-foundry-tools/commit/d4bfa2e4d8f0dd6e130ca7a8f1865fffd7ece3d5))
+
 ## [7.2.1](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.2.0...v7.2.1) (2023-02-15)
 
 **Note:** Version bump only for package cloud-foundry-tools-frontend
