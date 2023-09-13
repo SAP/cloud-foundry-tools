@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.3.4](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.3.3...v7.3.4) (2023-08-09)
+
+### Bug Fixes
+
+- update bas-sdk version ([ade94ba](https://github.com/sap-staging/cloud-foundry-tools/commit/ade94bae6f6992047bfb8e98a9594eb045033cae))
+
+## [7.3.3](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.3.2...v7.3.3) (2023-07-09)
+
+**Note:** Version bump only for package vscode-wing-cf-tools
+
+## [7.3.2](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.3.1...v7.3.2) (2023-07-06)
+
+### Bug Fixes
+
+- update bas-sdk to 3.4.2 version ([a4f721d](https://github.com/sap-staging/cloud-foundry-tools/commit/a4f721dac7a1749b7ad60583114109b411afab5f))
+
+## [7.3.1](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.3.0...v7.3.1) (2023-07-04)
+
+**Note:** Version bump only for package vscode-wing-cf-tools
+
+# [7.3.0](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.2.2...v7.3.0) (2023-07-04)
+
+### Features
+
+- support new functionality of bas-sdk cfendpoint api ([#260](https://github.com/sap-staging/cloud-foundry-tools/issues/260)) ([071fc6c](https://github.com/sap-staging/cloud-foundry-tools/commit/071fc6cd199c5177017daeada712a7ebb70582ca)), closes [#259](https://github.com/sap-staging/cloud-foundry-tools/issues/259)
+
+## [7.2.2](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.2.1...v7.2.2) (2023-06-29)
+
+**Note:** Version bump only for package vscode-wing-cf-tools
+
 ## [7.2.1](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.2.0...v7.2.1) (2023-02-15)
 
 **Note:** Version bump only for package vscode-wing-cf-tools
