@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as extension from "../extension";
-import * as path from "path";
+import { join, sep } from "path";
 import * as fs from "fs";
 import { RpcExtension } from "@sap-devx/webview-rpc/out.ext/rpc-extension";
 import { getModuleLogger } from "../logger/logger-wrapper";
@@ -11,21 +11,19 @@ import {
   cfGetTarget,
   cfLogin,
   cfLogout,
+  cfSetOrgSpace,
   CredentialsLoginOptions,
   ITarget,
   OK,
   SSOLoginOptions,
   Organization,
-  cfSetOrgSpace,
   Space,
 } from "@sap/cf-tools";
 import { messages } from "../messages";
-import { join, sep } from "path";
 import { cfendpoint } from "@sap/bas-sdk";
+import { toText } from "../utils";
 
-let _rpc: RpcExtension;
-
-let currentTarget: ITarget | undefined;
+let loginTarget: LoginTarget | undefined;
 let initTarget: { endpoint: string | undefined; org?: string | undefined; space?: string | undefined };
 let panel: vscode.WebviewPanel | undefined;
 let isLoginOnly: boolean | undefined;
@@ -56,12 +54,14 @@ export function openLoginView(
         ? panel
         : vscode.window.createWebviewPanel("cfLogin", "Cloud Foundry Sign In", split, {
             enableScripts: true,
-            localResourceRoots: [vscode.Uri.file(path.join(extension.getPath(), "dist", "media"))],
+            localResourceRoots: [vscode.Uri.file(join(extension.getPath(), "dist", "media"))],
           });
       panel.reveal();
       panel.onDidDispose(() => {
         resolve(cmdLoginResult);
         panel = undefined;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        loginTarget = undefined;
       });
 
       const extensionPath = extension.getPath();
@@ -83,159 +83,171 @@ export function openLoginView(
       }
 
       panel.webview.html = indexHtml;
-
-      _rpc = new RpcExtension(panel.webview);
-      _rpc.registerMethod({ func: init });
-      _rpc.registerMethod({ func: loginClick });
-      _rpc.registerMethod({ func: logoutClick });
-      _rpc.registerMethod({ func: getSelectedTarget });
-      _rpc.registerMethod({ func: getOrgs });
-      _rpc.registerMethod({ func: getSpaces });
-      _rpc.registerMethod({ func: applyTarget });
-      _rpc.registerMethod({ func: openPasscodeLink });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      loginTarget = new LoginTarget(panel);
     } catch (e) {
       reject(e.toString());
     }
   });
 }
 
-async function init() {
-  currentTarget = await getTarget();
+class LoginTarget {
+  private rpc: RpcExtension;
+  private currentTarget: ITarget | undefined;
 
-  initTarget.endpoint = initTarget?.endpoint
-    ? initTarget?.endpoint
-    : currentTarget && currentTarget["api endpoint"]
-    ? currentTarget["api endpoint"]
-    : await getCFDefaultLandscape();
-
-  return {
-    defaultEndpoint: initTarget.endpoint,
-    isLoggedIn: currentTarget !== undefined,
-    passcodeUrl: calculatePasscodeUrl(initTarget.endpoint),
-    currentOrg: currentTarget?.org,
-    currentSpace: currentTarget?.space,
-  };
-}
-
-async function getTarget(): Promise<ITarget | undefined> {
-  // TODO: need to pass the endpoint to check if logged-in to correct endpoint.
-  try {
-    const target = (await invokeLongFunctionWithProgressForm(cfGetTarget, false)) as ITarget;
-    return target;
-  } catch (e) {
-    // getModuleLogger(LOGGER_MODULE).error("no auth token", { exception: toText(e) }, { options: options });
-    console.log("need to login...");
-    // not logged in so need to show the login section
-    return undefined;
+  constructor(private readonly panel: vscode.WebviewPanel) {
+    this.rpc = new RpcExtension(panel.webview);
+    this.rpc.registerMethod({ func: this.init });
+    this.rpc.registerMethod({ func: this.loginClick });
+    this.rpc.registerMethod({ func: this.logoutClick });
+    this.rpc.registerMethod({ func: this.getSelectedTarget });
+    this.rpc.registerMethod({ func: this.getOrgs });
+    this.rpc.registerMethod({ func: this.getSpaces });
+    this.rpc.registerMethod({ func: this.applyTarget });
+    this.rpc.registerMethod({ func: this.openPasscodeLink });
   }
-  //logged in then need to show the target section
-}
 
-function getCFDefaultLandscape(): Promise<string> {
-  return cfGetConfigFileField("Target").then((cfgEndpoint: string) => {
-    return cfgEndpoint || cfendpoint.getCFEndpoint();
-  });
-}
-
-function calculatePasscodeUrl(endpoint: string): string {
-  return endpoint.replace(/api./g, "login.") + "/passcode";
-}
-
-async function loginClick(payload: SSOLoginOptions | CredentialsLoginOptions) {
-  cmdLoginResult = await invokeLongFunctionWithProgressForm(cfLogin, payload);
-  if (OK !== cmdLoginResult) {
-    void vscode.window.showErrorMessage(messages.login_failed);
-    return false;
+  private async getTarget(): Promise<ITarget | undefined> {
+    // TODO: need to pass the endpoint to check if logged-in to correct endpoint.
+    try {
+      return (await this.invokeLongFunctionWithProgressForm(cfGetTarget, false)) as ITarget;
+    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const errText = toText(e);
+      getModuleLogger(LOGGER_MODULE).error("getTarget failed", { exception: errText });
+      return undefined;
+    }
   }
-  void vscode.window.showInformationMessage(messages.login_success);
-  getModuleLogger(LOGGER_MODULE).debug("executeLogin: login succeeded");
 
-  if (isLoginOnly) {
-    setTimeout(() => {
+  private getCFDefaultLandscape(): Promise<string> {
+    return cfGetConfigFileField("Target").then((cfgEndpoint: string) => {
+      return cfgEndpoint || cfendpoint.getCFEndpoint();
+    });
+  }
+
+  private calculatePasscodeUrl(endpoint: string): string {
+    return endpoint.replace(/api./g, "login.") + "/passcode";
+  }
+
+  async init(): Promise<any> {
+    this.currentTarget = await this.getTarget();
+    if (!initTarget) {
+      initTarget = { endpoint: undefined, org: undefined, space: undefined };
+    }
+
+    initTarget.endpoint = initTarget?.endpoint
+      ? initTarget?.endpoint
+      : this.currentTarget && this.currentTarget["api endpoint"]
+      ? this.currentTarget["api endpoint"]
+      : await this.getCFDefaultLandscape();
+
+    return {
+      defaultEndpoint: initTarget.endpoint,
+      isLoggedIn: this.currentTarget !== undefined,
+      passcodeUrl: this.calculatePasscodeUrl(initTarget.endpoint),
+      currentOrg: this.currentTarget?.org,
+      currentSpace: this.currentTarget?.space,
+    };
+  }
+
+  async loginClick(payload: SSOLoginOptions | CredentialsLoginOptions) {
+    try {
+      cmdLoginResult = await this.invokeLongFunctionWithProgressForm(cfLogin, payload);
+      if (OK !== cmdLoginResult) {
+        void vscode.window.showErrorMessage(messages.login_failed);
+        return false;
+      }
+      void vscode.window.showInformationMessage(messages.login_success);
+      getModuleLogger(LOGGER_MODULE).debug("executeLogin: login succeeded");
+
+      if (isLoginOnly) {
+        setTimeout(() => {
+          panel?.dispose();
+        });
+      }
+      return true;
+    } catch (error) {
+      getModuleLogger(LOGGER_MODULE).error("executelogin: login error", error);
+      return false;
+    }
+  }
+
+  async logoutClick() {
+    try {
+      await this.invokeLongFunctionWithProgressForm(cfLogout);
+      this.currentTarget = undefined;
+      void vscode.window.showInformationMessage(messages.logout_success);
+      getModuleLogger(LOGGER_MODULE).debug("executeLogout: logout succeeded");
+      return true;
+    } catch (error) {
+      getModuleLogger(LOGGER_MODULE).error("executeLogout: logout error", error);
+      return false;
+    }
+  }
+
+  getSelectedTarget() {
+    return {
+      endpoint: this.currentTarget?.["api endpoint"],
+      org: this.currentTarget?.org,
+      space: this.currentTarget?.space,
+    };
+  }
+
+  getOrgs(): Promise<Organization[]> {
+    return cfGetAvailableOrgs()
+      .then((orgs: Organization[]) => {
+        getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableOrgs: get avaliable orgs succeeded");
+        return orgs;
+      })
+      .catch((error) => {
+        getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableOrgs: get avaliable orgs failed", error);
+        return [];
+      });
+  }
+
+  getSpaces(org: string): Promise<Space[]> {
+    return cfGetAvailableSpaces(org)
+      .then((spaces: Space[]) => {
+        getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableSpaces: get avaliable spaces succeeded");
+        return spaces;
+      })
+      .catch((error) => {
+        getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableSpaces: get avaliable spaces failed", error);
+        return [];
+      });
+  }
+
+  async applyTarget(org: string, space: string) {
+    try {
+      await cfSetOrgSpace(org, space);
+      cmdLoginResult = OK;
+      void vscode.window.showInformationMessage(messages.success_set_org_space);
+      getModuleLogger(LOGGER_MODULE).debug("executeSetOrgSpace: set org & spaces succeeded");
       panel?.dispose();
-    });
+      return cmdLoginResult;
+    } catch (error) {
+      cmdLoginResult = undefined;
+      getModuleLogger(LOGGER_MODULE).error("executeSetOrgSpace: set org & spaces failed", error);
+      return "Error";
+    }
   }
 
-  return true;
-}
-
-async function logoutClick() {
-  try {
-    await invokeLongFunctionWithProgressForm(cfLogout);
-    currentTarget = undefined;
-    void vscode.window.showInformationMessage(messages.logout_success);
-    getModuleLogger(LOGGER_MODULE).debug("executeLogout: logout succeeded");
-  } catch (error) {
-    getModuleLogger(LOGGER_MODULE).error("executeLogout: logout error", error);
-    return false;
+  openPasscodeLink(endpoint: string) {
+    void vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(this.calculatePasscodeUrl(endpoint)));
   }
-  return true;
-}
 
-function getSelectedTarget() {
-  return {
-    endpoint: currentTarget?.["api endpoint"],
-    org: currentTarget?.org,
-    space: currentTarget?.space,
-  };
-}
-
-function getOrgs(): Promise<Organization[]> {
-  return cfGetAvailableOrgs()
-    .then((orgs: Organization[]) => {
-      getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableOrgs: get avaliable orgs succeeded");
-      return orgs;
-    })
-    .catch((error) => {
-      getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableOrgs: get avaliable orgs failed", error);
-      return [];
-    });
-}
-
-function getSpaces(org: string): Promise<Space[]> {
-  return cfGetAvailableSpaces(org)
-    .then((spaces: Space[]) => {
-      getModuleLogger(LOGGER_MODULE).debug("executeGetAvaliableSpaces: get avaliable spaces succeeded");
-      return spaces;
-    })
-    .catch((error) => {
-      getModuleLogger(LOGGER_MODULE).error("executeGetAvaliableSpaces: get avaliable spaces failed", error);
-      return [];
-    });
-}
-
-async function applyTarget(org: string, space: string) {
-  try {
-    await cfSetOrgSpace(org, space);
-    cmdLoginResult = OK;
-    void vscode.window.showInformationMessage(messages.success_set_org_space);
-    getModuleLogger(LOGGER_MODULE).debug("executeSetOrgSpace: set org & spaces succeeded");
-    panel?.dispose();
-  } catch (error) {
-    cmdLoginResult = undefined;
-    getModuleLogger(LOGGER_MODULE).error("executeSetOrgSpace: set org & spaces failed", error);
-    return "Error";
-  }
-}
-
-function openPasscodeLink(endpoint: string) {
-  void vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(calculatePasscodeUrl(endpoint)));
-}
-
-export async function invokeLongFunctionWithProgressForm(longFunction: Function, ...args: any): Promise<any> {
-  try {
-    await _rpc.invoke("setBusyIndicator", [true]);
-    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-    return await longFunction(...args);
-  } finally {
-    await _rpc.invoke("setBusyIndicator", [false]);
+  async invokeLongFunctionWithProgressForm(longFunction: Function, ...args: any): Promise<any> {
+    try {
+      await this.rpc.invoke("setBusyIndicator", [true]);
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+      return await longFunction(...args);
+    } finally {
+      await this.rpc.invoke("setBusyIndicator", [false]);
+    }
   }
 }
 
 // for testing purpose only
 export const internal = {
-  getCFDefaultLandscape,
-  getOrgs,
-  getSpaces,
-  calculatePasscodeUrl,
+  LoginTarget,
 };
