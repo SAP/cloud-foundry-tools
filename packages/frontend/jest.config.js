@@ -15,11 +15,19 @@ module.exports = {
   transformIgnorePatterns: ["<rootDir>/node_modules/(?!(@sap-devx)/)"],
   modulePaths: ["<rootDir>/src", "<rootDir>/node_modules"],
   transform: {
-    ".*\\.(vue)$": "vue-jest",
-    "^.+\\.vue$": "vue-jest",
+    ".*\\.(vue)$": "@vue/vue3-jest",
+    "^.+\\.vue$": "@vue/vue3-jest",
     ".+\\.(css|styl|less|sass|scss|svg|png|jpg|ttf|woff|woff2)$": "jest-transform-stub",
     "^.+\\.tsx?$": "ts-jest",
     "^.+\\.js$": "<rootDir>/node_modules/babel-jest",
   },
   snapshotSerializers: ["<rootDir>/node_modules/jest-serializer-vue"],
+  coverageThreshold: {
+    global: {
+      branches: 0,
+      functions: 0,
+      lines: 0,
+      statements: 0,
+    },
+  },
 };

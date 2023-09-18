@@ -653,7 +653,7 @@ describe("utils unit tests", () => {
         try {
           await utils.examCFTarget(error, ["user", "wrong"], false);
           fail("should fail");
-        } catch (e) {
+        } catch (e: any) {
           expect(e.message).to.be.equal(error);
         }
       });
@@ -670,7 +670,7 @@ describe("utils unit tests", () => {
         try {
           await utils.examCFTarget("", [], false);
           fail("should fail");
-        } catch (e) {
+        } catch (e: any) {
           expect(e.message).to.be.equal(text);
         }
       });

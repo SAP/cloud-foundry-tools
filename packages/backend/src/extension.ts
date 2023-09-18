@@ -190,7 +190,7 @@ export async function activate(context: ExtensionContext): Promise<unknown> {
     if (!platformExtension.isActive) {
       try {
         await platformExtension.activate();
-      } catch (e) {
+      } catch (e: any) {
         platformExtension = undefined;
         getModuleLogger(LOGGER_MODULE).error("activate <%s> extension fails", runConfigExtName, {
           exception: toText(new Error(e?.message as string)),

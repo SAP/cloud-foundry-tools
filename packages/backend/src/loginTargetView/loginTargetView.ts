@@ -22,6 +22,7 @@ import {
 import { messages } from "../messages";
 import { join, sep } from "path";
 import { cfendpoint } from "@sap/bas-sdk";
+import * as cheerio from "cheerio";
 
 let _rpc: RpcExtension;
 
@@ -74,12 +75,21 @@ export function openLoginView(
         const scriptPathOnDisk = vscode.Uri.file(join(mediaPath, sep));
         const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
 
-        // TODO: very fragile: assuming double quotes and src is first attribute
-        // specifically, doesn't work when building vue for development (vue-cli-service build --mode development)
-        indexHtml = indexHtml
-          .replace(/<link href=/g, `<link href=${scriptUri.toString()}`)
-          .replace(/<script src=/g, `<script src=${scriptUri.toString()}`)
-          .replace(/<img src=/g, `<img src=${scriptUri.toString()}`);
+        const $: any = cheerio.load(indexHtml);
+
+        function replaceAttributePaths(elements: any, attributeName: string) {
+          elements.each((index: number, element: cheerio.Element) => {
+            const relativePath: string = $(element).attr(attributeName);
+            if (relativePath) {
+              const fullPath = path.join(scriptUri.toString(), relativePath);
+              $(element).attr(attributeName, fullPath);
+            }
+          });
+        }
+
+        replaceAttributePaths($("[src]"), "src");
+        replaceAttributePaths($("[href]"), "href");
+        indexHtml = $.html();
       }
 
       panel.webview.html = indexHtml;
@@ -93,7 +103,7 @@ export function openLoginView(
       _rpc.registerMethod({ func: getSpaces });
       _rpc.registerMethod({ func: applyTarget });
       _rpc.registerMethod({ func: openPasscodeLink });
-    } catch (e) {
+    } catch (e: any) {
       reject(e.toString());
     }
   });

@@ -1478,7 +1478,7 @@ describe("commands unit tests", () => {
       try {
         await commands.getAvailableServices();
         fail("should fail");
-      } catch (e) {
+      } catch (e: any) {
         expect(e.message).to.be.equal(errorMessage);
       }
     });
@@ -1565,7 +1565,7 @@ describe("commands unit tests", () => {
       try {
         await commands.getAvailableServices();
         fail("should fail");
-      } catch (e) {
+      } catch (e: any) {
         expect(e.message).to.be.equal(errorMessage);
       }
     });
@@ -1598,7 +1598,7 @@ describe("commands unit tests", () => {
       try {
         await commands.getServiceInstances();
         fail("test should fail here");
-      } catch (e) {
+      } catch (e: any) {
         expect(e.message).to.be.equal(errorMessage);
       }
     });
@@ -1631,7 +1631,7 @@ describe("commands unit tests", () => {
       try {
         await commands.getUserProvidedServiceInstances();
         fail("test should fail here");
-      } catch (e) {
+      } catch (e: any) {
         expect(e.message).to.be.equal(errorMessage);
       }
     });
@@ -1971,7 +1971,7 @@ describe("commands unit tests", () => {
       try {
         await commands.fetchServicePlanList();
         expect(true).to.be.equal(false);
-      } catch (e) {
+      } catch (e: any) {
         expect(e.message).to.be.equal(errorMessage);
       }
     });

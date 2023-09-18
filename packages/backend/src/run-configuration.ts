@@ -28,7 +28,7 @@ export class DependencyHandler implements types.IDependencyHandler {
       ) {
         bindState = types.BindState.cloud;
       }
-    } catch (e) {
+    } catch (e: any) {
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       void vscode.window.showErrorMessage(toText(e));
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
@@ -94,7 +94,7 @@ export class DependencyHandler implements types.IDependencyHandler {
           chiselTask ? { resource: { data: { chiselTask } } } : {}
         );
       }
-    } catch (e) {
+    } catch (e: any) {
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       void vscode.window.showErrorMessage(toText(e));
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
@@ -127,7 +127,7 @@ export class DependencyHandler implements types.IDependencyHandler {
           data: _.get(removedResourceDetails, "resourceData") || {},
         },
       });
-    } catch (e) {
+    } catch (e: any) {
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       void vscode.window.showErrorMessage(toText(e));
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
