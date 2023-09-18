@@ -730,3 +730,8 @@ export async function cmdSelectAndSaveTarget(): Promise<string | undefined> {
     getModuleLogger(LOGGER_MODULE).error(`cmdSelectAndSaveTarget exception thrown`, { error: errText });
   }
 }
+
+// for testing purpose only
+export const internal = {
+  onErrorCfLogin,
+};
