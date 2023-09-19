@@ -107,14 +107,14 @@ class LoginTarget {
 
   constructor(private readonly panel: vscode.WebviewPanel) {
     this.rpc = new RpcExtension(panel.webview);
-    this.rpc.registerMethod({ func: this.init });
-    this.rpc.registerMethod({ func: this.loginClick });
-    this.rpc.registerMethod({ func: this.logoutClick });
-    this.rpc.registerMethod({ func: this.getSelectedTarget });
-    this.rpc.registerMethod({ func: this.getOrgs });
-    this.rpc.registerMethod({ func: this.getSpaces });
-    this.rpc.registerMethod({ func: this.applyTarget });
-    this.rpc.registerMethod({ func: this.openPasscodeLink });
+    this.rpc.registerMethod({ func: this.init, thisArg: this });
+    this.rpc.registerMethod({ func: this.loginClick, thisArg: this });
+    this.rpc.registerMethod({ func: this.logoutClick, thisArg: this });
+    this.rpc.registerMethod({ func: this.getSelectedTarget, thisArg: this });
+    this.rpc.registerMethod({ func: this.getOrgs, thisArg: this });
+    this.rpc.registerMethod({ func: this.getSpaces, thisArg: this });
+    this.rpc.registerMethod({ func: this.applyTarget, thisArg: this });
+    this.rpc.registerMethod({ func: this.openPasscodeLink, thisArg: this });
   }
 
   private async getTarget(): Promise<ITarget | undefined> {
