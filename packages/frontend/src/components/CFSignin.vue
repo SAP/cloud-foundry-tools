@@ -44,21 +44,19 @@
       </div>
       <br /><br />
       <span class="subtitle-color-field">Select authentication method </span>
+      <span class="tooltip">
+        <v-mdi
+          name="mdi-help-circle-outline"
+          align-self=""
+          size="16"
+          fill="var(--vscode-textLink-foreground, #006ab1)"
+        />
+        <span class="tooltiptext"
+          >Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header
+          or cookie.</span
+        >
+      </span>
 
-      <!-- v-tooltip="{
-          content:
-            ' Single sign-on (SSO) is a token-based authentication method <br />in which an SSO token is passed in an HTTP header or cookie.',
-          placement: 'right',
-          class: 'tooltip-custom',
-          size: '5',
-        }" -->
-      <v-mdi
-        title="Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header or cookie."
-        name="mdi-help-circle-outline"
-        align-self=""
-        size="16"
-        fill="var(--vscode-textLink-foreground, #006ab1)"
-      />
       <vscode-radio-group orientation="horizontal" :value="ssoOrCredentials" @change="setSSO">
         <vscode-radio id="radioCredentials" value="Credentials"> Credentials </vscode-radio>
         <vscode-radio id="radioSSO" value="SSO"> SSO Passcode </vscode-radio>
@@ -68,19 +66,14 @@
         <vscode-link class="pr-4" @click="openPasscodeLink">
           Open a new browser page to generate your SSO passcode
         </vscode-link>
-        <!-- v-tooltip="{
-            content:
-              ' Your SSO passcode is generated in a seperate browser page. <br />Copy it and paste it back in SAP Business Application Studio.',
-            placement: 'right',
-            class: 'tooltip-custom',
-            size: '10%',
-          }" -->
-        <v-mdi
-          title="Your SSO passcode is generated in a seperate browser page. Copy it and paste it back in SAP Business Application Studio."
-          name="mdi-help-circle-outline"
-          size="16"
-          fill="var(--vscode-textLink-foreground, #006ab1)"
-        />
+        <span class="tooltip"
+          ><v-mdi name="mdi-help-circle-outline" size="16" fill="var(--vscode-textLink-foreground, #006ab1)" />
+          <span class="tooltiptext"
+            >Your SSO passcode is generated in a seperate browser page. Copy it and paste it back in SAP Business
+            Application Studio.</span
+          >
+        </span>
+
         <br /><br /><br />
 
         <span class="subtitle-color-field">Enter your SSO Passcode </span><span class="text-danger">*</span>
@@ -95,13 +88,9 @@
           @keyup="btnStatus"
           @input="(p) => (passcode = p.target.value)"
         >
-          <!-- v-tooltip="{
-              content: 'Paste the generated passcode',
-              placement: 'right',
-              class: 'tooltip-custom',
-              size: '10%',
-            }" -->
-          <span slot="end" title="Paste the generated passcode" class="codicon codicon-clippy" @click="paste" />
+          <span slot="end" class="tooltip codicon codicon-clippy" @click="paste">
+            <span class="tooltiptext geneatedcode">Paste the generated passcode</span>
+          </span>
         </vscode-text-field>
       </div>
       <br />
@@ -283,6 +272,25 @@ export default {
 </script>
 
 <style>
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: black;
+  color: #fff;
+  font-family: var(--vscode-font-family, Roboto, Avenir, Helvetica, Arial, sans-serif);
+  font-size: 13px;
+  text-align: center;
+  border-radius: 6px;
+  padding: 7px 7px;
+  min-width: 180px;
+  z-index: 1;
+}
+.geneatedcode {
+  position: absolute;
+}
+
 .cloud-foundry-title {
   font-weight: bold;
   float: left;
