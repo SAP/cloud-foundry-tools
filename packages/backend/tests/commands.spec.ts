@@ -108,9 +108,8 @@ describe("commands unit tests", () => {
       expect(result).to.be.equal("OK");
     });
 
-    it.skip("'ok:: return an empty string, we caught the error", async () => {
+    it("'ok:: return an empty string, we caught the error", async () => {
       cfLocalUtilsMock.expects("cfGetConfigFileJson").resolves();
-      cfLoginTargetMock.expects("openLoginView").resolves("OK");
 
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       const result = await commands.cmdLogin(node as any);
@@ -813,7 +812,7 @@ describe("commands unit tests", () => {
       try {
         await commands.getAvailableServices();
         fail("should fail");
-      } catch (e: any) {
+      } catch (e) {
         expect(e.message).to.be.equal(errorMessage);
       }
     });
@@ -900,7 +899,7 @@ describe("commands unit tests", () => {
       try {
         await commands.getAvailableServices();
         fail("should fail");
-      } catch (e: any) {
+      } catch (e) {
         expect(e.message).to.be.equal(errorMessage);
       }
     });
@@ -933,7 +932,7 @@ describe("commands unit tests", () => {
       try {
         await commands.getServiceInstances();
         fail("test should fail here");
-      } catch (e: any) {
+      } catch (e) {
         expect(e.message).to.be.equal(errorMessage);
       }
     });
@@ -966,7 +965,7 @@ describe("commands unit tests", () => {
       try {
         await commands.getUserProvidedServiceInstances();
         fail("test should fail here");
-      } catch (e: any) {
+      } catch (e) {
         expect(e.message).to.be.equal(errorMessage);
       }
     });
@@ -1306,7 +1305,7 @@ describe("commands unit tests", () => {
       try {
         await commands.fetchServicePlanList();
         expect(true).to.be.equal(false);
-      } catch (e: any) {
+      } catch (e) {
         expect(e.message).to.be.equal(errorMessage);
       }
     });

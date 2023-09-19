@@ -86,7 +86,7 @@ export function getEnvResources(envFilePath: string): Promise<{ vcapObject: any;
       });
       return Promise.resolve({ vcapObject: null, isQuotedVcap });
     }
-  } catch (error: any) {
+  } catch (error) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     getModuleLogger(LOGGER_MODULE).error(
       "getEnvResources: could not get the '.env' file resources",
@@ -241,7 +241,7 @@ function validateParamsXsuaa(value: string): TypeValidationResult {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     validateXsuaaTenantMode(_.get(data, "tenant-mode"));
     validateXsuaaOauth2Configuration(_.get(data, "oauth2-configuration"));
-  } catch (e: any) {
+  } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     result = toText(e);
   }
@@ -252,7 +252,7 @@ function validateParamsJson(value: string): TypeValidationResult {
   let result;
   try {
     parse(_.trim(value));
-  } catch (e: any) {
+  } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     result = toText(e);
   }
@@ -342,7 +342,7 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
         const filePath = path.normalize(path.join(project.uri.fsPath, GITIGNORE));
         await fs.promises.open(filePath, "w");
         ignoreFiles.push(vscode.Uri.file(filePath));
-      } catch (e: any) {
+      } catch (e) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         getModuleLogger(LOGGER_MODULE).error("updateGitIgnoreList: creation .gitignore file failed", {
           exception: toText(new Error(e?.message as string)),
@@ -365,7 +365,7 @@ export async function updateGitIgnoreList(envPath: string): Promise<void> {
             { encoding: UTF8 }
           );
         }
-      } catch (e: any) {
+      } catch (e) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         getModuleLogger(LOGGER_MODULE).error(
           "updateGitIgnoreList: update .gitignore file failed",

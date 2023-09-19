@@ -396,7 +396,7 @@ describe("loginTargetView tests", () => {
       try {
         await loginTargetInstance.invokeLongFunctionWithProgressForm(longFunctionStub, "arg1", "arg2");
         fail("Should have thrown an error");
-      } catch (error: any) {
+      } catch (error) {
         expect(error.message).to.equal("Function failed");
         expect(rpcInvokeStub.calledTwice).to.be.true;
         expect(rpcInvokeStub.firstCall.calledWith("setBusyIndicator", [true])).to.be.true;

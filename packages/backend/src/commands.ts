@@ -160,7 +160,7 @@ export async function verifyLoginRetry(options?: { weak?: boolean }): Promise<un
       examCFTarget as () => Promise<any>,
       [messages.cf_setting_not_set, ["user", "org", "space"], options?.weak]
     );
-  } catch (e: any) {
+  } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     getModuleLogger(LOGGER_MODULE).error("verifyLoginRetry failed", { exception: toText(e) }, { options: options });
   }
@@ -193,7 +193,7 @@ async function verifyLoginRetryPartial(opts?: { endPoint?: string }): Promise<un
       [messages.login, ["user"], false],
       opts?.endPoint ? [opts.endPoint] : []
     );
-  } catch (e: any) {
+  } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     getModuleLogger(LOGGER_MODULE).error("verifyLoginRetryPartial failed", { exception: toText(e) });
   }
@@ -203,7 +203,7 @@ async function verifyLoginRetryPartial(opts?: { endPoint?: string }): Promise<un
 export async function cmdCFSetOrgSpace(): Promise<string | undefined> {
   try {
     return await cmdLogin(false, true);
-  } catch (e: any) {
+  } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     void vscode.window.showErrorMessage(toText(e));
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -282,7 +282,7 @@ export async function cmdLogin(
     }
 
     return result;
-  } catch (e: any) {
+  } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const errText = toText(e);
     void vscode.window.showErrorMessage(errText);
@@ -294,7 +294,7 @@ export async function cmdLogin(
 export async function cmdSelectSpace(): Promise<string | undefined> {
   try {
     return await cmdLogin(false, true);
-  } catch (e: any) {
+  } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const errText = toText(e);
     void vscode.window.showErrorMessage(errText);
@@ -502,7 +502,7 @@ async function createService(isUps: boolean, info?: ServiceTypeInfo): Promise<st
   if (instanceName) {
     try {
       return await (isUps ? createUpsInstance(instanceName, info) : createServiceInstance(instanceName, info));
-    } catch (error: any) {
+    } catch (error) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const errText = toText(error);
       void vscode.window.showErrorMessage(errText);
@@ -723,7 +723,7 @@ export async function cmdSelectAndSaveTarget(): Promise<string | undefined> {
       }
     }
     return label;
-  } catch (e: any) {
+  } catch (e) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const errText = toText(e);
     void vscode.window.showErrorMessage(errText);

@@ -16,7 +16,7 @@ enum ChiselKeys {
 function initReader(filePath: string): PropertiesReader.Reader | undefined {
   try {
     return PropertiesReader(filePath);
-  } catch (e: any) {
+  } catch (e) {
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     getModuleLogger(LOGGER_MODULE).error(
       "checkAndCreateChiselTask: propertiesReader : environment file is broken or not exists",
@@ -88,7 +88,7 @@ export async function deleteChiselParamsFromFile(filePath: string): Promise<bool
       `deleteChiselParamsFromFile: override the paramters to ${filePath} file without chisel parameters`
     );
     return true;
-  } catch (err: any) {
+  } catch (err) {
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     getModuleLogger(
       LOGGER_MODULE

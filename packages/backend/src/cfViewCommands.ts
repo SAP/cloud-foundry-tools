@@ -282,7 +282,7 @@ export async function cmdSetCurrentTarget(
       }
 
       return execSetTarget(item);
-    } catch (e: any) {
+    } catch (e) {
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       void vscode.window.showErrorMessage(toText(e));
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
@@ -498,7 +498,7 @@ export async function cmdBindLocal(
         return chiselTask ? { instanceName, chiselTask } : { instanceName };
       }
     }
-  } catch (e: any) {
+  } catch (e) {
     if (e) {
       // login to cf canceled by user
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
@@ -573,7 +573,7 @@ export async function bindLocalService(
         return [instanceName];
       }
     }
-  } catch (e: any) {
+  } catch (e) {
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     void vscode.window.showErrorMessage(toText(e));
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "./out",
     "rootDir": ".",
-    "rootDirs": ["./src", "./tests"]
+    "rootDirs": ["./src", "./tests"],
+    "useUnknownInCatchVariables": false
   }
 }

@@ -168,7 +168,7 @@ describe("cfViewCommands tests", () => {
       try {
         await cfViewCommands.cfDeployServiceAPI("");
         fail("should not reach here");
-      } catch (e: any) {
+      } catch (e) {
         expect(e.message).to.equal(messages.no_cf_api_endpoint);
       }
     });

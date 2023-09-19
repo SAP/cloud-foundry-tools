@@ -95,7 +95,7 @@ export function openLoginView(
       panel.webview.html = indexHtml;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       loginTarget = new LoginTarget(panel);
-    } catch (e: any) {
+    } catch (e) {
       reject(e.toString());
     }
   });
@@ -121,7 +121,7 @@ class LoginTarget {
     // TODO: need to pass the endpoint to check if logged-in to correct endpoint.
     try {
       return (await this.invokeLongFunctionWithProgressForm(cfGetTarget, false)) as ITarget;
-    } catch (e: any) {
+    } catch (e) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const errText = toText(e);
       getModuleLogger(LOGGER_MODULE).error("getTarget failed", { exception: errText });
