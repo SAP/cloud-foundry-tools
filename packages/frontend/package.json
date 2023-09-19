@@ -54,7 +54,7 @@
     "@vscode/codicons": "^0.0.30",
     "@vue/cli-plugin-babel": "5.0.8",
     "@vue/cli-plugin-unit-jest": "5.0.8",
-    "@vue/cli-service": "5.0.8",
+    "@vue/cli-service": "4.5.4",
     "@vue/compiler-sfc": "3.3.4",
     "@vue/test-utils": "2.4.1",
     "babel-eslint": "^10.0.1",
