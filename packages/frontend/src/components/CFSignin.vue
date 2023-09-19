@@ -31,7 +31,7 @@
       <vscode-text-field
         id="cfEndpointInput"
         ref="cfendpointInput"
-        v-model="endpoint"
+        :value="endpoint"
         class="pt-8"
         :class="{ 'invalid-input-field': !isCFEndpointValid }"
         size="50"
@@ -280,7 +280,7 @@ export default {
   background-color: black;
   color: #fff;
   font-family: var(--vscode-font-family, Roboto, Avenir, Helvetica, Arial, sans-serif);
-  font-size: 13px;
+  font-size: 11px;
   text-align: center;
   border-radius: 6px;
   padding: 7px 7px;

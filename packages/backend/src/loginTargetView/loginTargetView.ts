@@ -22,7 +22,6 @@ import {
 import { messages } from "../messages";
 import { cfendpoint } from "@sap/bas-sdk";
 import { toText } from "../utils";
-import * as cheerio from "cheerio";
 
 let loginTarget: LoginTarget | undefined;
 let initTarget: { endpoint: string | undefined; org?: string | undefined; space?: string | undefined };
@@ -75,21 +74,12 @@ export function openLoginView(
         const scriptPathOnDisk = vscode.Uri.file(join(mediaPath, sep));
         const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
 
-        const $: any = cheerio.load(indexHtml);
-
-        function replaceAttributePaths(elements: any, attributeName: string) {
-          elements.each((index: number, element: cheerio.Element) => {
-            const relativePath: string = $(element).attr(attributeName);
-            if (relativePath) {
-              const fullPath = join(scriptUri.toString(), relativePath);
-              $(element).attr(attributeName, fullPath);
-            }
-          });
-        }
-
-        replaceAttributePaths($("[src]"), "src");
-        replaceAttributePaths($("[href]"), "href");
-        indexHtml = $.html();
+        // TODO: very fragile: assuming double quotes and src is first attribute
+        // specifically, doesn't work when building vue for development (vue-cli-service build --mode development)
+        indexHtml = indexHtml
+          .replace(/<link href=/g, `<link href=${scriptUri.toString()}`)
+          .replace(/<script src=/g, `<script src=${scriptUri.toString()}`)
+          .replace(/<img src=/g, `<img src=${scriptUri.toString()}`);
       }
 
       panel.webview.html = indexHtml;
