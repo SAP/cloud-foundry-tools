@@ -188,5 +188,6 @@ export default {
 .cf-drop-down {
   min-width: 400px;
   width: fit-content;
+  padding: 0px 0px 2px 0px;
 }
 </style>
