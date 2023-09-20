@@ -1,5 +1,5 @@
 <template>
-  <v-app id="app">
+  <v-app id="app" data-vscode-context='{"webviewSection": "main", "preventDefaultContextMenuItems": true}'>
     <Header class="app" />
 
     <vscode-progress-ring class="progress-ring" :style="{ display: progressVisibility }"></vscode-progress-ring>

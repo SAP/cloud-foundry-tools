@@ -15,9 +15,13 @@ import {
   ServiceTypeInfo,
   cfGetManagedServiceInstances,
   cfGetTarget,
+  // Cli,
 } from "@sap/cf-tools";
 import { getModuleLogger } from "./logger/logger-wrapper";
-import { existsSync } from "fs";
+import { fileSync } from "tmp";
+// import { Url } from "url";
+import { execSync, ExecSyncOptionsWithStringEncoding } from "child_process";
+import { merge, trimEnd } from "lodash";
 
 export const isWindows = platform().includes("win");
 type TypeValidationResult = string | undefined | null;
@@ -62,7 +66,7 @@ export function toText(e: Error): string {
 export function getEnvResources(envFilePath: string): Promise<{ vcapObject: any; isQuotedVcap: boolean }> {
   try {
     let isQuotedVcap = false;
-    if (existsSync(envFilePath)) {
+    if (fs.existsSync(envFilePath)) {
       const envProperties = PropertiesReader(envFilePath);
       let vcapProperty = envProperties.getRaw(ENV_VCAP_RESOURCES);
       if (vcapProperty) {
@@ -445,3 +449,76 @@ export function invokeLongFunctionWithProgress(longFunction: any, progressMessag
     () => longFunction()
   );
 }
+
+function exec(cmd: string, opt?: { cwd?: string }): string | undefined {
+  try {
+    return trimEnd(
+      execSync(
+        cmd,
+        merge(
+          {
+            env: {
+              ...process.env,
+            },
+            encoding: "utf8",
+          },
+          opt?.cwd ? { cwd: opt.cwd } : {}
+        ) as ExecSyncOptionsWithStringEncoding
+      )
+    );
+  } catch (e) {
+    getModuleLogger(LOGGER_MODULE).error(<any>e.toString());
+  }
+}
+
+type TMakeFile = { nameExt: string; content?: string | NodeJS.ArrayBufferView; winPath?: boolean };
+/**
+ * Generate a temporary file with the specified content that will be cleane after by itself
+ * @param opt TMakeFile
+ * @returns fully qualified name of file
+ */
+function makeFile(opt: TMakeFile): string {
+  const tmpObj = fileSync({ postfix: opt.nameExt });
+  if (opt.content) {
+    fs.writeFileSync(tmpObj.fd, opt.content);
+  }
+  return opt.winPath ? tmpObj.name : tmpObj.name.split(path.sep).join(path.posix.sep);
+}
+
+export type TCisOAuth = {
+  cert: string;
+  key: string;
+  certUrl: URL;
+  clientId: string;
+};
+
+export function obtainCisOAuthToken(data: TCisOAuth): string | undefined {
+  let cert, key;
+  let certName = "",
+    keyName = "";
+  try {
+    cert = makeFile({ nameExt: `.pem`, content: data.cert });
+    key = makeFile({ nameExt: `.pem`, content: data.key });
+    const dirName = path.dirname(cert);
+    certName = path.basename(cert);
+    keyName = path.basename(cert);
+    // const oauth = exec(`curl --cert ${cert} --key ${key} -XPOST ${data.certUrl.href}oauth/token -d "grant_type=client_credentials&client_id=${data.clientId}"`, {cwd: path.dirname(cert)});
+    const oauth = exec(
+      `curl --cert ${certName} --key ${keyName} -XPOST ${data.certUrl.href}oauth/token -d "grant_type=client_credentials&client_id=${data.clientId}"`,
+      { cwd: path.dirname(cert) }
+    );
+    if (oauth) {
+      return JSON.parse(oauth).access_token as string;
+    }
+  } catch (e) {
+    getModuleLogger(LOGGER_MODULE).error(e.toString());
+  } finally {
+    fs.unlink(certName, () => {});
+    fs.unlink(keyName, () => {});
+  }
+}
+
+//........for testing purpose only................................
+export const internal = {
+  makeFile,
+};
