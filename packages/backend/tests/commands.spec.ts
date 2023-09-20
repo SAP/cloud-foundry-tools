@@ -110,6 +110,7 @@ describe("commands unit tests", () => {
 
     it("'ok:: return an empty string, we caught the error", async () => {
       cfLocalUtilsMock.expects("cfGetConfigFileJson").resolves();
+      cfLoginTargetMock.expects("openLoginView").resolves("OK");
 
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       const result = await commands.cmdLogin(node as any);
