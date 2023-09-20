@@ -44,17 +44,22 @@
       </div>
       <br /><br />
       <span class="subtitle-color-field">Select authentication method </span>
-      <span class="tooltip">
+      <span
+        v-tooltip="{
+          text:
+            'Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header or cookie.',
+          theme: {
+            placement: 'right',
+            width: '300px',
+          },
+        }"
+      >
         <v-mdi
           name="mdi-help-circle-outline"
           align-self=""
           size="16"
           fill="var(--vscode-textLink-foreground, #006ab1)"
         />
-        <span class="tooltiptext"
-          >Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header
-          or cookie.</span
-        >
       </span>
 
       <vscode-radio-group orientation="horizontal" :value="ssoOrCredentials" @change="setSSO">
@@ -66,12 +71,16 @@
         <vscode-link class="pr-4" @click="openPasscodeLink">
           Open a new browser page to generate your SSO passcode
         </vscode-link>
-        <span class="tooltip"
+        <span
+          v-tooltip="{
+            text:
+              'Your SSO passcode is generated in a seperate browser page. Copy it and paste it back in SAP Business Application Studio.',
+            theme: {
+              placement: 'right',
+              width: '300px',
+            },
+          }"
           ><v-mdi name="mdi-help-circle-outline" size="16" fill="var(--vscode-textLink-foreground, #006ab1)" />
-          <span class="tooltiptext"
-            >Your SSO passcode is generated in a seperate browser page. Copy it and paste it back in SAP Business
-            Application Studio.</span
-          >
         </span>
 
         <br /><br /><br />
@@ -88,9 +97,17 @@
           @keyup="btnStatus"
           @input="(p) => (passcode = p.target.value)"
         >
-          <span slot="end" class="tooltip codicon codicon-clippy" @click="paste">
-            <span class="tooltiptext geneatedcode">Paste the generated passcode</span>
-          </span>
+          <span
+            slot="end"
+            v-tooltip="{
+              text: 'Paste the generated passcode',
+              theme: {
+                placement: 'right',
+                width: '155px',
+              },
+            }"
+            ><span class="codicon codicon-clippy" @click="paste"></span
+          ></span>
         </vscode-text-field>
       </div>
       <br />
@@ -272,25 +289,6 @@ export default {
 </script>
 
 <style>
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-}
-.tooltip .tooltiptext {
-  visibility: hidden;
-  background-color: black;
-  color: #fff;
-  font-family: var(--vscode-font-family, Roboto, Avenir, Helvetica, Arial, sans-serif);
-  font-size: 11px;
-  text-align: center;
-  border-radius: 6px;
-  padding: 7px 7px;
-  min-width: 180px;
-  z-index: 1;
-}
-.geneatedcode {
-  position: absolute;
-}
-
 .cloud-foundry-title {
   font-weight: bold;
   float: left;
