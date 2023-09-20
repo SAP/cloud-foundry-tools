@@ -9,6 +9,8 @@ module.exports = {
     "!<rootDir>/src/exploregens/**",
     "!<rootDir>/src/main.js",
     "!<rootDir>/src/plugins/**",
+    "!<rootDir>/src/directives/**",
+    "!<rootDir>/src/styles/**",
   ],
   coverageReporters: ["lcov", "html", "text-summary"],
   moduleFileExtensions: ["js", "vue", "json"],
