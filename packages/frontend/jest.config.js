@@ -1,7 +1,7 @@
 module.exports = {
   verbose: true,
   testRegex: "(/test/(.*).(test|spec)).[jt]sx?$",
-  collectCoverage: true,
+  collectCoverage: false,
   collectCoverageFrom: [
     "src/**/*.{js,vue}",
     "!**/node_modules/**",
@@ -26,10 +26,10 @@ module.exports = {
   snapshotSerializers: ["<rootDir>/node_modules/jest-serializer-vue"],
   coverageThreshold: {
     global: {
-      branches: 0,
-      functions: 0,
-      lines: 0,
-      statements: 0,
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100,
     },
   },
 };
