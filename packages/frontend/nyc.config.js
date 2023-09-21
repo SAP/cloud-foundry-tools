@@ -6,7 +6,7 @@ module.exports = Object.assign(baseNycConfig, {
   functions: 0,
   statements: 0,
   include: ["**/src/**/*.js", "**/src/**/*.vue"],
-  exclude: ["**/test/**"],
+  exclude: ["**/test/**", "**/src/directives/**"],
   // https://github.com/vuejs/vue-cli/issues/1363#issuecomment-609913867
   extension: [".js", ".vue"],
   instrument: true,

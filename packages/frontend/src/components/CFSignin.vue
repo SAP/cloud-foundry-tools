@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/v-on-event-hyphenation -->
+<!-- eslint-disable vue/no-deprecated-slot-attribute -->
 <template>
   <div>
     <div class="cloud-foundry-title">Cloud Foundry Sign In</div>
@@ -6,7 +8,7 @@
         name="mdi-check-circle-outline"
         size="16"
         fill="var(--vscode-notebookStatusSuccessIcon-foreground, #388a34)"
-      ></v-mdi>
+      />
       You are signed in to Cloud Foundry.
     </div>
     <br /><br />
@@ -14,93 +16,97 @@
     <div :style="{ display: loggedInVisibility }">
       <span class="subtitle-color-field">Cloud Foundry Endpoint</span>
       <br />
-      <div class="mt-8">{{ endpoint }}</div>
+      <div class="mt-8">
+        {{ endpoint }}
+      </div>
       <br /><br />
-      <vscode-button @click="SignoutClicked">Sign Out</vscode-button>
+      <vscode-button @click="SignoutClicked"> Sign Out </vscode-button>
     </div>
 
     <!-- authentication area -->
-    <div :style="{ display: notLoggedInVisibility }" id="authenticationDiv">
+    <div id="authenticationDiv" :style="{ display: notLoggedInVisibility }">
       <br />
       <span class="subtitle-color-field">Enter Cloud Foundry Endpoint </span><span class="text-danger">*</span>
       <br />
       <vscode-text-field
         id="cfEndpointInput"
+        ref="cfendpointInput"
+        :value="endpoint"
         class="pt-8"
         :class="{ 'invalid-input-field': !isCFEndpointValid }"
         size="50"
         type="url"
-        ref="cfendpointInput"
-        :value="this.target.defaultEndpoint"
         @input="setEndpoint"
-        v-on:keyup="btnStatus"
-      ></vscode-text-field>
+        @keyup="btnStatus"
+      />
       <div v-if="!isCFEndpointValid" class="error-container">
         <div class="invalid-endpoint-error">You must provide a valid URL</div>
       </div>
       <br /><br />
       <span class="subtitle-color-field">Select authentication method </span>
-
-      <v-mdi
-        name="mdi-help-circle-outline"
-        align-self=""
-        size="16"
-        fill="var(--vscode-textLink-foreground, #006ab1)"
+      <span
         v-tooltip="{
-          content:
-            ' Single sign-on (SSO) is a token-based authentication method <br />in which an SSO token is passed in an HTTP header or cookie.',
-          placement: 'right',
-          class: 'tooltip-custom',
-          size: '5',
+          text:
+            'Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header or cookie.',
+          theme: {
+            placement: 'right',
+            width: '300px',
+          },
         }"
       >
-      </v-mdi>
+        <v-mdi
+          name="mdi-help-circle-outline"
+          align-self=""
+          size="16"
+          fill="var(--vscode-textLink-foreground, #006ab1)"
+        />
+      </span>
+
       <vscode-radio-group orientation="horizontal" :value="ssoOrCredentials" @change="setSSO">
-        <vscode-radio id="radioCredentials" value="Credentials">Credentials </vscode-radio>
-        <vscode-radio id="radioSSO" value="SSO">SSO Passcode </vscode-radio>
+        <vscode-radio id="radioCredentials" value="Credentials"> Credentials </vscode-radio>
+        <vscode-radio id="radioSSO" value="SSO"> SSO Passcode </vscode-radio>
       </vscode-radio-group>
 
       <div id="sso-div" :style="{ display: ssoVisibility }">
-        <vscode-link @click="openPasscodeLink" class="pr-4"
-          >Open a new browser page to generate your SSO passcode
+        <vscode-link class="pr-4" @click="openPasscodeLink">
+          Open a new browser page to generate your SSO passcode
         </vscode-link>
-        <v-mdi
-          name="mdi-help-circle-outline"
-          size="16"
-          fill="var(--vscode-textLink-foreground, #006ab1)"
+        <span
           v-tooltip="{
-            content:
-              ' Your SSO passcode is generated in a seperate browser page. <br />Copy it and paste it back in SAP Business Application Studio.',
-            placement: 'right',
-            class: 'tooltip-custom',
-            size: '10%',
+            text:
+              'Your SSO passcode is generated in a seperate browser page. Copy it and paste it back in SAP Business Application Studio.',
+            theme: {
+              placement: 'right',
+              width: '300px',
+            },
           }"
-        >
-        </v-mdi>
+          ><v-mdi name="mdi-help-circle-outline" size="16" fill="var(--vscode-textLink-foreground, #006ab1)" />
+        </span>
+
         <br /><br /><br />
 
         <span class="subtitle-color-field">Enter your SSO Passcode </span><span class="text-danger">*</span>
         <br />
         <vscode-text-field
+          ref="psc"
+          v-model="passcode"
           class="pt-8"
           size="47"
           placeholder="Enter your passcode"
-          v-on:keyup="btnStatus"
-          v-model="passcode"
-          ref="psc"
-          @input="(p) => (passcode = p.target.value)"
           :value="passcode"
+          @keyup="btnStatus"
+          @input="(p) => (passcode = p.target.value)"
         >
           <span
             slot="end"
-            class="codicon codicon-clippy"
-            @click="paste"
             v-tooltip="{
-              content: 'Paste the generated passcode',
-              placement: 'right',
-              class: 'tooltip-custom',
-              size: '10%',
+              text: 'Paste the generated passcode',
+              theme: {
+                placement: 'right',
+                width: '155px',
+              },
             }"
+            ><span class="codicon codicon-clippy" @click="paste"></span
           ></span>
         </vscode-text-field>
       </div>
@@ -110,36 +116,36 @@
         <span class="subtitle-color-field">Enter your username </span><span class="text-danger">*</span>
         <br />
         <vscode-text-field
-          class="pt-8"
-          v-on:keyup="btnStatus"
           v-model="username"
+          class="pt-8"
           :value="username"
-          @input="(u) => (username = u.target.value)"
           size="50"
           placeholder="User ID"
-        ></vscode-text-field>
+          @keyup="btnStatus"
+          @input="(u) => (username = u.target.value)"
+        />
         <br /><br />
 
         <span class="subtitle-color-field">Enter your password </span><span class="text-danger">*</span>
         <br />
         <vscode-text-field
-          class="pt-8"
-          v-on:keyup="btnStatus"
           v-model="password"
+          class="pt-8"
           :value="password"
-          @input="(p) => (password = p.target.value)"
           type="password"
           size="50"
-        ></vscode-text-field>
+          @keyup="btnStatus"
+          @input="(p) => (password = p.target.value)"
+        />
       </div>
       <br />
       <span :style="{ display: authFailedVisibility }" style="color: var(--vscode-errorForeground, #b80000)">
-        <v-mdi name="mdi-close-circle-outline" size="16" fill="var(--vscode-errorForeground, #b80000)"></v-mdi>
+        <v-mdi name="mdi-close-circle-outline" size="16" fill="var(--vscode-errorForeground, #b80000)" />
         Authentication failed. Please try again.
         <br />
       </span>
       <br />
-      <vscode-button @click="SigninClicked" v-bind:disabled="disableButton">Sign in</vscode-button>
+      <vscode-button :disabled="disableButton" @click="SigninClicked"> Sign in </vscode-button>
     </div>
 
     <br /><br />
@@ -153,6 +159,8 @@ import {
   vsCodeRadio,
   vsCodeLink,
   vsCodeButton,
+  vsCodeDropdown,
+  vsCodeOption,
 } from "@vscode/webview-ui-toolkit";
 
 provideVSCodeDesignSystem().register(vsCodeTextField());
@@ -160,31 +168,34 @@ provideVSCodeDesignSystem().register(vsCodeRadioGroup());
 provideVSCodeDesignSystem().register(vsCodeRadio());
 provideVSCodeDesignSystem().register(vsCodeLink());
 provideVSCodeDesignSystem().register(vsCodeButton());
+provideVSCodeDesignSystem().register(vsCodeDropdown());
+provideVSCodeDesignSystem().register(vsCodeOption());
 
 export default {
-  name: "Signin",
-  props: ["target", "rpc"],
+  name: "CFSignin",
+  props: {
+    target: {
+      type: Object,
+      required: true,
+    },
+    rpc: {
+      type: Object,
+      required: true,
+    },
+  },
+  emits: ["updateIsLoggedIn"],
   data() {
     return {
       disableButton: true,
       isLoggedIn: "",
       authFailed: "",
       ssoOrCredentials: "Credentials",
-      endpoint: "",
+      endpoint: this.target.defaultEndpoint ?? "", // Initially set the endpoint to the defaultEndpoint
       passcode: "",
       username: "",
       password: "",
       isCFEndpointValid: true,
     };
-  },
-  updated() {
-    this.isLoggedIn === "" ? (this.isLoggedIn = this.target.isLoggedIn) : "";
-    this.endpoint === "" ? (this.endpoint = this.target.defaultEndpoint) : "";
-  },
-  watch: {
-    isLoggedIn(newVal) {
-      this.$emit("updateIsLoggedIn", newVal);
-    },
   },
   computed: {
     authFailedVisibility() {
@@ -202,6 +213,15 @@ export default {
     credentialsVisibility() {
       return this.ssoOrCredentials === "Credentials" ? "" : "none";
     },
+  },
+  watch: {
+    isLoggedIn(newVal) {
+      this.$emit("updateIsLoggedIn", newVal);
+    },
+  },
+  updated() {
+    this.isLoggedIn === "" ? (this.isLoggedIn = this.target.isLoggedIn) : "";
+    this.endpoint === "" ? (this.endpoint = this.target.defaultEndpoint) : "";
   },
   methods: {
     btnStatus() {

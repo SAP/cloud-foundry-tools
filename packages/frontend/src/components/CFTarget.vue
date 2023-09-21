@@ -1,6 +1,6 @@
 <template>
-  <div class="loggedIn" id="targetDiv">
-    <vscode-divider role="separator" aria-orientation="horizontal" orientation="horizontal"></vscode-divider>
+  <div id="targetDiv" class="loggedIn">
+    <vscode-divider role="separator" aria-orientation="horizontal" orientation="horizontal" />
     <br /><br />
     <div class="cloud-foundry-target">Cloud Foundry Target</div>
     <div :style="{ display: orgAndSpaceSetVisibility }" class="org-and-space-visibility">
@@ -8,27 +8,45 @@
         name="mdi-check-circle-outline"
         size="16"
         fill="var(--vscode-notebookStatusSuccessIcon-foreground, #388a34)"
-      ></v-mdi>
+      />
       Target is set to: {{ currentOrg }} org and {{ currentSpace }} space.
     </div>
     <br /><br />
     <span class="subtitle-color-field">Select Cloud Foundry Organization </span><span class="text-danger">*</span><br />
-    <v-select class="mt-8" v-model="selectedOrg" :options="optOrganizations" :clearable="false" />
+    <vscode-dropdown class="cf-drop-down mt-8" :value="selectedOrg.guid" @input="updateSelectedOrg">
+      <vscode-option v-for="org in optOrganizations" :key="org.guid" :value="org.guid">{{ org.label }}</vscode-option>
+    </vscode-dropdown>
     <br /><br />
     <span class="subtitle-color-field">Select Cloud Foundry Space </span><span class="text-danger">*</span><br />
-    <v-select class="mt-8" v-model="selectedSpace" :options="optSpaces" :clearable="false" />
+    <vscode-dropdown class="cf-drop-down mt-8" :value="selectedSpace.guid" @input="updateSelectedSpace">
+      <vscode-option v-for="space in optSpaces" :key="space.guid" :value="space.guid">{{ space.label }}</vscode-option>
+    </vscode-dropdown>
     <br /><br />
-
-    <vscode-button class="mt-8" @click="setTarget" v-bind:disabled="statusApplyButton">Apply</vscode-button>
+    <vscode-button class="mt-8" :disabled="isApplyButtonDisabled" @click="setTarget"> Apply </vscode-button>
   </div>
 </template>
+
 <script>
 import { provideVSCodeDesignSystem, vsCodeButton } from "@vscode/webview-ui-toolkit";
-provideVSCodeDesignSystem().register(vsCodeButton());
 
+provideVSCodeDesignSystem().register(vsCodeButton());
+import * as _ from "lodash";
 export default {
-  name: "Target",
-  props: ["target", "rpc", "isLoggedIn"],
+  name: "CFTarget",
+  props: {
+    target: {
+      type: Object,
+      required: true,
+    },
+    rpc: {
+      type: Object,
+      required: true,
+    },
+    isLoggedIn: {
+      type: Boolean,
+      required: true,
+    },
+  },
   data() {
     return {
       areOrgAndSpaceSet: "",
@@ -40,29 +58,6 @@ export default {
       currentSpace: "",
     };
   },
-  updated() {
-    if (this.currentOrg === "") {
-      this.currentOrg = this.target?.currentOrg;
-    }
-    if (this.currentSpace === "") {
-      this.currentSpace = this.target?.currentSpace;
-    }
-  },
-  watch: {
-    isLoggedIn(newVal) {
-      if (newVal) this.getOrgAndSpace();
-    },
-    currentOrg(newOrg) {
-      this.$emit("updateTargetOrg", newOrg);
-    },
-    currentSpace(newSpace) {
-      this.$emit("updateTargetSpace", newSpace);
-    },
-    selectedOrg(v) {
-      this.selectSpace(undefined);
-      this.$emit("updateTargetOrg", v?.label);
-    },
-  },
   computed: {
     loggedInVisibility() {
       return !this.isLoggedIn ? "none" : "";
@@ -70,7 +65,7 @@ export default {
     orgAndSpaceSetVisibility() {
       return this.areOrgAndSpaceSet || (this.target.currentOrg && this.target.currentSpace) ? "" : "none";
     },
-    statusApplyButton() {
+    isApplyButtonDisabled() {
       return (
         this.selectedOrg.label === undefined ||
         this.selectedSpace.label === undefined ||
@@ -84,10 +79,36 @@ export default {
       return this.spaces;
     },
   },
+  watch: {
+    isLoggedIn(newVal) {
+      if (newVal) {
+        this.getOrgAndSpace();
+      }
+    },
+  },
+  updated() {
+    if (this.currentOrg === "") {
+      this.currentOrg = this.target?.currentOrg;
+    }
+    if (this.currentSpace === "") {
+      this.currentSpace = this.target?.currentSpace;
+    }
+  },
   methods: {
+    updateSelectedOrg(newOrg) {
+      this.selectedOrg = _.find(this.orgs, (org) => org.guid === newOrg.target.value);
+      this.selectSpace(undefined);
+    },
+    updateSelectedSpace(newSpace) {
+      this.selectedSpace = _.find(this.spaces, (space) => space.guid === newSpace.target.value);
+    },
     getOrgAndSpace() {
       this.rpc.invoke("getSelectedTarget").then((target) => {
         this.rpc.invoke("getOrgs").then((orgs) => {
+          orgs.unshift({
+            label: "",
+            guid: "",
+          });
           const orgsWithSelected = orgs.map((org) => {
             if (org.label === target.org) {
               this.selectedOrg = {
@@ -103,6 +124,8 @@ export default {
             };
           });
           this.orgs = orgsWithSelected;
+
+          // If no org could be selected from the current target, set it to the first org if exists
           if (!this.selectedOrg || !this.selectedOrg.guid) {
             if (this.orgs && this.orgs[0]) {
               this.selectedOrg = {
@@ -111,6 +134,8 @@ export default {
               };
             }
           }
+
+          // If some org is selected - select a space with the current target information
           if (this.selectedOrg && this.selectedOrg.guid) {
             this.selectSpace(target.space);
           }
@@ -126,16 +151,11 @@ export default {
             selected: targetSpace ? space.label === targetSpace : false,
           };
         });
-        this.selectedSpace.label = undefined;
         this.spaces = spacesWithSelected;
+        // If a specific space should be selected - choose it, otherwise take the first if exists and fallback to empty selection object.
+        this.selectedSpace =
+          _.find(this.spaces, (space) => space.selected === true) ?? (this.spaces && this.spaces[0]) ?? {};
       });
-    },
-    changeSpace(val) {
-      this.selectedSpace = this.spaces.find((space) => space.guid === val.target.value);
-      this.selectedSpace.selected = true;
-    },
-    setEndpoint(val) {
-      this.endpoint = val.target.value;
     },
     setTarget() {
       const org = this.selectedOrg.label;
@@ -145,7 +165,6 @@ export default {
         this.areOrgAndSpaceSet = true;
         this.currentOrg = org;
         this.currentSpace = space;
-        console.log("update target display");
       });
     },
   },
@@ -170,19 +189,9 @@ export default {
 .text-danger {
   color: red;
 }
-.v-select .vs__dropdown-toggle,
-.vs__dropdown-menu {
-  background: var(--vscode-editor-background);
-  width: fit-content;
+.cf-drop-down {
   min-width: 400px;
-  border-color: var(--vscode-input-foreground);
-}
-.v-select,
-.vs__selected {
-  color: var(--vscode-editor-foreground);
-}
-.v-select .vs__open-indicator,
-.vs__clear {
-  fill: var(--vscode-scrollbarSlider-activeBackground);
+  width: fit-content;
+  padding: 0px 0px 2px 0px;
 }
 </style>

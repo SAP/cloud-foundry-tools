@@ -1,37 +1,30 @@
+<!-- eslint-disable vue/v-on-event-hyphenation -->
 <template>
-  <v-app id="app">
-    <Header class="app" />
+  <div id="app">
+    <CFHeader class="app" />
 
-    <vscode-progress-ring class="progress-ring" :style="{ display: progressVisibility }"></vscode-progress-ring>
+    <vscode-progress-ring class="progress-ring" :style="{ display: progressVisibility }" />
 
     <div class="app" :style="{ display: formVisibility }">
       <div style="visibility: none">
-        <Signin :target="initialTarget" :rpc="rpc" @updateIsLoggedIn="updateIsLoggedIn" />
+        <CFSignin :target="initialTarget" :rpc="rpc" @updateIsLoggedIn="updateIsLoggedIn" />
 
         <div :style="{ display: targetVisibility }">
-          <Target
-            :target="initialTarget"
-            :rpc="rpc"
-            :isLoggedIn="isLoggedIn"
-            @updateTargetOrg="updateTargetOrg"
-            @updateTargetSpace="updateTargetSpace"
-          />
+          <CFTarget :target="initialTarget" :rpc="rpc" :isLoggedIn="isLoggedIn" />
         </div>
       </div>
     </div>
     <!-- end progress -->
-  </v-app>
+  </div>
 </template>
 
 <script>
-// eslint-disable-next-line no-unused-vars
-import Vue from "vue";
 import { RpcBrowser } from "@sap-devx/webview-rpc/out.browser/rpc-browser";
 import { RpcBrowserWebSockets } from "@sap-devx/webview-rpc/out.browser/rpc-browser-ws";
 import * as _ from "lodash";
-import Header from "./components/Header.vue";
-import Signin from "./components/Signin.vue";
-import Target from "./components/Target.vue";
+import CFHeader from "./components/CFHeader.vue";
+import CFSignin from "./components/CFSignin.vue";
+import CFTarget from "./components/CFTarget.vue";
 import {
   provideVSCodeDesignSystem,
   vsCodeButton,
@@ -54,11 +47,11 @@ function initialState() {
   };
 }
 export default {
-  name: "app",
+  name: "App",
   components: {
-    Header,
-    Signin,
-    Target,
+    CFHeader,
+    CFSignin,
+    CFTarget,
   },
   data() {
     return initialState();
@@ -76,26 +69,16 @@ export default {
     isLoadingColor() {
       return true;
     },
-    currentPrompt() {
-      return _.get(this.prompts, "[" + this.promptIndex + "]");
-    },
   },
-  watch: {
-    prompts: {
-      handler() {
-        this.setBusyIndicator();
-      },
-    },
+  async created() {
+    await this.setupRpc();
+  },
+  mounted() {
+    this.init();
   },
   methods: {
     updateIsLoggedIn(val) {
       this.isLoggedIn = val;
-    },
-    updateTargetOrg(org) {
-      this.currentOrg = org;
-    },
-    updateTargetSpace(space) {
-      this.currentSpace = space;
     },
     setBusyIndicator(value) {
       this.showBusyIndicator = value;
@@ -103,7 +86,7 @@ export default {
     isInVsCode() {
       return typeof acquireVsCodeApi !== "undefined";
     },
-    setupRpc() {
+    async setupRpc() {
       /* istanbul ignore if */
       if (this.isInVsCode()) {
         // eslint-disable-next-line no-undef
@@ -112,11 +95,17 @@ export default {
         this.initRpc();
       } else {
         const ws = new WebSocket("ws://127.0.0.1:8081");
-        /* istanbul ignore next */
-        ws.onopen = () => {
-          this.rpc = new RpcBrowserWebSockets(ws);
-          this.initRpc();
-        };
+        return new Promise((resolve, reject) => {
+          ws.onopen = async () => {
+            try {
+              this.rpc = new RpcBrowserWebSockets(ws);
+              this.initRpc();
+              resolve();
+            } catch (e) {
+              reject(e);
+            }
+          };
+        });
       }
     },
     initRpc() {
@@ -134,12 +123,6 @@ export default {
         this.initialTarget = target;
       });
     },
-  },
-  created() {
-    this.setupRpc();
-  },
-  mounted() {
-    this.init();
   },
 };
 </script>

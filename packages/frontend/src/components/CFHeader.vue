@@ -6,7 +6,7 @@
     >
     <br />
     <br />
-    <vscode-divider role="separator"></vscode-divider>
+    <vscode-divider role="separator" />
     <br />
   </div>
 </template>
@@ -16,7 +16,7 @@ import { provideVSCodeDesignSystem, vsCodeDivider } from "@vscode/webview-ui-too
 provideVSCodeDesignSystem().register(vsCodeDivider());
 
 export default {
-  name: "Header",
+  name: "CFHeader",
   props: [],
 };
 </script>

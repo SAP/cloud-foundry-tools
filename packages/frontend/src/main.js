@@ -1,19 +1,16 @@
-import Vue from "vue";
+import { createApp } from "vue";
 import CFSignIn from "./App";
 import VueMdijs from "vue-mdijs";
 import { mdiCheckCircleOutline, mdiHelpCircleOutline, mdiCloseCircleOutline } from "@mdi/js";
-import { VTooltip, VPopover, VClosePopover } from "v-tooltip";
-import vSelect from "vue-select";
-import "vue-select/dist/vue-select.css";
+import "./styles/tooltip.css";
+import tooltip from "./directives/tooltip.js";
 
-Vue.config.productionTip = false;
+const app = createApp(CFSignIn);
+app.config.compilerOptions.isCustomElement = (tag) => tag.startsWith("ui5-") || tag.startsWith("vscode-");
 VueMdijs.add({ mdiCheckCircleOutline, mdiHelpCircleOutline, mdiCloseCircleOutline });
-Vue.use(VueMdijs);
-Vue.directive("tooltip", VTooltip);
-Vue.directive("close-popover", VClosePopover);
-Vue.component("v-popover", VPopover);
-Vue.component("v-select", vSelect);
+app.use(VueMdijs);
 
-new Vue({
-  render: (h) => h(CFSignIn),
-}).$mount("#app");
+// register all directives
+app.directive("tooltip", tooltip);
+
+app.mount("#app");

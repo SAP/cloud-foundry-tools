@@ -31,7 +31,7 @@
     "compile": "tsc -p ./",
     "copy:test-resources": "shx cp -r ./tests/resources ./out/tests/resources",
     "coverage": "nyc mocha --colors",
-    "frontend:all": "cd ../frontend && npm run build && cd ../backend && npm run frontend:copy",
+    "frontend:all": "cd ../frontend && npm-run-all clean build && cd ../backend && npm run frontend:copy",
     "frontend:copy": "npm-run-all clean:frontend && shx cp -r ../frontend/dist/. ./dist/media/",
     "package": "vsce package --yarn",
     "test": "mocha --colors",
