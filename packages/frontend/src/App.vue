@@ -21,7 +21,7 @@
 <script>
 import { RpcBrowser } from "@sap-devx/webview-rpc/out.browser/rpc-browser";
 import { RpcBrowserWebSockets } from "@sap-devx/webview-rpc/out.browser/rpc-browser-ws";
-import * as _ from "lodash";
+import _ from "lodash";
 import CFHeader from "./components/CFHeader.vue";
 import CFSignin from "./components/CFSignin.vue";
 import CFTarget from "./components/CFTarget.vue";

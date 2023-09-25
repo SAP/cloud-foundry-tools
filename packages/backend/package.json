@@ -21,7 +21,7 @@
   "scripts": {
     "build": "npm-run-all clean compile webpack-dev frontend:all",
     "bundle": "webpack --mode production",
-    "ci": "npm-run-all clean compile copy:test-resources coverage bundle frontend:all package",
+    "ci": "npm-run-all clean compile copy:test-resources coverage bundle frontend:copy package coverage:copy",
     "ci:artifacts_only": "npm-run-all clean compile webpack-dev frontend:all package",
     "clean": "npm-run-all clean:dist clean:out clean:vsix",
     "clean:dist": "rimraf ./dist",
@@ -33,6 +33,7 @@
     "coverage": "nyc mocha --colors",
     "frontend:all": "cd ../frontend && npm-run-all clean build && cd ../backend && npm run frontend:copy",
     "frontend:copy": "npm-run-all clean:frontend && shx cp -r ../frontend/dist/. ./dist/media/",
+    "coverage:copy": "shx mkdir -p ../../coverage && shx cp -u ./coverage/lcov.info ../../coverage/lcov_backend.info",
     "package": "vsce package --yarn",
     "test": "mocha --colors",
     "watch": "tsc -watch -p ./",
