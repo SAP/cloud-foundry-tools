@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import CFSignIn from "./App";
+import CFSignIn from "./App.vue";
 import VueMdijs from "vue-mdijs";
 import { mdiCheckCircleOutline, mdiHelpCircleOutline, mdiCloseCircleOutline } from "@mdi/js";
 import "./styles/tooltip.css";
