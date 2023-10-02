@@ -4,11 +4,7 @@
     <br /><br />
     <div class="cloud-foundry-target">Cloud Foundry Target</div>
     <div :style="{ display: orgAndSpaceSetVisibility }" class="org-and-space-visibility">
-      <v-mdi
-        name="mdi-check-circle-outline"
-        size="16"
-        fill="var(--vscode-notebookStatusSuccessIcon-foreground, #388a34)"
-      />
+      <span className="codicon codicon-pass signin-icon-target" />
       Target is set to: {{ currentOrg }} org and {{ currentSpace }} space.
     </div>
     <br /><br />
@@ -171,7 +167,12 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.signin-icon-target {
+  padding-right: 5px;
+  padding-top: 2px;
+  color: var(--vscode-notebookStatusSuccessIcon-foreground, #388a34);
+}
 .subtitle-color-field {
   color: var(--vscode-descriptionForeground, #717171);
 }
@@ -185,6 +186,7 @@ export default {
 }
 .org-and-space-visibility {
   float: left;
+  display: flex;
 }
 .text-danger {
   color: red;

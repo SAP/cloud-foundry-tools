@@ -56,13 +56,5 @@ module.exports = {
         "prefer-spread": "off",
       },
     },
-    {
-      // For Vue frontend sub-packages.
-      files: ["*.vue"],
-      parser: "vue-eslint-parser",
-      // Using the smaller vue rule subset (essential) to avoid including formatting rules
-      // as formatting as handled by prettier **directly**.
-      extends: ["plugin:vue/essential"],
-    },
   ],
 };
