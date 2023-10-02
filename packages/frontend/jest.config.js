@@ -2,7 +2,6 @@ module.exports = {
   verbose: true,
   testRegex: "(/test/(.*).(test|spec)).[jt]sx?$",
   collectCoverage: false,
-  coverageProvider: "v8",
   collectCoverageFrom: [
     "src/**/*.{js,vue}",
     "!**/node_modules/**",
