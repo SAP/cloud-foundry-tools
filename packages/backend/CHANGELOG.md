@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [7.4.0](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.3.4...v7.4.0) (2023-10-03)
+
+### Features
+
+- migrate to vite.js and upgrade deps ([#271](https://github.com/sap-staging/cloud-foundry-tools/issues/271)) ([6e4381c](https://github.com/sap-staging/cloud-foundry-tools/commit/6e4381cd889da81424da5ce0e11bd5b78b15121c))
+- migrating to Vue3 ([#258](https://github.com/sap-staging/cloud-foundry-tools/issues/258)) ([1bbe976](https://github.com/sap-staging/cloud-foundry-tools/commit/1bbe9764f3af8989d15cd5ba48cb706fc97c83d3))
+
 ## [7.3.4](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.3.3...v7.3.4) (2023-08-09)
 
 ### Bug Fixes
