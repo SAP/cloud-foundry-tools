@@ -75,13 +75,16 @@ export default {
       return this.spaces;
     },
   },
-  watch: {
-    isLoggedIn(newVal) {
-      if (newVal) {
-        this.getOrgAndSpace();
-      }
-    },
+  async created() {
+    await this.getOrgAndSpace();
   },
+  // watch: {
+  //   isLoggedIn(newVal) {
+  //     if (newVal) {
+  //       this.getOrgAndSpace();
+  //     }
+  //   },
+  // },
   updated() {
     if (this.currentOrg === "") {
       this.currentOrg = this.target?.currentOrg;
@@ -98,9 +101,9 @@ export default {
     updateSelectedSpace(newSpace) {
       this.selectedSpace = _.find(this.spaces, (space) => space.guid === newSpace.target.value);
     },
-    getOrgAndSpace() {
-      this.rpc.invoke("getSelectedTarget").then((target) => {
-        this.rpc.invoke("getOrgs").then((orgs) => {
+    async getOrgAndSpace() {
+      return this.rpc.invoke("getSelectedTarget").then((target) => {
+        return this.rpc.invoke("getOrgs").then((orgs) => {
           orgs.unshift({
             label: "",
             guid: "",

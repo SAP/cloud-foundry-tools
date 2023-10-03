@@ -3,16 +3,18 @@
   <div id="app">
     <CFHeader class="app" />
 
-    <vscode-progress-ring class="progress-ring" :style="{ display: progressVisibility }" />
+    <vscode-progress-ring v-if="showBusyIndicator" class="progress-ring" />
 
-    <div class="app" :style="{ display: formVisibility }">
-      <div style="visibility: none">
-        <CFSignin :target="initialTarget" :rpc="rpc" @updateIsLoggedIn="updateIsLoggedIn" />
+    <div v-if="!showBusyIndicator" class="app">
+      <CFSignin
+        v-if="!showBusyIndicator"
+        :target="initialTarget"
+        :rpc="rpc"
+        :setLoggedIn="setLoggedIn"
+        :isLoggedIn="isLoggedIn"
+      />
 
-        <div :style="{ display: targetVisibility }">
-          <CFTarget :target="initialTarget" :rpc="rpc" :isLoggedIn="isLoggedIn" />
-        </div>
-      </div>
+      <CFTarget v-if="!showBusyIndicator && isLoggedIn" :target="initialTarget" :rpc="rpc" />
     </div>
     <!-- end progress -->
   </div>
@@ -31,21 +33,12 @@ import {
   vsCodeProgressRing,
   vsCodeDropdown,
 } from "@vscode/webview-ui-toolkit";
+import { ref } from "vue";
 
 provideVSCodeDesignSystem().register(vsCodeButton());
 provideVSCodeDesignSystem().register(vsCodeProgressRing());
 provideVSCodeDesignSystem().register(vsCodeDropdown());
 
-function initialState() {
-  return {
-    rpc: Object,
-    showBusyIndicator: "",
-    initialTarget: Object,
-    isLoggedIn: false,
-    curretOrg: "",
-    currentSpace: "",
-  };
-}
 export default {
   name: "App",
   components: {
@@ -53,28 +46,31 @@ export default {
     CFSignin,
     CFTarget,
   },
-  data() {
-    return initialState();
+  setup() {
+    const isLoggedIn = ref(false);
+
+    const setLoggedIn = (value) => {
+      isLoggedIn.value = value;
+    };
+
+    return {
+      isLoggedIn,
+      setLoggedIn,
+    };
   },
-  computed: {
-    targetVisibility() {
-      return this.isLoggedIn ? "" : "none";
-    },
-    progressVisibility() {
-      return !this.showBusyIndicator ? "none" : "";
-    },
-    formVisibility() {
-      return this.showBusyIndicator ? "none" : "";
-    },
-    isLoadingColor() {
-      return true;
-    },
+  data() {
+    return {
+      rpc: Object,
+      showBusyIndicator: true,
+      initialTarget: Object,
+      curretOrg: "",
+      currentSpace: "",
+    };
   },
   async created() {
     await this.setupRpc();
-  },
-  mounted() {
-    this.init();
+    await this.init();
+    this.setLoggedIn(this.initialTarget.isLoggedIn);
   },
   methods: {
     updateIsLoggedIn(val) {
@@ -111,15 +107,15 @@ export default {
     initRpc() {
       const functions = ["setBusyIndicator"];
       _.forEach(functions, (funcName) => {
-        this.rpc.registerMethod({
+        this.rpc?.registerMethod({
           func: this[funcName],
           thisArg: this,
           name: funcName,
         });
       });
     },
-    init() {
-      this.rpc.invoke("init").then((target) => {
+    async init() {
+      return this.rpc?.invoke("init").then((target) => {
         this.initialTarget = target;
       });
     },

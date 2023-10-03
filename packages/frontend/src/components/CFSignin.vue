@@ -3,7 +3,7 @@
 <template>
   <div>
     <div class="cloud-foundry-title">Cloud Foundry Sign In</div>
-    <div :style="{ display: loggedInVisibility }" class="logged-in-visibility">
+    <div v-if="isLoggedIn" class="logged-in-visibility">
       <div style="display: flex">
         <span className="codicon codicon-pass signin-icon" />
         You are signed in to Cloud Foundry.
@@ -11,7 +11,7 @@
     </div>
     <br /><br />
 
-    <div :style="{ display: loggedInVisibility }">
+    <div v-if="isLoggedIn">
       <span class="subtitle-color-field">Cloud Foundry Endpoint</span>
       <br />
       <div class="mt-8">
@@ -21,8 +21,8 @@
       <vscode-button @click="SignoutClicked"> Sign Out </vscode-button>
     </div>
 
-    <!-- authentication area -->
-    <div id="authenticationDiv" :style="{ display: notLoggedInVisibility }">
+    <!-- authentication area (sign in form)-->
+    <div v-if="!isLoggedIn" id="authenticationDiv">
       <br />
       <span class="subtitle-color-field">Enter Cloud Foundry Endpoint </span><span class="text-danger">*</span>
       <br />
@@ -181,12 +181,31 @@ export default {
       type: Object,
       required: true,
     },
+    setLoggedIn: {
+      type: Object,
+      required: true,
+    },
+    isLoggedIn: {
+      type: Boolean,
+      required: true,
+    },
   },
-  emits: ["updateIsLoggedIn"],
+  // setup() {
+  //   const authFailed = ref(false);
+
+  //   const setAuthFailed = (value) => {
+  //     console.log(`setAuthFailed is changing to ${value}`);
+  //     authFailed.value = value;
+  //   };
+
+  //   return {
+  //     authFailed,
+  //     setAuthFailed,
+  //   };
+  // },
   data() {
     return {
       disableButton: true,
-      isLoggedIn: "",
       authFailed: "",
       ssoOrCredentials: "Credentials",
       endpoint: this.target.defaultEndpoint ?? "", // Initially set the endpoint to the defaultEndpoint
@@ -200,12 +219,6 @@ export default {
     authFailedVisibility() {
       return !this.authFailed ? "none" : "";
     },
-    loggedInVisibility() {
-      return !this.isLoggedIn ? "none" : "";
-    },
-    notLoggedInVisibility() {
-      return this.isLoggedIn ? "none" : "";
-    },
     ssoVisibility() {
       return this.ssoOrCredentials === "SSO" ? "" : "none";
     },
@@ -213,13 +226,7 @@ export default {
       return this.ssoOrCredentials === "Credentials" ? "" : "none";
     },
   },
-  watch: {
-    isLoggedIn(newVal) {
-      this.$emit("updateIsLoggedIn", newVal);
-    },
-  },
   updated() {
-    this.isLoggedIn === "" ? (this.isLoggedIn = this.target.isLoggedIn) : "";
     this.endpoint === "" ? (this.endpoint = this.target.defaultEndpoint) : "";
   },
   methods: {
@@ -264,7 +271,7 @@ export default {
       this.rpc.invoke("loginClick", [payload]).then((res) => {
         if (res) {
           this.authFailed = "";
-          this.isLoggedIn = true;
+          this.setLoggedIn(true);
         } else {
           this.authFailed = true;
         }
@@ -274,7 +281,7 @@ export default {
       let payload = {};
       this.rpc.invoke("logoutClick", [payload]).then((res) => {
         if (res) {
-          this.isLoggedIn = false;
+          this.setLoggedIn(false);
         }
       });
     },
