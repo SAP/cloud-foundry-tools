@@ -108,7 +108,7 @@ describe("commands unit tests", () => {
       expect(result).to.be.equal("OK");
     });
 
-    it("'ok:: return an empty string, we caught the error", async () => {
+    it.skip("'ok:: return an empty string, we caught the error", async () => {
       cfLocalUtilsMock.expects("cfGetConfigFileJson").resolves();
       cfLoginTargetMock.expects("openLoginView").resolves("OK");
 

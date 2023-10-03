@@ -4,12 +4,10 @@
   <div>
     <div class="cloud-foundry-title">Cloud Foundry Sign In</div>
     <div :style="{ display: loggedInVisibility }" class="logged-in-visibility">
-      <v-mdi
-        name="mdi-check-circle-outline"
-        size="16"
-        fill="var(--vscode-notebookStatusSuccessIcon-foreground, #388a34)"
-      />
-      You are signed in to Cloud Foundry.
+      <div style="display: flex">
+        <span className="codicon codicon-pass signin-icon" />
+        You are signed in to Cloud Foundry.
+      </div>
     </div>
     <br /><br />
 
@@ -43,24 +41,22 @@
         <div class="invalid-endpoint-error">You must provide a valid URL</div>
       </div>
       <br /><br />
-      <span class="subtitle-color-field">Select authentication method </span>
-      <span
-        v-tooltip="{
-          text:
-            'Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header or cookie.',
-          theme: {
-            placement: 'right',
-            width: '300px',
-          },
-        }"
-      >
-        <v-mdi
-          name="mdi-help-circle-outline"
-          align-self=""
-          size="16"
-          fill="var(--vscode-textLink-foreground, #006ab1)"
-        />
-      </span>
+      <div style="display: flex">
+        <span class="subtitle-color-field">Select authentication method </span>
+        <span
+          v-tooltip="{
+            text:
+              'Single sign-on (SSO) is a token-based authentication method in which an SSO token is passed in an HTTP header or cookie.',
+            theme: {
+              placement: 'right',
+              width: '300px',
+            },
+          }"
+          class="tooltip sso-info-icon"
+        >
+          <span className="codicon codicon-question" />
+        </span>
+      </div>
 
       <vscode-radio-group orientation="horizontal" :value="ssoOrCredentials" @change="setSSO">
         <vscode-radio id="radioCredentials" value="Credentials"> Credentials </vscode-radio>
@@ -68,20 +64,22 @@
       </vscode-radio-group>
 
       <div id="sso-div" :style="{ display: ssoVisibility }">
-        <vscode-link class="pr-4" @click="openPasscodeLink">
-          Open a new browser page to generate your SSO passcode
-        </vscode-link>
-        <span
-          v-tooltip="{
-            text:
-              'Your SSO passcode is generated in a seperate browser page. Copy it and paste it back in SAP Business Application Studio.',
-            theme: {
-              placement: 'right',
-              width: '300px',
-            },
-          }"
-          ><v-mdi name="mdi-help-circle-outline" size="16" fill="var(--vscode-textLink-foreground, #006ab1)" />
-        </span>
+        <div style="display: flex; margin-top: 16px">
+          <vscode-link @click="openPasscodeLink"> Open a new browser page to generate your SSO passcode </vscode-link>
+          <span
+            v-tooltip="{
+              text:
+                'Your SSO passcode is generated in a seperate browser page. Copy it and paste it back in SAP Business Application Studio.',
+              theme: {
+                placement: 'right',
+                width: '300px',
+              },
+            }"
+            class="tooltip"
+          >
+            <span className="codicon codicon-question sso-icon" />
+          </span>
+        </div>
 
         <br /><br /><br />
 
@@ -140,8 +138,9 @@
       </div>
       <br />
       <span :style="{ display: authFailedVisibility }" style="color: var(--vscode-errorForeground, #b80000)">
-        <v-mdi name="mdi-close-circle-outline" size="16" fill="var(--vscode-errorForeground, #b80000)" />
-        Authentication failed. Please try again.
+        <div style="display: flex">
+          <span className="codicon codicon-error signinerror-icon" /> Authentication failed. Please try again.
+        </div>
         <br />
       </span>
       <br />
@@ -288,7 +287,32 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.signinerror-icon {
+  padding-top: 1px;
+  padding-right: 5px;
+}
+.signin-icon {
+  padding-right: 5px;
+  padding-top: 2px;
+  color: var(--vscode-notebookStatusSuccessIcon-foreground, #388a34);
+}
+.sso-icon {
+  padding-top: 3px;
+  color: var(--vscode-textLink-foreground, #006ab1);
+}
+.sso-info-icon {
+  padding-top: 2px;
+  color: var(--vscode-textLink-foreground, #006ab1);
+}
+.tooltip {
+  display: flex;
+  align-items: center;
+  padding-left: 5px;
+}
+.mt-8 {
+  margin-top: 8px;
+}
 .cloud-foundry-title {
   font-weight: bold;
   float: left;
@@ -303,10 +327,6 @@ export default {
 .subtitle-color-field {
   color: var(--vscode-descriptionForeground, #717171);
 }
-/* mdi-icon */
-svg.mdi-icon {
-  vertical-align: bottom;
-}
 .tooltip .tooltip-inner {
   width: auto;
   background-color: black;
@@ -316,10 +336,6 @@ svg.mdi-icon {
   border-radius: 5px;
   box-shadow: rgba(0, 0, 0, 0.22) 5px 5px 5px;
   opacity: 1 !important;
-}
-.pr-4 {
-  padding-right: 4px;
-  padding-top: 16px;
 }
 .pt-8 {
   margin-top: 8px;

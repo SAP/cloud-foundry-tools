@@ -21,7 +21,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .subtitle-field {
   color: var(--vscode-descriptionForeground, #717171);
   margin-bottom: 16px;
