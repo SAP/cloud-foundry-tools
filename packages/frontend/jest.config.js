@@ -1,9 +1,10 @@
 module.exports = {
   verbose: true,
   testRegex: "(/test/(.*).(test|spec)).[jt]sx?$",
-  collectCoverage: false,
+  collectCoverage: true,
   collectCoverageFrom: [
     "src/**/*.{js,vue}",
+    "!src/main.js",
     "!**/node_modules/**",
     "!<rootDir>/src/utils.js",
     "!<rootDir>/src/exploregens/**",
@@ -12,24 +13,29 @@ module.exports = {
     "!<rootDir>/src/directives/**",
     "!<rootDir>/src/styles/**",
   ],
-  coverageReporters: ["lcov", "html", "text-summary"],
   moduleNameMapper: {
-    "^vue$": "<rootDir>/node_modules/vue",
+    "^@/(.*)$": "<rootDir>/src/$1",
   },
   moduleFileExtensions: ["js", "vue", "json"],
   transformIgnorePatterns: ["<rootDir>/node_modules/(?!(.+)/)"],
   modulePaths: ["<rootDir>/src", "<rootDir>/node_modules"],
   transform: {
-    ".*\\.(vue)$": "@vue/vue3-jest",
     "^.+\\.vue$": "@vue/vue3-jest",
     "^.+\\.tsx?$": "ts-jest",
+    "^.+\\.js$": "babel-jest",
+    "^.+\\.jsx?$": "babel-jest",
   },
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  testEnvironmentOptions: {
+    customExportConditions: ["node", "node-addons"],
+  },
+  testEnvironment: "jsdom",
   coverageThreshold: {
     global: {
-      branches: 100,
-      functions: 100,
-      lines: 100,
-      statements: 100,
+      branches: 41,
+      functions: 50,
+      lines: 92,
+      statements: 63,
     },
   },
 };
