@@ -7,14 +7,13 @@
   "license": "Apache 2.0",
   "publisher": "SAP",
   "scripts": {
-    "ci": "npm-run-all clean build coverage",
+    "ci": "npm-run-all clean build test",
     "ci:artifacts_only": "npm-run-all clean build",
     "clean": "rimraf ./dist ./coverage",
     "dev": "vite",
     "build": "vite build",
     "build-dev": "vite build --mode development",
     "test": "jest -w 1 --colors",
-    "coverage": "nyc jest -w 1 --colors",
     "serve": "vite preview"
   },
   "browserslist": [
@@ -40,9 +39,9 @@
   "dependencies": {
     "@sap-devx/webview-rpc": "0.4.1",
     "@vscode/webview-ui-toolkit": "1.2.2",
-    "@vue/compiler-sfc": "^3.3.4",
-    "vue": "^3.2.36",
-    "vue-loader": "^17.2.2",
+    "@vue/compiler-sfc": "3.3.4",
+    "vue": "3.2.36",
+    "vue-loader": "17.2.2",
     "vue-loading-overlay": "6.0.3"
   },
   "devDependencies": {
