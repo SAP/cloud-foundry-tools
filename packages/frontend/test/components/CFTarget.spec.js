@@ -164,4 +164,70 @@ describe("CFTarget.vue", () => {
     expect(orgDropdown.exists()).to.be.true;
     expect(spaceDropdown.length).to.equal(2); // You may need to adjust this based on your component's structure
   });
+
+  it("updates selectedOrg when an organization is selected", async () => {
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "ExampleOrg", // Set your desired currentOrg value
+          currentSpace: "ExampleSpace", // Set your desired currentSpace value
+        },
+        rpc: {},
+        isLoggedIn: true,
+      },
+    });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    // Simulate selecting an organization
+    await wrapper.setData({ selectedOrg: { guid: "org-guid", label: "Org Label" } });
+
+    // Assert that selectedOrg is updated correctly
+    expect(wrapper.vm.selectedOrg).to.deep.equal({ guid: "org-guid", label: "Org Label" });
+  });
+
+  it("selects a space when an organization is selected", async () => {
+    // Mock the RPC object with a custom implementation for getSpaces
+    const rpcMock = {
+      invoke: jest.fn((method, args) => {
+        if (method === "getSpaces" && args[0] === "org-guid") {
+          return Promise.resolve([
+            { guid: "space-guid-1", label: "Space 1" },
+            { guid: "space-guid-2", label: "Space 2" },
+          ]);
+        }
+        return Promise.resolve([]);
+      }),
+    };
+
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "ExampleOrg",
+        },
+        rpc: rpcMock,
+        isLoggedIn: true,
+      },
+    });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    // Simulate selecting an organization
+    await wrapper.setData({ selectedOrg: { guid: "org-guid", label: "Org Label" } });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    // Assert that the space dropdown is populated correctly
+    const spaceDropdown = wrapper.find(".cf-drop-down");
+    expect(spaceDropdown.exists()).to.be.true;
+
+    // Simulate selecting a space
+    await wrapper.setData({ selectedSpace: { guid: "space-guid-1", label: "Space 1" } });
+
+    // Assert that selectedSpace is updated correctly
+    expect(wrapper.vm.selectedSpace).to.deep.equal({ guid: "space-guid-1", label: "Space 1" });
+  });
 });

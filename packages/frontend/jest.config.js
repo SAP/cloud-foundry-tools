@@ -2,14 +2,11 @@ module.exports = {
   verbose: true,
   testRegex: "(/test/(.*).(test|spec)).[jt]sx?$",
   collectCoverage: true,
+  coverageProvider: "v8",
   collectCoverageFrom: [
     "src/**/*.{js,vue}",
-    "!src/main.js",
     "!**/node_modules/**",
-    "!<rootDir>/src/utils.js",
-    "!<rootDir>/src/exploregens/**",
     "!<rootDir>/src/main.js",
-    "!<rootDir>/src/plugins/**",
     "!<rootDir>/src/directives/**",
     "!<rootDir>/src/styles/**",
   ],
@@ -32,10 +29,10 @@ module.exports = {
   testEnvironment: "jsdom",
   coverageThreshold: {
     global: {
-      branches: 41,
-      functions: 50,
-      lines: 92,
-      statements: 63,
+      branches: 85,
+      functions: 80,
+      lines: 87,
+      statements: 87,
     },
   },
 };

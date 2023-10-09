@@ -201,4 +201,102 @@ describe("CFSignin.vue", () => {
     // Assert that ssoOrCredentials is set to "Credentials"
     expect(wrapper.vm.ssoOrCredentials).to.equal("Credentials");
   });
+
+  it("should enable the button when conditions are met", async () => {
+    const wrapper = shallowMount(CFSignin, {
+      global: {
+        directives: {
+          // Use the mockTooltipDirective for v-tooltip
+          tooltip: mockTooltipDirective,
+        },
+      },
+      props: {
+        target: {
+          defaultEndpoint: "",
+          isLoggedIn: false,
+        },
+        rpc: {},
+      },
+    });
+
+    // Set some initial values to trigger button enabling
+    await wrapper.setData({
+      endpoint: "https://example.com", // Set a valid endpoint
+      isCFEndpointValid: true,
+      ssoOrCredentials: "Credentials",
+      username: "user",
+      password: "password",
+    });
+
+    // Trigger the btnStatus method
+    await wrapper.vm.btnStatus();
+
+    // Check that the button is enabled
+    expect(wrapper.vm.disableButton).to.be.false;
+  });
+
+  it("should disable the button when conditions are not met", async () => {
+    const wrapper = shallowMount(CFSignin, {
+      global: {
+        directives: {
+          // Use the mockTooltipDirective for v-tooltip
+          tooltip: mockTooltipDirective,
+        },
+      },
+      props: {
+        target: {
+          defaultEndpoint: "",
+          isLoggedIn: false,
+        },
+        rpc: {},
+      },
+    });
+
+    // Set some initial values to trigger button disabling
+    await wrapper.setData({
+      endpoint: "", // Set an empty endpoint
+      isCFEndpointValid: false,
+      ssoOrCredentials: "Credentials",
+      username: "",
+      password: "",
+    });
+
+    // Trigger the btnStatus method
+    await wrapper.vm.btnStatus();
+
+    // Check that the button is disabled
+    expect(wrapper.vm.disableButton).to.be.true;
+  });
+
+  it("should set CF endpoint and validate it", async () => {
+    const wrapper = shallowMount(CFSignin, {
+      global: {
+        directives: {
+          // Use the mockTooltipDirective for v-tooltip
+          tooltip: mockTooltipDirective,
+        },
+      },
+      props: {
+        target: {
+          defaultEndpoint: "",
+          isLoggedIn: false,
+        },
+        rpc: {},
+      },
+    });
+
+    // Set a valid CF endpoint
+    const validEndpoint = "https://example.com";
+    await wrapper.vm.setEndpoint({ target: { value: validEndpoint } });
+
+    // Check if endpoint is correctly set
+    expect(wrapper.vm.endpoint).to.be.equals(validEndpoint);
+
+    // Set an invalid CF endpoint
+    const invalidEndpoint = "invalid-url";
+    await wrapper.vm.setEndpoint({ target: { value: invalidEndpoint } });
+
+    // Check if endpoint is correctly set
+    expect(wrapper.vm.endpoint).to.be.equals(invalidEndpoint);
+  });
 });

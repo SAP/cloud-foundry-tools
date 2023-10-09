@@ -103,4 +103,51 @@ describe("App.vue", () => {
     const expectedHtml = `<divid="app"><c-f-header-stubclass="app"></c-f-header-stub><vscode-progress-ringclass="progress-ring"style="display:none;"></vscode-progress-ring><divclass="app"><divstyle="visibility:none;"><c-f-signin-stubtarget="functionObject(){[nativecode]}"rpc="[objectObject]"></c-f-signin-stub><divstyle="display:none;"><c-f-target-stubtarget="[Function]"rpc="[objectObject]"isloggedin="false"></c-f-target-stub></div></div></div><!--endprogress--></div>`;
     expect(wrapper.html().replace(/\s/g, "")).to.equal(expectedHtml);
   });
+
+  it("computes isLoadingColor as true", () => {
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          rpc: mockRpc, // Provide the mock rpc object
+        };
+      },
+    });
+
+    // Check that the computed property returns true
+    expect(wrapper.vm.isLoadingColor).to.be.true;
+  });
+
+  it("sets showBusyIndicator to the specified value", () => {
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          rpc: mockRpc, // Provide the mock rpc object
+          showBusyIndicator: false, // Initialize with a specific value
+        };
+      },
+    });
+
+    // Call the setBusyIndicator method with a value of true
+    wrapper.vm.setBusyIndicator(true);
+
+    // Check that the showBusyIndicator data property is now true
+    expect(wrapper.vm.showBusyIndicator).to.be.true;
+  });
+
+  it("sets showBusyIndicator to the specified value (false)", () => {
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          rpc: mockRpc, // Provide the mock rpc object
+          showBusyIndicator: true, // Initialize with a specific value
+        };
+      },
+    });
+
+    // Call the setBusyIndicator method with a value of false
+    wrapper.vm.setBusyIndicator(false);
+
+    // Check that the showBusyIndicator data property is now false
+    expect(wrapper.vm.showBusyIndicator).to.be.false;
+  });
 });
