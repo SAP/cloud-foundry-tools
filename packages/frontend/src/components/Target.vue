@@ -37,6 +37,19 @@ provideVSCodeDesignSystem().register(vsCodeDropdown());
 provideVSCodeDesignSystem().register(vsCodeButton());
 provideVSCodeDesignSystem().register(vsCodeOption());
 
+function compareFn(a, b) {
+  const labelA = a.label.toLowerCase();
+  const labelB = b.label.toLowerCase();
+
+  if (labelA < labelB) {
+    return -1;
+  }
+  if (labelA > labelB) {
+    return 1;
+  }
+  return 0;
+}
+
 export default {
   name: "Target",
   props: ["target", "rpc", "isLoggedIn"],
@@ -91,6 +104,7 @@ export default {
               selected: org.label === target.org,
             };
           });
+          orgsWithSelected.sort(compareFn);
           this.orgs = [{ label: " ", guid: "0", selected: true }].concat(orgsWithSelected);
 
           if (!this.selectedOrg || !this.selectedOrg.guid) {
@@ -113,6 +127,7 @@ export default {
             selected: targetSpace ? space.label === targetSpace : false,
           };
         });
+        spacesWithSelected.sort(compareFn);
         this.spaces = [{ label: " ", guid: "0", selected: true }].concat(spacesWithSelected);
 
         if (targetSpace == undefined || !this.selectedSpace || !this.selectedSpace.guid) {
