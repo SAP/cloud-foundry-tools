@@ -22,15 +22,34 @@ jest.mock("@vscode/webview-ui-toolkit", () => ({
 
 const mockTooltipDirective = jest.fn();
 
+const global = {
+  directives: {
+    // Use the mockTooltipDirective for v-tooltip
+    tooltip: mockTooltipDirective,
+  },
+  stubs: {
+    VscodeLink: {
+      template: "<div></div>",
+    },
+    VscodeRadioGroup: {
+      template: "<div></div>",
+    },
+    VscodeRadio: {
+      template: "<button></button>",
+    },
+    VscodeTextField: {
+      template: "<div></div>",
+    },
+    VscodeButton: {
+      template: "<button></button>",
+    },
+  },
+};
+
 describe("CFSignin.vue", () => {
   it("renders without errors", () => {
     const wrapper = shallowMount(CFSignin, {
-      global: {
-        directives: {
-          // Use the mockTooltipDirective for v-tooltip
-          tooltip: mockTooltipDirective,
-        },
-      },
+      global,
       props: {
         target: {},
         rpc: {},
@@ -41,12 +60,7 @@ describe("CFSignin.vue", () => {
 
   it("initializes with default data values", () => {
     const wrapper = shallowMount(CFSignin, {
-      global: {
-        directives: {
-          // Use the mockTooltipDirective for v-tooltip
-          tooltip: mockTooltipDirective,
-        },
-      },
+      global,
       props: {
         target: {
           defaultEndpoint: "https://example.com",
@@ -66,11 +80,31 @@ describe("CFSignin.vue", () => {
   });
 
   it("disables the Sign in button when no input is provided", async () => {
+    //avoid showing warning for custom element in console log.
+    jest.spyOn(console, "warn").mockImplementation(() => {
+      return;
+    });
+
     const wrapper = shallowMount(CFSignin, {
+      // Do not mock button
       global: {
         directives: {
           // Use the mockTooltipDirective for v-tooltip
           tooltip: mockTooltipDirective,
+        },
+        stubs: {
+          VscodeLink: {
+            template: "<div></div>",
+          },
+          VscodeRadioGroup: {
+            template: "<div></div>",
+          },
+          VscodeRadio: {
+            template: "<button></button>",
+          },
+          VscodeTextField: {
+            template: "<div></div>",
+          },
         },
       },
       props: {
@@ -88,12 +122,7 @@ describe("CFSignin.vue", () => {
 
   it("handles successful sign-in with valid credentials", async () => {
     const wrapper = shallowMount(CFSignin, {
-      global: {
-        directives: {
-          // Use the mockTooltipDirective for v-tooltip
-          tooltip: mockTooltipDirective,
-        },
-      },
+      global,
       props: {
         target: {
           defaultEndpoint: "https://example.com",
@@ -118,12 +147,7 @@ describe("CFSignin.vue", () => {
 
   it("handles unsuccessful sign-in with invalid credentials", async () => {
     const wrapper = shallowMount(CFSignin, {
-      global: {
-        directives: {
-          // Use the mockTooltipDirective for v-tooltip
-          tooltip: mockTooltipDirective,
-        },
-      },
+      global,
       props: {
         target: {
           defaultEndpoint: "https://example.com",
@@ -148,12 +172,7 @@ describe("CFSignin.vue", () => {
 
   it("handles successful sign-out", async () => {
     const wrapper = shallowMount(CFSignin, {
-      global: {
-        directives: {
-          // Use the mockTooltipDirective for v-tooltip
-          tooltip: mockTooltipDirective,
-        },
-      },
+      global,
       props: {
         target: {
           defaultEndpoint: "https://example.com",
@@ -174,12 +193,7 @@ describe("CFSignin.vue", () => {
 
   it("sets SSO or Credentials authentication method", () => {
     const wrapper = shallowMount(CFSignin, {
-      global: {
-        directives: {
-          // Use the mockTooltipDirective for v-tooltip
-          tooltip: mockTooltipDirective,
-        },
-      },
+      global,
       props: {
         target: {
           defaultEndpoint: "",
@@ -204,12 +218,7 @@ describe("CFSignin.vue", () => {
 
   it("should enable the button when conditions are met", async () => {
     const wrapper = shallowMount(CFSignin, {
-      global: {
-        directives: {
-          // Use the mockTooltipDirective for v-tooltip
-          tooltip: mockTooltipDirective,
-        },
-      },
+      global,
       props: {
         target: {
           defaultEndpoint: "",
@@ -237,12 +246,7 @@ describe("CFSignin.vue", () => {
 
   it("should disable the button when conditions are not met", async () => {
     const wrapper = shallowMount(CFSignin, {
-      global: {
-        directives: {
-          // Use the mockTooltipDirective for v-tooltip
-          tooltip: mockTooltipDirective,
-        },
-      },
+      global,
       props: {
         target: {
           defaultEndpoint: "",
@@ -270,12 +274,7 @@ describe("CFSignin.vue", () => {
 
   it("should set CF endpoint and validate it", async () => {
     const wrapper = shallowMount(CFSignin, {
-      global: {
-        directives: {
-          // Use the mockTooltipDirective for v-tooltip
-          tooltip: mockTooltipDirective,
-        },
-      },
+      global,
       props: {
         target: {
           defaultEndpoint: "",

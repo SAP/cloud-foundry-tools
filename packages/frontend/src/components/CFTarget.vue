@@ -26,6 +26,20 @@
 import { provideVSCodeDesignSystem, vsCodeButton } from "@vscode/webview-ui-toolkit";
 
 provideVSCodeDesignSystem().register(vsCodeButton());
+
+function compareFn(a, b) {
+  const labelA = a.label.toLowerCase();
+  const labelB = b.label.toLowerCase();
+
+  if (labelA < labelB) {
+    return -1;
+  }
+  if (labelA > labelB) {
+    return 1;
+  }
+  return 0;
+}
+
 import * as _ from "lodash";
 export default {
   name: "CFTarget",
@@ -119,7 +133,7 @@ export default {
               selected: org.label === target.org,
             };
           });
-          this.orgs = orgsWithSelected;
+          this.orgs = orgsWithSelected.sort(compareFn);
 
           // If no org could be selected from the current target, set it to the first org if exists
           if (!this.selectedOrg || !this.selectedOrg.guid) {
@@ -147,7 +161,7 @@ export default {
             selected: targetSpace ? space.label === targetSpace : false,
           };
         });
-        this.spaces = spacesWithSelected;
+        this.spaces = spacesWithSelected.sort(compareFn);
         // If a specific space should be selected - choose it, otherwise take the first if exists and fallback to empty selection object.
         this.selectedSpace =
           _.find(this.spaces, (space) => space.selected === true) ?? (this.spaces && this.spaces[0]) ?? {};

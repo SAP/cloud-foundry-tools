@@ -86,8 +86,8 @@ export default {
     isInVsCode() {
       return typeof acquireVsCodeApi !== "undefined";
     },
+    /* c8 ignore start */
     async setupRpc() {
-      /* istanbul ignore if */
       if (this.isInVsCode()) {
         // eslint-disable-next-line no-undef
         window.vscode = acquireVsCodeApi();
@@ -118,6 +118,7 @@ export default {
         });
       });
     },
+    /* c8 ignore stop */
     init() {
       this.rpc.invoke("init").then((target) => {
         this.initialTarget = target;

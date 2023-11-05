@@ -18,6 +18,24 @@ jest.mock("@vscode/webview-ui-toolkit", () => ({
   vsCodeButton: jest.fn(() => ({})), // Mock vsCodeButton with an empty object
 }));
 
+// Stub is used to avoid console warnings of vscode custom elements
+const global = {
+  stubs: {
+    VscodeDivider: {
+      template: "<div></div>",
+    },
+    VscodeOption: {
+      template: "<div></div>",
+    },
+    VscodeButton: {
+      template: "<button></button>",
+    },
+    VscodeDropdown: {
+      template: "<div></div>",
+    },
+  },
+};
+
 describe("CFTarget.vue", () => {
   it("renders without errors", () => {
     const wrapper = shallowMount(CFTarget, {
@@ -28,6 +46,7 @@ describe("CFTarget.vue", () => {
         rpc: {},
         isLoggedIn: true, // Provide isLoggedIn value as needed
       },
+      global,
     });
     expect(wrapper.exists()).to.be.true;
   });
@@ -36,6 +55,10 @@ describe("CFTarget.vue", () => {
     const rpcMock = {
       invoke: jest.fn().mockResolvedValue(), // Mock the applyTarget method
     };
+    //avoid showing warning for custom element in console log.
+    jest.spyOn(console, "warn").mockImplementation(() => {
+      return;
+    });
 
     const wrapper = shallowMount(CFTarget, {
       props: {
@@ -44,6 +67,19 @@ describe("CFTarget.vue", () => {
         },
         rpc: rpcMock,
         isLoggedIn: true,
+      },
+      global: {
+        stubs: {
+          VscodeDivider: {
+            template: "<div></div>",
+          },
+          VscodeOption: {
+            template: "<div></div>",
+          },
+          VscodeDropdown: {
+            template: "<div></div>",
+          },
+        },
       },
     });
 
@@ -71,6 +107,7 @@ describe("CFTarget.vue", () => {
         rpc: {},
         isLoggedIn: true, // Logged in
       },
+      global,
     });
 
     // Assert that certain elements are visible
@@ -85,6 +122,7 @@ describe("CFTarget.vue", () => {
         rpc: {},
         isLoggedIn: false, // Simulate not being logged in
       },
+      global,
     });
 
     // Assert that certain elements are hidden
@@ -103,6 +141,7 @@ describe("CFTarget.vue", () => {
         },
         isLoggedIn: true,
       },
+      global,
     });
 
     // Wait for Vue to update the component
@@ -124,6 +163,7 @@ describe("CFTarget.vue", () => {
         },
         isLoggedIn: true,
       },
+      global,
     });
 
     // Wait for Vue to update the component
@@ -153,6 +193,7 @@ describe("CFTarget.vue", () => {
         rpc: rpcMock,
         isLoggedIn: true,
       },
+      global,
     });
 
     // Wait for Vue to update the component
@@ -165,6 +206,46 @@ describe("CFTarget.vue", () => {
     expect(spaceDropdown.length).to.equal(2); // You may need to adjust this based on your component's structure
   });
 
+  it("populates orgs dropdown with multiple organizations - sorted", async () => {
+    const rpcMock = {
+      invoke: jest.fn().mockImplementation((funcName) => {
+        if (funcName === "getOrgs") {
+          return Promise.resolve([
+            { guid: "47423742", label: "bbbb" },
+            { guid: "32432423", label: "aaaaa" },
+          ]);
+        } else if (funcName === "getSelectedTarget") {
+          return Promise.resolve({ guid: "32432423", org: "aaaaa" });
+        } else if (funcName === "getSpaces") {
+          return Promise.resolve([]);
+        }
+      }),
+    };
+
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "aaaaa",
+        },
+        rpc: rpcMock,
+        isLoggedIn: false,
+      },
+      global,
+    });
+
+    // Trigger watch by changing isLoggedIn prop
+    await wrapper.setProps({ isLoggedIn: true });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    // Assert orgs got sorted
+    const orgsList = wrapper.vm.$data.orgs;
+    expect(orgsList[0]?.label).equal("");
+    expect(orgsList[1]?.label).equal("aaaaa");
+    expect(orgsList[2]?.label).equal("bbbb");
+  });
+
   it("updates selectedOrg when an organization is selected", async () => {
     const wrapper = shallowMount(CFTarget, {
       props: {
@@ -175,6 +256,7 @@ describe("CFTarget.vue", () => {
         rpc: {},
         isLoggedIn: true,
       },
+      global,
     });
 
     // Wait for Vue to update the component
@@ -209,6 +291,7 @@ describe("CFTarget.vue", () => {
         rpc: rpcMock,
         isLoggedIn: true,
       },
+      global,
     });
 
     // Wait for Vue to update the component
