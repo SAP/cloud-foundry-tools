@@ -11,6 +11,14 @@ jest.spyOn(window, "getComputedStyle").mockImplementation(() => ({
   },
 }));
 
+const global = {
+  stubs: {
+    VscodeDivider: {
+      template: "<div></div>",
+    },
+  },
+};
+
 jest.mock("@vscode/webview-ui-toolkit", () => ({
   provideVSCodeDesignSystem: jest.fn(() => ({
     register: jest.fn(),
@@ -24,19 +32,21 @@ jest.mock("@vscode/webview-ui-toolkit", () => ({
 
 describe("CFHeader.vue", () => {
   it("renders without errors", () => {
-    const wrapper = mount(CFHeader);
+    const wrapper = mount(CFHeader, {
+      global,
+    });
     expect(wrapper.exists()).to.be.true;
   });
 
   it("renders the component with correct content", () => {
-    const wrapper = mount(CFHeader);
+    const wrapper = mount(CFHeader, { global });
     expect(wrapper.text()).contain("Cloud Foundry Sign In and Targets");
     expect(wrapper.text()).contain("Provide your Cloud Foundry parameters to sign in to the Cloud Foundry enviroment");
     expect(wrapper.find('[role="separator"]').exists()).to.be.true;
   });
 
   it("applies the correct subtitle-field style", () => {
-    const wrapper = mount(CFHeader);
+    const wrapper = mount(CFHeader, { global });
 
     // Access the element with class "subtitle-field"
     const subtitleField = wrapper.find(".subtitle-field").element;
@@ -49,8 +59,8 @@ describe("CFHeader.vue", () => {
   });
 
   it("renders the correct HTML structure", () => {
-    const wrapper = mount(CFHeader);
-    const expectedHtml = `<div><h1wrapping-type="Normal">CloudFoundrySignInandTargets</h1><spanclass="subtitle-field">ProvideyourCloudFoundryparameterstosignintotheCloudFoundryenviroment</span><br><br><vscode-dividerrole="separator"></vscode-divider><br></div>`;
+    const wrapper = mount(CFHeader, { global });
+    const expectedHtml = `<div><h1wrapping-type="Normal">CloudFoundrySignInandTargets</h1><spanclass="subtitle-field">ProvideyourCloudFoundryparameterstosignintotheCloudFoundryenviroment</span><br><br><divrole="separator"></div><br></div>`;
     expect(wrapper.html().replace(/\s/g, "")).to.equal(expectedHtml);
   });
 });

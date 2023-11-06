@@ -54,6 +54,15 @@ jest.mock("../src/components/CFSignin.vue", () => ({
   template: "<div>Mocked CFSignin</div>", // Replace with your desired mock template
 }));
 
+// Stub is used to avoid console warnings of vscode custom elements
+const global = {
+  stubs: {
+    VscodeProgressRing: {
+      template: "<div></div>",
+    },
+  },
+};
+
 describe("App.vue", () => {
   // Mock the rpc object with the required methods
   const mockRpc = {
@@ -67,8 +76,10 @@ describe("App.vue", () => {
       data() {
         return {
           rpc: mockRpc, // Provide the mock rpc object
+          initialTarget: {},
         };
       },
+      global,
     });
 
     // Assert that the component exists without errors
@@ -80,8 +91,10 @@ describe("App.vue", () => {
       data() {
         return {
           rpc: mockRpc, // Provide the mock rpc object
+          initialTarget: {},
         };
       },
+      global,
     });
     expect(wrapper.vm.isLoggedIn).to.be.false; // Initial state
 
@@ -97,10 +110,12 @@ describe("App.vue", () => {
       data() {
         return {
           rpc: mockRpc, // Provide the mock rpc object
+          initialTarget: {},
         };
       },
+      global,
     });
-    const expectedHtml = `<divid="app"><c-f-header-stubclass="app"></c-f-header-stub><vscode-progress-ringclass="progress-ring"style="display:none;"></vscode-progress-ring><divclass="app"><divstyle="visibility:none;"><c-f-signin-stubtarget="functionObject(){[nativecode]}"rpc="[objectObject]"></c-f-signin-stub><divstyle="display:none;"><c-f-target-stubtarget="[Function]"rpc="[objectObject]"isloggedin="false"></c-f-target-stub></div></div></div><!--endprogress--></div>`;
+    const expectedHtml = `<divid="app"><c-f-header-stubclass="app"></c-f-header-stub><divclass="progress-ring"style="display:none;"></div><divclass="app"><divstyle="visibility:none;"><c-f-signin-stubtarget="[objectObject]"rpc="[objectObject]"></c-f-signin-stub><divstyle="display:none;"><c-f-target-stubtarget="[objectObject]"rpc="[objectObject]"isloggedin="false"></c-f-target-stub></div></div></div><!--endprogress--></div>`;
     expect(wrapper.html().replace(/\s/g, "")).to.equal(expectedHtml);
   });
 
@@ -109,8 +124,10 @@ describe("App.vue", () => {
       data() {
         return {
           rpc: mockRpc, // Provide the mock rpc object
+          initialTarget: {},
         };
       },
+      global,
     });
 
     // Check that the computed property returns true
@@ -123,8 +140,10 @@ describe("App.vue", () => {
         return {
           rpc: mockRpc, // Provide the mock rpc object
           showBusyIndicator: false, // Initialize with a specific value
+          initialTarget: {},
         };
       },
+      global,
     });
 
     // Call the setBusyIndicator method with a value of true
@@ -140,8 +159,10 @@ describe("App.vue", () => {
         return {
           rpc: mockRpc, // Provide the mock rpc object
           showBusyIndicator: true, // Initialize with a specific value
+          initialTarget: {},
         };
       },
+      global,
     });
 
     // Call the setBusyIndicator method with a value of false

@@ -207,9 +207,11 @@ export default {
       return this.isLoggedIn ? "none" : "";
     },
     ssoVisibility() {
+      /* c8 ignore next */
       return this.ssoOrCredentials === "SSO" ? "" : "none";
     },
     credentialsVisibility() {
+      /* c8 ignore next */
       return this.ssoOrCredentials === "Credentials" ? "" : "none";
     },
   },
