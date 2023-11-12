@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.4.1](https://github.com/SAP/cloud-foundry-tools/compare/v7.4.0...v7.4.1) (2023-11-12)
+
+### Bug Fixes
+
+- sorted orgs and spaces + tests ([#277](https://github.com/SAP/cloud-foundry-tools/issues/277)) ([459801a](https://github.com/SAP/cloud-foundry-tools/commit/459801a3bd2a8bb796fef4a3e0fcb6a74d9ab9f6))
+
 # [7.4.0](https://github.com/SAP/cloud-foundry-tools/compare/v7.3.4...v7.4.0) (2023-10-03)
 
 ### Bug Fixes
