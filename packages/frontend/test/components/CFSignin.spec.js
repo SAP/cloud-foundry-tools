@@ -203,10 +203,7 @@ describe("CFSignin.vue", () => {
       },
     });
 
-    // Set SSO authentication method
-    wrapper.vm.setSSO({ target: { value: "SSO" } });
-
-    // Assert that ssoOrCredentials is set to "SSO"
+    // Assert that ssoOrCredentials is set to "SSO" by default
     expect(wrapper.vm.ssoOrCredentials).to.equal("SSO");
 
     // Set Credentials authentication method

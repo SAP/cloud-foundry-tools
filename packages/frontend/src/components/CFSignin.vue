@@ -188,7 +188,7 @@ export default {
       disableButton: true,
       isLoggedIn: "",
       authFailed: "",
-      ssoOrCredentials: "Credentials",
+      ssoOrCredentials: "SSO",
       endpoint: this.target.defaultEndpoint ?? "", // Initially set the endpoint to the defaultEndpoint
       passcode: "",
       username: "",
