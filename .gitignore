@@ -76,3 +76,6 @@ tsconfig.tsbuildinfo
 # generated artifacts
 out
 dist
+
+# OS generated files
+.DS_Store

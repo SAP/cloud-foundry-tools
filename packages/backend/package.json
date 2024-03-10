@@ -314,7 +314,7 @@
     }
   },
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "commitlint": {
     "extends": [
