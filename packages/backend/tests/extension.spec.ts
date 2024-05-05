@@ -105,8 +105,10 @@ describe("extension unit test", () => {
       mockCfLocalUnits.expects("cfGetConfigFilePath").returns("");
       fsMock.expects("watchFile").never();
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      await extension.activate(testContext);
-      windowMock.verify();
+      await extension.activate(testContext).then(() => {
+        // wait for the tree view to be created asynchonously
+        return new Promise((resolve) => setTimeout(resolve, 100));
+      });
     });
 
     it("ok:: cfConfigFilePath exists", async () => {
@@ -114,7 +116,10 @@ describe("extension unit test", () => {
       mockCfLocalUnits.expects("cfGetConfigFilePath").returns("testCFConfigFilePath");
       fsMock.expects("watchFile").withArgs("testCFConfigFilePath");
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      await extension.activate(testContext);
+      await extension.activate(testContext).then(() => {
+        // wait for the tree view to be created asynchonously
+        return new Promise((resolve) => setTimeout(resolve, 100));
+      });
     });
 
     it("ok:: depended platform extension is defined but not activated", async () => {
@@ -140,7 +145,10 @@ describe("extension unit test", () => {
       mockExt.expects("activate").resolves();
       extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(extRun);
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      await extension.activate(testContext);
+      await extension.activate(testContext).then(() => {
+        // wait for the tree view to be created asynchonously
+        return new Promise((resolve) => setTimeout(resolve, 100));
+      });
       mockExt.verify();
     });
 
@@ -167,7 +175,10 @@ describe("extension unit test", () => {
       mockExt.expects("activate").rejects(new Error("my error"));
       extensionsMock.expects("getExtension").withExactArgs(runConfigExtName).returns(extRun);
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      await extension.activate(testContext);
+      await extension.activate(testContext).then(() => {
+        // wait for the tree view to be created asynchonously
+        return new Promise((resolve) => setTimeout(resolve, 100));
+      });
       mockExt.verify();
     });
   });
@@ -199,7 +210,10 @@ describe("extension unit test", () => {
           },
         });
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      await extension.activate(testContext);
+      await extension.activate(testContext).then(() => {
+        // wait for rest of initialization asynchonously
+        return new Promise((resolve) => setTimeout(resolve, 100));
+      });
     });
 
     afterEach(() => {
@@ -366,7 +380,10 @@ describe("extension unit test", () => {
 
     it("ok:: verify callback trigger, target updated", async () => {
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      await extension.activate(testContext);
+      await extension.activate(testContext).then(() => {
+        // wait for the tree view to be created asynchonously
+        return new Promise((resolve) => setTimeout(resolve, 100));
+      });
       mockCfLocalUnits
         .expects("cfGetConfigFileField")
         .withExactArgs("OrganizationFields")
@@ -381,7 +398,10 @@ describe("extension unit test", () => {
 
     it("ok:: nothing updated", async () => {
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      await extension.activate(testContext);
+      await extension.activate(testContext).then(() => {
+        // wait for the tree view to be created asynchonously
+        return new Promise((resolve) => setTimeout(resolve, 100));
+      });
 
       setTimeout(() => {
         mockCfLocalUnits
@@ -406,7 +426,10 @@ describe("extension unit test", () => {
 
     it("ok:: not targeted", async () => {
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      await extension.activate(testContext);
+      await extension.activate(testContext).then(() => {
+        // wait for the tree view to be created asynchonously
+        return new Promise((resolve) => setTimeout(resolve, 100));
+      });
 
       setTimeout(() => {
         mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("OrganizationFields").resolves({ Name: "" });
@@ -424,7 +447,10 @@ describe("extension unit test", () => {
         .resolves({ Name: "testName1" });
       mockCfLocalUnits.expects("cfGetConfigFileField").withExactArgs("SpaceFields").resolves({ Name: "testName3" });
       /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      await extension.activate(testContext);
+      await extension.activate(testContext).then(() => {
+        // wait for the tree view to be created asynchonously
+        return new Promise((resolve) => setTimeout(resolve, 100));
+      });
 
       setTimeout(() => {
         mockCfLocalUnits
