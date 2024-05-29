@@ -257,7 +257,7 @@ export default {
       let payload = {};
       payload.endpoint = this.endpoint !== "" ? this.endpoint : this.target.defaultEndpoint;
       if (this.ssoOrCredentials === "SSO") {
-        payload.ssoPasscode = this.passcode;
+        payload.ssoPasscode = `"${this.passcode}"`;
       } else {
         payload.user = this.username;
         payload.password = this.password;
