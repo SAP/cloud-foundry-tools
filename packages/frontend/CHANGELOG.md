@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.4.4](https://github.com/SAP/cloud-foundry-tools/compare/v7.4.3...v7.4.4) (2024-05-30)
+
+### Bug Fixes
+
+- failed to login to CF with SSO passcode starting with a hyphen ([#293](https://github.com/SAP/cloud-foundry-tools/issues/293)) ([9bb5e3a](https://github.com/SAP/cloud-foundry-tools/commit/9bb5e3adfef757238cf01c0d83190af957349b0e))
+
 ## [7.4.3](https://github.com/SAP/cloud-foundry-tools/compare/v7.4.2...v7.4.3) (2024-05-05)
 
 **Note:** Version bump only for package cloud-foundry-tools-frontend
