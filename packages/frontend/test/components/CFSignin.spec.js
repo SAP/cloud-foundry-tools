@@ -145,6 +145,42 @@ describe("CFSignin.vue", () => {
     expect(wrapper.vm.isLoggedIn).to.be.true;
   });
 
+  it("handles successful sign-in with valid SSO", async () => {
+    const endpoint = "https://example.com";
+    const passcode = "-_validPasscode";
+    const wrapper = shallowMount(CFSignin, {
+      global,
+      props: {
+        target: {
+          defaultEndpoint: endpoint,
+          isLoggedIn: false,
+        },
+        rpc: {
+          invoke: async (command, args) => {
+            expect(command).to.equal("loginClick");
+            expect(args[0]).to.deep.equal({
+              endpoint: endpoint,
+              ssoPasscode: `"${passcode}"`,
+            });
+            return true;
+          },
+        },
+      },
+    });
+
+    // Set SSO authentication method
+    wrapper.vm.setSSO({ target: { value: "SSO" } });
+
+    wrapper.vm.passcode = passcode;
+
+    // Trigger the SigninClicked method
+    await wrapper.vm.SigninClicked();
+
+    // Assert that authentication failed message is not displayed and isLoggedIn is set to true
+    expect(wrapper.vm.authFailed).to.equal("");
+    expect(wrapper.vm.isLoggedIn).to.be.true;
+  });
+
   it("handles unsuccessful sign-in with invalid credentials", async () => {
     const wrapper = shallowMount(CFSignin, {
       global,
