@@ -9,24 +9,24 @@
     </div>
     <br /><br />
     <span class="subtitle-color-field">Select Cloud Foundry Organization </span><span class="text-danger">*</span><br />
-    <vscode-dropdown class="cf-drop-down mt-8" :value="selectedOrg.guid" @input="updateSelectedOrg">
-      <vscode-option v-for="org in optOrganizations" :key="org.guid" :value="org.guid">{{ org.label }}</vscode-option>
-    </vscode-dropdown>
+    <vscode-single-select :value="selectedOrg.label" class="cf-drop-down mt-8" @change="updateSelectedOrg">
+      <vscode-option v-for="org in optOrganizations" :key="org.guid" :value="org.label" :selected="org.selected">{{
+        org.label
+      }}</vscode-option>
+    </vscode-single-select>
     <br /><br />
     <span class="subtitle-color-field">Select Cloud Foundry Space </span><span class="text-danger">*</span><br />
-    <vscode-dropdown class="cf-drop-down mt-8" :value="selectedSpace.guid" @input="updateSelectedSpace">
-      <vscode-option v-for="space in optSpaces" :key="space.guid" :value="space.guid">{{ space.label }}</vscode-option>
-    </vscode-dropdown>
+    <vscode-single-select :value="selectedSpace.label" class="cf-drop-down mt-8" @change="updateSelectedSpace">
+      <vscode-option v-for="space in optSpaces" :key="space.guid" :value="space.label" :selected="space.selected">{{
+        space.label
+      }}</vscode-option>
+    </vscode-single-select>
     <br /><br />
     <vscode-button class="mt-8" :disabled="isApplyButtonDisabled" @click="setTarget"> Apply </vscode-button>
   </div>
 </template>
 
 <script>
-import { provideVSCodeDesignSystem, vsCodeButton } from "@vscode/webview-ui-toolkit";
-
-provideVSCodeDesignSystem().register(vsCodeButton());
-
 import * as _ from "lodash";
 export default {
   name: "CFTarget",
@@ -93,11 +93,11 @@ export default {
   },
   methods: {
     updateSelectedOrg(newOrg) {
-      this.selectedOrg = _.find(this.orgs, (org) => org.guid === newOrg.target.value);
+      this.selectedOrg = _.find(this.orgs, (org) => org.label === newOrg.target.value);
       this.selectSpace(undefined);
     },
     updateSelectedSpace(newSpace) {
-      this.selectedSpace = _.find(this.spaces, (space) => space.guid === newSpace.target.value);
+      this.selectedSpace = _.find(this.spaces, (space) => space.label === newSpace.target.value);
     },
     getOrgAndSpace() {
       this.rpc.invoke("getSelectedTarget").then((target) => {
@@ -123,7 +123,7 @@ export default {
           this.orgs = _.sortBy(orgsWithSelected, (item) => item.label.toLowerCase());
 
           // If no org could be selected from the current target, set it to the first org if exists
-          if (!this.selectedOrg || !this.selectedOrg.guid) {
+          if (!this.selectedOrg || !this.selectedOrg.label) {
             if (this.orgs && this.orgs[0]) {
               this.selectedOrg = {
                 label: this.orgs[0].label,
@@ -133,7 +133,7 @@ export default {
           }
 
           // If some org is selected - select a space with the current target information
-          if (this.selectedOrg && this.selectedOrg.guid) {
+          if (this.selectedOrg && this.selectedOrg.label) {
             this.selectSpace(target.space);
           }
         });

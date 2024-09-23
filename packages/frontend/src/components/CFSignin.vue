@@ -26,7 +26,7 @@
       <br />
       <span class="subtitle-color-field">Enter Cloud Foundry Endpoint </span><span class="text-danger">*</span>
       <br />
-      <vscode-text-field
+      <vscode-textfield
         id="cfEndpointInput"
         ref="cfendpointInput"
         :value="endpoint"
@@ -65,7 +65,7 @@
 
       <div id="sso-div" :style="{ display: ssoVisibility }">
         <div style="display: flex; margin-top: 16px">
-          <vscode-link @click="openPasscodeLink"> Open a new browser page to generate your SSO passcode </vscode-link>
+          <a @click="openPasscodeLink"> Open a new browser page to generate your SSO passcode </a>
           <span
             v-tooltip="{
               text:
@@ -85,7 +85,14 @@
 
         <span class="subtitle-color-field">Enter your SSO Passcode </span><span class="text-danger">*</span>
         <br />
-        <vscode-text-field
+
+        <!-- The following doesn't work and don't recognize the codicon icon -->
+        <!-- <vscode-icon slot="content-after" name="clippy" title="clippy" action-icon></vscode-icon> -->
+
+        <!-- The following does work and recognize the codicon icon -->
+        <!-- <span class="codicon codicon-clippy"></span> -->
+
+        <vscode-textfield
           ref="psc"
           v-model="passcode"
           class="pt-8"
@@ -95,7 +102,7 @@
           @keyup="btnStatus"
           @input="(p) => (passcode = p.target.value)"
         >
-          <span
+          <!-- <span
             slot="end"
             v-tooltip="{
               text: 'Paste the generated passcode',
@@ -105,15 +112,29 @@
               },
             }"
             ><span class="codicon codicon-clippy" @click="paste"></span
-          ></span>
-        </vscode-text-field>
+          ></span> -->
+          <vscode-icon
+            slot="content-after"
+            v-tooltip="{
+              text: 'Paste the generated passcode',
+              theme: {
+                placement: 'right',
+                width: '155px',
+              },
+            }"
+            name="clippy"
+            title="clippy"
+            action-icon
+            @click="paste"
+          ></vscode-icon>
+        </vscode-textfield>
       </div>
       <br />
 
       <div id="credentials-div" :style="{ display: credentialsVisibility }">
         <span class="subtitle-color-field">Enter your username </span><span class="text-danger">*</span>
         <br />
-        <vscode-text-field
+        <vscode-textfield
           v-model="username"
           class="pt-8"
           :value="username"
@@ -126,7 +147,7 @@
 
         <span class="subtitle-color-field">Enter your password </span><span class="text-danger">*</span>
         <br />
-        <vscode-text-field
+        <vscode-textfield
           v-model="password"
           class="pt-8"
           :value="password"
@@ -151,25 +172,6 @@
   </div>
 </template>
 <script>
-import {
-  provideVSCodeDesignSystem,
-  vsCodeTextField,
-  vsCodeRadioGroup,
-  vsCodeRadio,
-  vsCodeLink,
-  vsCodeButton,
-  vsCodeDropdown,
-  vsCodeOption,
-} from "@vscode/webview-ui-toolkit";
-
-provideVSCodeDesignSystem().register(vsCodeTextField());
-provideVSCodeDesignSystem().register(vsCodeRadioGroup());
-provideVSCodeDesignSystem().register(vsCodeRadio());
-provideVSCodeDesignSystem().register(vsCodeLink());
-provideVSCodeDesignSystem().register(vsCodeButton());
-provideVSCodeDesignSystem().register(vsCodeDropdown());
-provideVSCodeDesignSystem().register(vsCodeOption());
-
 export default {
   name: "CFSignin",
   props: {
@@ -290,6 +292,15 @@ export default {
 </script>
 
 <style scoped>
+a {
+  color: var(--vscode-textLink-foreground, #3794ff); /* VS Code link color */
+  text-decoration: none; /* Remove underline */
+  cursor: pointer;
+}
+a:hover {
+  text-decoration: underline; /* Show underline on hover */
+  color: var(--vscode-textLink-activeForeground, #1e50a2); /* Active link color */
+}
 .signinerror-icon {
   padding-top: 1px;
   padding-right: 5px;
