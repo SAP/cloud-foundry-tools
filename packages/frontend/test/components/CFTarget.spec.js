@@ -11,12 +11,6 @@ jest.spyOn(window, "getComputedStyle").mockImplementation(() => ({
   },
 }));
 
-jest.mock("@vscode/webview-ui-toolkit", () => ({
-  provideVSCodeDesignSystem: jest.fn(() => ({
-    register: jest.fn(),
-  })), // Mock provideVSCodeDesignSystem with an empty object
-  vsCodeButton: jest.fn(() => ({})), // Mock vsCodeButton with an empty object
-}));
 
 // Stub is used to avoid console warnings of vscode custom elements
 const global = {

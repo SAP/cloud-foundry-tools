@@ -102,17 +102,6 @@
           @keyup="btnStatus"
           @input="(p) => (passcode = p.target.value)"
         >
-          <!-- <span
-            slot="end"
-            v-tooltip="{
-              text: 'Paste the generated passcode',
-              theme: {
-                placement: 'right',
-                width: '155px',
-              },
-            }"
-            ><span class="codicon codicon-clippy" @click="paste"></span
-          ></span> -->
           <vscode-icon
             slot="content-after"
             v-tooltip="{
@@ -123,7 +112,6 @@
               },
             }"
             name="clippy"
-            title="clippy"
             action-icon
             @click="paste"
           ></vscode-icon>
