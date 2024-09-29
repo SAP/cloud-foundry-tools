@@ -25,16 +25,15 @@ import * as _ from "lodash";
 import CFHeader from "./components/CFHeader.vue";
 import CFSignin from "./components/CFSignin.vue";
 import CFTarget from "./components/CFTarget.vue";
-import {
-  provideVSCodeDesignSystem,
-  vsCodeButton,
-  vsCodeProgressRing,
-  vsCodeDropdown,
-} from "@vscode/webview-ui-toolkit";
 
-provideVSCodeDesignSystem().register(vsCodeButton());
-provideVSCodeDesignSystem().register(vsCodeProgressRing());
-provideVSCodeDesignSystem().register(vsCodeDropdown());
+import "@vscode-elements/elements/dist/vscode-button/index.js";
+import "@vscode-elements/elements/dist/vscode-progress-ring/index.js";
+import "@vscode-elements/elements/dist/vscode-single-select/index.js";
+import "@vscode-elements/elements/dist/vscode-divider/index.js";
+import "@vscode-elements/elements/dist/vscode-textfield/index.js";
+import "@vscode-elements/elements/dist/vscode-radio-group/index.js";
+import "@vscode-elements/elements/dist/vscode-radio/index.js";
+import "@vscode-elements/elements/dist/vscode-option/index.js";
 
 function initialState() {
   return {
