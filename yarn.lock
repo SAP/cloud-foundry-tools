@@ -2700,12 +2700,12 @@
   resolved "https://registry.yarnpkg.com/@vitejs/plugin-vue/-/plugin-vue-4.3.4.tgz#a289dff38e01949fe7be581d5542cabaeb961dec"
   integrity sha512-ciXNIHKPriERBisHFBvnTbfKa6r9SAesOYXeGDzgegcvy9Q4xdScSHAmKbNT0M3O0S9LKhIf5/G+UYG4NnnzYw==
 
-"@vscode-elements/elements@1.6.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@vscode-elements/elements/-/elements-1.6.0.tgz#d4a6fb87cce67a723efed601ecc3d5c2be36a231"
-  integrity sha512-fbZw0Xr7yQ7cg9Qibh0rwutvcG2o+h6HyuV5bLrWa80DPCsLFQwyCoX+6hzngAxPC+SAP1LYz+PYZeesiAtOLg==
+"@vscode-elements/elements@next":
+  version "1.6.2-pre.2"
+  resolved "https://registry.yarnpkg.com/@vscode-elements/elements/-/elements-1.6.2-pre.2.tgz#19d476fcb16a566d2c9553ee3679e2ffbd9c2f32"
+  integrity sha512-ih5TTakT/2gHUk4ldHuEmcD7ovDajszZyAPwUe1MqXE+Hxv7YVi1io3R1YMyS/WyK5qpZrfF0MeSiXr5rnC1rw==
   dependencies:
-    lit "^3.1.2"
+    lit "^3.2.0"
 
 "@vscode-logging/logger@^2.0.0":
   version "2.0.0"
@@ -8006,7 +8006,7 @@ lit-html@^3.2.0:
   dependencies:
     "@types/trusted-types" "^2.0.2"
 
-lit@^3.1.2:
+lit@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/lit/-/lit-3.2.0.tgz#2189d72bccbc335f733a67bfbbd295f015e68e05"
   integrity sha512-s6tI33Lf6VpDu7u4YqsSX78D28bYQulM+VAzsGch4fx2H0eLZnJsUBsPWmGYSGoKDNbjtRv02rio1o+UdPVwvw==

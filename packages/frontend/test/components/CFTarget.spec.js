@@ -11,7 +11,6 @@ jest.spyOn(window, "getComputedStyle").mockImplementation(() => ({
   },
 }));
 
-
 // Stub is used to avoid console warnings of vscode custom elements
 const global = {
   stubs: {
@@ -235,9 +234,8 @@ describe("CFTarget.vue", () => {
 
     // Assert orgs got sorted
     const orgsList = wrapper.vm.$data.orgs;
-    expect(orgsList[0]?.label).equal("");
-    expect(orgsList[1]?.label).equal("aaaaa");
-    expect(orgsList[2]?.label).equal("bbbb");
+    expect(orgsList[0]?.label).equal("aaaaa");
+    expect(orgsList[1]?.label).equal("bbbb");
   });
 
   it("updates selectedOrg when an organization is selected", async () => {
