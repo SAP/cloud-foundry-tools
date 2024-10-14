@@ -11,10 +11,6 @@
   </div>
 </template>
 <script>
-import { provideVSCodeDesignSystem, vsCodeDivider } from "@vscode/webview-ui-toolkit";
-
-provideVSCodeDesignSystem().register(vsCodeDivider());
-
 export default {
   name: "CFHeader",
   props: [],

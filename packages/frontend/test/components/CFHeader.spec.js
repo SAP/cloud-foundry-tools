@@ -19,17 +19,6 @@ const global = {
   },
 };
 
-jest.mock("@vscode/webview-ui-toolkit", () => ({
-  provideVSCodeDesignSystem: jest.fn(() => ({
-    register: jest.fn(),
-  })),
-  vsCodeDivider: jest.fn(() => ({
-    render() {
-      return "<div></div>"; // Mock the rendering of vscode-divider
-    },
-  })),
-}));
-
 describe("CFHeader.vue", () => {
   it("renders without errors", () => {
     const wrapper = mount(CFHeader, {

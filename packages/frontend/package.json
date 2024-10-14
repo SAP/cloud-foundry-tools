@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@sap-devx/webview-rpc": "0.4.1",
-    "@vscode/webview-ui-toolkit": "1.2.2",
+    "@vscode-elements/elements": "next",
     "@vue/compiler-sfc": "3.3.4",
     "vue": "3.2.36",
     "vue-loader": "17.2.2",

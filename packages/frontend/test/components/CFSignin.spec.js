@@ -2,24 +2,6 @@ import { expect } from "chai";
 import { shallowMount } from "@vue/test-utils";
 import CFSignin from "../../src/components/CFSignin.vue";
 
-jest.mock("@vscode/webview-ui-toolkit", () => ({
-  provideVSCodeDesignSystem: jest.fn(() => ({
-    register: jest.fn(),
-  })),
-  vsCodeDivider: jest.fn(() => ({
-    render() {
-      return "<div></div>"; // Mock the rendering of vscode-divider
-    },
-  })),
-  vsCodeTextField: jest.fn(() => ({})), // Mock vsCodeTextField with an empty object
-  vsCodeRadioGroup: jest.fn(), // Add this line to mock vsCodeRadioGroup
-  vsCodeRadio: jest.fn(), // Add this line to mock vsCodeRadio
-  vsCodeLink: jest.fn(() => ({})), // Mock vsCodeLink with an empty object
-  vsCodeButton: jest.fn(() => ({})), // Mock vsCodeButton with an empty object
-  vsCodeDropdown: jest.fn(() => ({})), // Mock vsCodeDropdown with an empty object
-  vsCodeOption: jest.fn(() => ({})), // Mock vsCodeOption with an empty object
-}));
-
 const mockTooltipDirective = jest.fn();
 
 const global = {
