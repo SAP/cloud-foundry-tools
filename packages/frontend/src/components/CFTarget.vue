@@ -102,6 +102,10 @@ export default {
     getOrgAndSpace() {
       this.rpc.invoke("getSelectedTarget").then((target) => {
         this.rpc.invoke("getOrgs").then((orgs) => {
+          orgs.unshift({
+            label: "",
+            guid: "",
+          });
           const orgsWithSelected = orgs.map((org) => {
             if (org.label === target.org) {
               this.selectedOrg = {
