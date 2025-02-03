@@ -34,15 +34,6 @@ jest.mock("@sap-devx/webview-rpc/out.browser/rpc-browser-ws", () => {
   };
 });
 
-jest.mock("@vscode/webview-ui-toolkit", () => ({
-  provideVSCodeDesignSystem: jest.fn(() => ({
-    register: jest.fn(),
-  })), // Mock provideVSCodeDesignSystem with an empty object
-  vsCodeButton: jest.fn(() => ({})), // Mock vsCodeButton with an empty object
-  vsCodeProgressRing: jest.fn(() => ({})), // Mock vsCodeProgressRing with an empty object
-  vsCodeDropdown: jest.fn(() => ({})), // Mock vsCodeDropdown with an empty object
-}));
-
 jest.mock("../src/components/CFHeader.vue", () => ({
   name: "CFHeader",
   template: "<div>Mocked CFHeader</div>", // Replace with your desired mock template

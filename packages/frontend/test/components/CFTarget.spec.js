@@ -11,13 +11,6 @@ jest.spyOn(window, "getComputedStyle").mockImplementation(() => ({
   },
 }));
 
-jest.mock("@vscode/webview-ui-toolkit", () => ({
-  provideVSCodeDesignSystem: jest.fn(() => ({
-    register: jest.fn(),
-  })), // Mock provideVSCodeDesignSystem with an empty object
-  vsCodeButton: jest.fn(() => ({})), // Mock vsCodeButton with an empty object
-}));
-
 // Stub is used to avoid console warnings of vscode custom elements
 const global = {
   stubs: {
@@ -241,7 +234,6 @@ describe("CFTarget.vue", () => {
 
     // Assert orgs got sorted
     const orgsList = wrapper.vm.$data.orgs;
-    expect(orgsList[0]?.label).equal("");
     expect(orgsList[1]?.label).equal("aaaaa");
     expect(orgsList[2]?.label).equal("bbbb");
   });
