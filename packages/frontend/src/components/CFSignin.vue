@@ -6,7 +6,9 @@
     <div :style="{ display: loggedInVisibility }" class="logged-in-visibility">
       <div style="display: flex">
         <span className="codicon codicon-pass signin-icon" />
-        You are signed in to Cloud Foundry.
+        {{
+          "You are signed in to Cloud Foundry." + (orgAndSpaceSet ? "" : " You can now set the Org and Space Target.")
+        }}
       </div>
     </div>
     <br /><br />
@@ -59,8 +61,10 @@
       </div>
 
       <vscode-radio-group orientation="horizontal" :value="ssoOrCredentials" @change="setSSO">
-        <vscode-radio id="radioCredentials" value="Credentials"> Credentials </vscode-radio>
-        <vscode-radio id="radioSSO" value="SSO"> SSO Passcode </vscode-radio>
+        <vscode-radio id="radioCredentials" value="Credentials" :checked="ssoOrCredentials === 'Credentials'">
+          Credentials
+        </vscode-radio>
+        <vscode-radio id="radioSSO" value="SSO" :checked="ssoOrCredentials === 'SSO'"> SSO Passcode </vscode-radio>
       </vscode-radio-group>
 
       <div id="sso-div" :style="{ display: ssoVisibility }">
@@ -98,7 +102,6 @@
           class="pt-8"
           size="47"
           placeholder="Enter your passcode"
-          :value="passcode"
           @keyup="btnStatus"
           @input="(p) => (passcode = p.target.value)"
         >
@@ -125,7 +128,6 @@
         <vscode-textfield
           v-model="username"
           class="pt-8"
-          :value="username"
           size="50"
           placeholder="User ID"
           @keyup="btnStatus"
@@ -138,7 +140,6 @@
         <vscode-textfield
           v-model="password"
           class="pt-8"
-          :value="password"
           type="password"
           size="50"
           @keyup="btnStatus"
@@ -169,6 +170,10 @@ export default {
     },
     rpc: {
       type: Object,
+      required: true,
+    },
+    orgAndSpaceSet: {
+      type: Boolean,
       required: true,
     },
   },
@@ -229,8 +234,8 @@ export default {
       }
     },
     setEndpoint(val) {
-      this.endpoint = val.target.value.replace(/ /g, "");
-      this.isCFEndpointValid = this.endpoint !== "" && this.$refs?.cfendpointInput?.control?.validity?.valid;
+      this.endpoint = val.target.value.replace(/ /g, "").replace(/\/$/, "");
+      this.isCFEndpointValid = this.endpoint !== "" && this.$refs?.cfendpointInput?.validity?.valid;
     },
     paste() {
       navigator.clipboard.readText().then((clipText) => {

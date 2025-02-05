@@ -1,28 +1,40 @@
 <template>
   <div id="targetDiv" class="loggedIn">
-    <vscode-divider role="separator" aria-orientation="horizontal" orientation="horizontal" />
-    <br /><br />
+    <br />
     <div class="cloud-foundry-target">Cloud Foundry Target</div>
     <div :style="{ display: orgAndSpaceSetVisibility }" class="org-and-space-visibility">
       <span className="codicon codicon-pass signin-icon-target" />
       Target is set to: {{ currentOrg }} org and {{ currentSpace }} space.
     </div>
+    <div v-if="orgMissing || spaceMissing" class="org-and-space-absence">
+      <span className="codicon codicon-warning org-and-space-absence-icon" />
+      {{
+        orgMissing
+          ? "There are no Org and Space for this landscape, please contact your admin."
+          : "There is no Space for this Org, please contact your admin."
+      }}
+    </div>
     <br /><br />
-    <span class="subtitle-color-field">Select Cloud Foundry Organization </span><span class="text-danger">*</span><br />
-    <vscode-single-select :value="selectedOrg.label" class="cf-drop-down mt-8" @change="updateSelectedOrg">
-      <vscode-option v-for="org in optOrganizations" :key="org.guid" :value="org.label" :selected="org.selected">{{
-        org.label
-      }}</vscode-option>
-    </vscode-single-select>
-    <br /><br />
-    <span class="subtitle-color-field">Select Cloud Foundry Space </span><span class="text-danger">*</span><br />
-    <vscode-single-select :value="selectedSpace.label" class="cf-drop-down mt-8" @change="updateSelectedSpace">
-      <vscode-option v-for="space in optSpaces" :key="space.guid" :value="space.label" :selected="space.selected">{{
-        space.label
-      }}</vscode-option>
-    </vscode-single-select>
-    <br /><br />
-    <vscode-button class="mt-8" :disabled="isApplyButtonDisabled" @click="setTarget"> Apply </vscode-button>
+    <template v-if="!orgMissing">
+      <span class="subtitle-color-field">Select Cloud Foundry Organization </span><span class="text-danger">*</span
+      ><br />
+      <vscode-single-select :value="selectedOrg.label" class="cf-drop-down mt-8" @change="updateSelectedOrg">
+        <vscode-option disabled value=""></vscode-option>
+        <vscode-option v-for="org in optOrganizations" :key="org.guid" :value="org.label" :selected="org.selected">{{
+          org.label
+        }}</vscode-option>
+      </vscode-single-select>
+      <br /><br />
+      <span class="subtitle-color-field">Select Cloud Foundry Space </span><span class="text-danger">*</span><br />
+      <vscode-single-select :value="selectedSpace.label" class="cf-drop-down mt-8" @change="updateSelectedSpace">
+        <vscode-option disabled value=""></vscode-option>
+        <vscode-option v-for="space in optSpaces" :key="space.guid" :value="space.label" :selected="space.selected">{{
+          space.label
+        }}</vscode-option>
+      </vscode-single-select>
+      <br /><br />
+      <vscode-button class="mt-8" :disabled="isApplyButtonDisabled" @click="setTarget"> Apply </vscode-button>
+    </template>
   </div>
 </template>
 
@@ -44,9 +56,12 @@ export default {
       required: true,
     },
   },
+  emits: ["orgAndSpaceSet"],
   data() {
     return {
       areOrgAndSpaceSet: "",
+      orgMissing: false,
+      spaceMissing: false,
       orgs: [],
       spaces: [],
       selectedOrg: {},
@@ -60,7 +75,7 @@ export default {
       return !this.isLoggedIn ? "none" : "";
     },
     orgAndSpaceSetVisibility() {
-      return this.areOrgAndSpaceSet || (this.target.currentOrg && this.target.currentSpace) ? "" : "none";
+      return this.areOrgAndSpaceSet || (this.target?.currentOrg && this.target?.currentSpace) ? "" : "none";
     },
     isApplyButtonDisabled() {
       return (
@@ -90,6 +105,7 @@ export default {
     if (this.currentSpace === "") {
       this.currentSpace = this.target?.currentSpace;
     }
+    this.$emit("orgAndSpaceSet", this.isApplyButtonDisabled);
   },
   methods: {
     updateSelectedOrg(newOrg) {
@@ -102,10 +118,6 @@ export default {
     getOrgAndSpace() {
       this.rpc.invoke("getSelectedTarget").then((target) => {
         this.rpc.invoke("getOrgs").then((orgs) => {
-          orgs.unshift({
-            label: "",
-            guid: "",
-          });
           const orgsWithSelected = orgs.map((org) => {
             if (org.label === target.org) {
               this.selectedOrg = {
@@ -123,19 +135,18 @@ export default {
           this.orgs = _.sortBy(orgsWithSelected, (item) => item.label.toLowerCase());
 
           // If no org could be selected from the current target, set it to the first org if exists
-          if (!this.selectedOrg || !this.selectedOrg.label) {
-            if (this.orgs && this.orgs[0]) {
-              this.selectedOrg = {
-                label: this.orgs[0].label,
-                guid: this.orgs[0].guid,
-              };
-            }
+          if (!this.selectedOrg?.label && this.orgs.length === 1) {
+            this.selectedOrg = {
+              label: this.orgs[0].label,
+              guid: this.orgs[0].guid,
+            };
           }
 
           // If some org is selected - select a space with the current target information
           if (this.selectedOrg && this.selectedOrg.label) {
             this.selectSpace(target.space);
           }
+          this.orgMissing = this.orgs.length === 0;
         });
       });
     },
@@ -149,9 +160,10 @@ export default {
           };
         });
         this.spaces = _.sortBy(spacesWithSelected, (item) => item.label.toLowerCase());
-        // If a specific space should be selected - choose it, otherwise take the first if exists and fallback to empty selection object.
+        // If a specific space should be selected - choose it, otherwise take the first if exists and is the only one, otherwise fallback to an empty selection object.
         this.selectedSpace =
-          _.find(this.spaces, (space) => space.selected === true) ?? (this.spaces && this.spaces[0]) ?? {};
+          this.spaces.length === 1 ? this.spaces[0] : _.find(this.spaces, (space) => space.selected === true) ?? {};
+        this.spaceMissing = this.spaces.length === 0;
       });
     },
     setTarget() {
@@ -169,10 +181,16 @@ export default {
 </script>
 
 <style scoped>
-.signin-icon-target {
+.signin-icon-target,
+.org-and-space-absence-icon {
   padding-right: 5px;
   padding-top: 2px;
+}
+.signin-icon-target {
   color: var(--vscode-notebookStatusSuccessIcon-foreground, #388a34);
+}
+.org-and-space-absence-icon {
+  color: var(--vscode-notificationsWarningIcon-foreground, #bf8803);
 }
 .subtitle-color-field {
   color: var(--vscode-descriptionForeground, #717171);
@@ -185,7 +203,8 @@ export default {
   padding-right: 16px;
   float: left;
 }
-.org-and-space-visibility {
+.org-and-space-visibility,
+.org-and-space-absence {
   float: left;
   display: flex;
 }

@@ -2,7 +2,7 @@
   <div>
     <h1 wrapping-type="Normal">Cloud Foundry Sign In and Targets</h1>
     <span class="subtitle-field">
-      Provide your Cloud Foundry parameters to sign in to the Cloud Foundry enviroment</span
+      Provide your parameters to sign in to the Cloud Foundry environment and select the target Org and Space.</span
     >
     <br />
     <br />
