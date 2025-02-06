@@ -26,7 +26,12 @@
       </vscode-single-select>
       <br /><br />
       <span class="subtitle-color-field">Select Cloud Foundry Space </span><span class="text-danger">*</span><br />
-      <vscode-single-select :value="selectedSpace.label" class="cf-drop-down mt-8" @change="updateSelectedSpace">
+      <vscode-single-select
+        :disabled="!optSpaces.length"
+        :value="selectedSpace.label"
+        class="cf-drop-down mt-8"
+        @change="updateSelectedSpace"
+      >
         <vscode-option disabled value=""></vscode-option>
         <vscode-option v-for="space in optSpaces" :key="space.guid" :value="space.label" :selected="space.selected">{{
           space.label
