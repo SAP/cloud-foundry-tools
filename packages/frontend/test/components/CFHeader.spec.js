@@ -31,7 +31,7 @@ describe("CFHeader.vue", () => {
     const wrapper = mount(CFHeader, { global });
     expect(wrapper.text()).contain("Cloud Foundry Sign In and Targets");
     expect(wrapper.text()).contain(
-      "Cloud Foundry Sign In and Targets Provide your parameters to sign in to the Cloud Foundry environment and select the target Org and Space."
+      "Provide your credentials to sign in to the Cloud Foundry environment and then select the target org and space."
     );
     expect(wrapper.find('[role="separator"]').exists()).to.be.true;
   });
@@ -51,7 +51,7 @@ describe("CFHeader.vue", () => {
 
   it("renders the correct HTML structure", () => {
     const wrapper = mount(CFHeader, { global });
-    const expectedHtml = `<div><h1wrapping-type="Normal">CloudFoundrySignInandTargets</h1><spanclass="subtitle-field">ProvideyourparameterstosignintotheCloudFoundryenvironmentandselectthetargetOrgandSpace.</span><br><br><divrole="separator"></div><br></div>`;
+    const expectedHtml = `<div><h1wrapping-type="Normal">CloudFoundrySignInandTargets</h1><spanclass="subtitle-field">ProvideyourcredentialstosignintotheCloudFoundryenvironmentandthenselectthetargetorgandspace.</span><br><br><divrole="separator"></div><br></div>`;
     expect(wrapper.html().replace(/\s/g, "")).to.equal(expectedHtml);
   });
 });

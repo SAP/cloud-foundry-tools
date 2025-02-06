@@ -479,7 +479,7 @@ describe("CFTarget.vue", () => {
     // Trigger watch by changing isLoggedIn prop
     expect(wrapper.vm.selectedOrg).to.deep.equal({});
     expect(wrapper.vm.selectedSpace).to.deep.equal({});
-    expect(wrapper.text()).contain("There are no Org and Space for this landscape, please contact your admin.");
+    expect(wrapper.text()).contain("There is no Org defined for this landscape.");
   });
 
   it("does show error message when there is Organisaion but no Spaces are returned", async () => {
@@ -519,7 +519,7 @@ describe("CFTarget.vue", () => {
     expect(wrapper.vm.selectedOrg).to.deep.equal({ label: "aaaaa", guid: "32432423" });
     await wrapper.vm.$nextTick();
     expect(wrapper.vm.selectedSpace).to.deep.equal({});
-    expect(wrapper.text()).contain("There is no Space for this Org, please contact your admin.");
+    expect(wrapper.text()).contain("There is no Space defined for the org you selected.");
   });
 
   it("updates selectedOrg when an organization is selected", async () => {

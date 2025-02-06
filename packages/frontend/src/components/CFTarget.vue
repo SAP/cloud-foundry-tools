@@ -10,8 +10,8 @@
       <span className="codicon codicon-warning org-and-space-absence-icon" />
       {{
         orgMissing
-          ? "There are no Org and Space for this landscape, please contact your admin."
-          : "There is no Space for this Org, please contact your admin."
+          ? "There is no Org defined for this landscape."
+          : "There is no Space defined for the org you selected."
       }}
     </div>
     <br /><br />

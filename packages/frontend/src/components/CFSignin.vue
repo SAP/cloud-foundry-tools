@@ -6,9 +6,7 @@
     <div :style="{ display: loggedInVisibility }" class="logged-in-visibility">
       <div style="display: flex">
         <span className="codicon codicon-pass signin-icon" />
-        {{
-          "You are signed in to Cloud Foundry." + (orgAndSpaceSet ? "" : " You can now set the Org and Space Target.")
-        }}
+        {{ "You are signed in to Cloud Foundry." + (orgAndSpaceSet ? "" : " You can now set the Org and Space.") }}
       </div>
     </div>
     <br /><br />
