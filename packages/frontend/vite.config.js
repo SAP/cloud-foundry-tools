@@ -5,7 +5,14 @@ const path = require("path");
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    vue(),
+    vue({
+      template: {
+        compilerOptions: {
+          // Instruct the compiler to treat UI5 Web Components and VSCode Elements Web Components as custom elements.
+          isCustomElement: (tag) => tag.startsWith("ui5-") || tag.startsWith("vscode-"),
+        },
+      },
+    }),
     {
       name: "html-transform",
       transformIndexHtml(html) {

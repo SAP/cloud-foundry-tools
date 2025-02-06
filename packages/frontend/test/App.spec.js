@@ -96,6 +96,25 @@ describe("App.vue", () => {
     expect(wrapper.vm.isLoggedIn).to.be.true;
   });
 
+  it("updates orgAndSpaceSet when updateOrgAndSpaceSet is called", () => {
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          rpc: mockRpc, // Provide the mock rpc object
+          initialTarget: {},
+        };
+      },
+      global,
+    });
+    expect(wrapper.vm.orgAndSpaceSet).to.be.false; // Initial state
+
+    // Call the updateOrgAndSpaceSet method with a value of true
+    wrapper.vm.updateOrgAndSpaceSet(true);
+
+    // Check that isLoggedIn has been updated to true
+    expect(wrapper.vm.orgAndSpaceSet).to.be.true;
+  });
+
   it("renders the correct HTML structure", () => {
     const wrapper = shallowMount(App, {
       data() {
@@ -106,7 +125,7 @@ describe("App.vue", () => {
       },
       global,
     });
-    const expectedHtml = `<divid="app"><c-f-header-stubclass="app"></c-f-header-stub><divclass="progress-ring"style="display:none;"></div><divclass="app"><divstyle="visibility:none;"><c-f-signin-stubtarget="[objectObject]"rpc="[objectObject]"></c-f-signin-stub><divstyle="display:none;"><c-f-target-stubtarget="[objectObject]"rpc="[objectObject]"isloggedin="false"></c-f-target-stub></div></div></div><!--endprogress--></div>`;
+    const expectedHtml = `<divid="app"><c-f-header-stubclass="app"></c-f-header-stub><divclass="progress-ring"style="display:none;"></div><divclass="app"><divstyle="visibility:none;"><c-f-signin-stubtarget="[objectObject]"organdspaceset="false"rpc="[objectObject]"></c-f-signin-stub><divstyle="display:none;"><c-f-target-stubtarget="[objectObject]"rpc="[objectObject]"isloggedin="false"></c-f-target-stub></div></div></div><!--endprogress--></div>`;
     expect(wrapper.html().replace(/\s/g, "")).to.equal(expectedHtml);
   });
 

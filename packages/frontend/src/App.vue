@@ -7,10 +7,20 @@
 
     <div class="app" :style="{ display: formVisibility }">
       <div style="visibility: none">
-        <CFSignin :target="initialTarget" :rpc="rpc" @updateIsLoggedIn="updateIsLoggedIn" />
+        <CFSignin
+          :target="initialTarget"
+          :orgAndSpaceSet="orgAndSpaceSet"
+          :rpc="rpc"
+          @updateIsLoggedIn="updateIsLoggedIn"
+        />
 
         <div :style="{ display: targetVisibility }">
-          <CFTarget :target="initialTarget" :rpc="rpc" :isLoggedIn="isLoggedIn" />
+          <CFTarget
+            :target="initialTarget"
+            :rpc="rpc"
+            :isLoggedIn="isLoggedIn"
+            @orgAndSpaceSet="updateOrgAndSpaceSet"
+          />
         </div>
       </div>
     </div>
@@ -43,6 +53,7 @@ function initialState() {
     isLoggedIn: false,
     curretOrg: "",
     currentSpace: "",
+    orgAndSpaceSet: false,
   };
 }
 export default {
@@ -76,6 +87,9 @@ export default {
     this.init();
   },
   methods: {
+    updateOrgAndSpaceSet(val) {
+      this.orgAndSpaceSet = val;
+    },
     updateIsLoggedIn(val) {
       this.isLoggedIn = val;
     },

@@ -23,7 +23,7 @@ const global = {
     VscodeButton: {
       template: "<button></button>",
     },
-    VscodeDropdown: {
+    VscodeSingleSelect: {
       template: "<div></div>",
     },
   },
@@ -199,7 +199,30 @@ describe("CFTarget.vue", () => {
     expect(spaceDropdown.length).to.equal(2); // You may need to adjust this based on your component's structure
   });
 
-  it("populates orgs dropdown with multiple organizations - sorted", async () => {
+  it("sets currentOrg and currentSpace to undefined when target is undefined", async () => {
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: undefined,
+        rpc: {
+          invoke: jest.fn().mockResolvedValue([]), // Mock the getOrgs and getSpaces methods
+        },
+        isLoggedIn: true,
+      },
+      global,
+    });
+    await wrapper.vm.$nextTick();
+
+    // Trigger watch by changing isLoggedIn prop
+    await wrapper.setProps({ currentOrg: "", currentSpace: "" });
+
+    //   // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.vm.currentOrg).to.equal(undefined);
+    expect(wrapper.vm.currentSpace).to.equal(undefined);
+  });
+
+  it("does select Organizaion when Organizaion is returned from selectedTarget", async () => {
     const rpcMock = {
       invoke: jest.fn().mockImplementation((funcName) => {
         if (funcName === "getOrgs") {
@@ -234,8 +257,269 @@ describe("CFTarget.vue", () => {
 
     // Assert orgs got sorted
     const orgsList = wrapper.vm.$data.orgs;
-    expect(orgsList[1]?.label).equal("aaaaa");
-    expect(orgsList[2]?.label).equal("bbbb");
+    expect(orgsList[0]?.label).equal("aaaaa");
+    expect(orgsList[1]?.label).equal("bbbb");
+    expect(wrapper.vm.selectedOrg).to.deep.equal({ label: "aaaaa", guid: "32432423", selected: true });
+  });
+
+  it("does not select Organizaion when multiple Organizaions returned and unknown Organizaion from selectedTarget", async () => {
+    const rpcMock = {
+      invoke: jest.fn().mockImplementation((funcName) => {
+        if (funcName === "getOrgs") {
+          return Promise.resolve([
+            { guid: "47423742", label: "bbbb" },
+            { guid: "32432423", label: "aaaaa" },
+          ]);
+        } else if (funcName === "getSelectedTarget") {
+          return Promise.resolve({ guid: "00000000", org: "cccccc" });
+        } else if (funcName === "getSpaces") {
+          return Promise.resolve([
+            {
+              label: "space1",
+              guid: "xxxxxxxx",
+              orgGUID: "32432423",
+            },
+            {
+              label: "space2",
+              guid: "yyyyyyyy",
+              orgGUID: "47423742",
+            },
+          ]);
+        }
+      }),
+    };
+
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "aaaaa",
+        },
+        rpc: rpcMock,
+        isLoggedIn: false,
+      },
+      global,
+    });
+
+    // Trigger watch by changing isLoggedIn prop
+    await wrapper.setProps({ isLoggedIn: true });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.vm.selectedOrg).to.deep.equal({});
+    expect(wrapper.vm.selectedSpace).to.deep.equal({});
+  });
+
+  it("does select Organizaion and no Space when one Organizaion is returned but multiple Spaces and unknown org from selectedTarget", async () => {
+    const rpcMock = {
+      invoke: jest.fn().mockImplementation((funcName) => {
+        if (funcName === "getOrgs") {
+          return Promise.resolve([{ guid: "32432423", label: "aaaaa" }]);
+        } else if (funcName === "getSelectedTarget") {
+          return Promise.resolve({ guid: "00000000", org: "cccccc" });
+        } else if (funcName === "getSpaces") {
+          return Promise.resolve([
+            {
+              label: "space1",
+              guid: "xxxxxxxx",
+              orgGUID: "32432423",
+            },
+            {
+              label: "space2",
+              guid: "yyyyyyyy",
+              orgGUID: "47423742",
+            },
+          ]);
+        }
+      }),
+    };
+
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "aaaaa",
+        },
+        rpc: rpcMock,
+        isLoggedIn: false,
+      },
+      global,
+    });
+
+    // Trigger watch by changing isLoggedIn prop
+    await wrapper.setProps({ isLoggedIn: true });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.vm.selectedOrg).to.deep.equal({ label: "aaaaa", guid: "32432423" });
+    expect(wrapper.vm.selectedSpace).to.deep.equal({});
+  });
+
+  it("does select Organisaion and Space when one Organisation and one Space and unknown org from selectedTarget", async () => {
+    const rpcMock = {
+      invoke: jest.fn().mockImplementation((funcName) => {
+        if (funcName === "getOrgs") {
+          return Promise.resolve([{ guid: "32432423", label: "aaaaa" }]);
+        } else if (funcName === "getSelectedTarget") {
+          return Promise.resolve({ guid: "00000000", org: "cccccc" });
+        } else if (funcName === "getSpaces") {
+          return Promise.resolve([
+            {
+              label: "space1",
+              guid: "xxxxxxxx",
+              orgGUID: "32432423",
+            },
+          ]);
+        }
+      }),
+    };
+
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "aaaaa",
+        },
+        rpc: rpcMock,
+        isLoggedIn: false,
+      },
+      global,
+    });
+
+    // Trigger watch by changing isLoggedIn prop
+    await wrapper.setProps({ isLoggedIn: true });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.vm.selectedOrg).to.deep.equal({ label: "aaaaa", guid: "32432423" });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedSpace).to.deep.equal({ guid: "xxxxxxxx", label: "space1", selected: false });
+  });
+
+  it("does select Organisaion and Space when one Organisation and multiple Space and known org from selectedTarget", async () => {
+    const rpcMock = {
+      invoke: jest.fn().mockImplementation((funcName) => {
+        if (funcName === "getOrgs") {
+          return Promise.resolve([{ guid: "32432423", label: "aaaaa" }]);
+        } else if (funcName === "getSelectedTarget") {
+          return Promise.resolve({ guid: "32432423", org: "aaaaa", space: "space1" });
+        } else if (funcName === "getSpaces") {
+          return Promise.resolve([
+            {
+              label: "space1",
+              guid: "xxxxxxxx",
+              orgGUID: "32432423",
+            },
+            {
+              label: "space2",
+              guid: "xxxxxxxx",
+              orgGUID: "32432423",
+            },
+          ]);
+        }
+      }),
+    };
+
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "aaaaa",
+        },
+        rpc: rpcMock,
+        isLoggedIn: false,
+      },
+      global,
+    });
+
+    // Trigger watch by changing isLoggedIn prop
+    await wrapper.setProps({ isLoggedIn: true });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.vm.selectedOrg).to.deep.equal({ label: "aaaaa", guid: "32432423", selected: true });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedSpace).to.deep.equal({ guid: "xxxxxxxx", label: "space1", selected: true });
+  });
+
+  it("does show error message when no Organisations are returned", async () => {
+    const rpcMock = {
+      invoke: jest.fn().mockImplementation((funcName) => {
+        if (funcName === "getOrgs") {
+          return Promise.resolve([]);
+        } else if (funcName === "getSelectedTarget") {
+          return Promise.resolve({ guid: "00000000", org: "cccccc" });
+        } else if (funcName === "getSpaces") {
+          return Promise.resolve([]);
+        }
+      }),
+    };
+
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "aaaaa",
+        },
+        rpc: rpcMock,
+        isLoggedIn: false,
+      },
+      global,
+    });
+
+    await wrapper.setData({
+      orgMissing: true,
+    });
+
+    // Trigger watch by changing isLoggedIn prop
+    await wrapper.setProps({ isLoggedIn: true });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    // Trigger watch by changing isLoggedIn prop
+    expect(wrapper.vm.selectedOrg).to.deep.equal({});
+    expect(wrapper.vm.selectedSpace).to.deep.equal({});
+    expect(wrapper.text()).contain("There is no Org defined for this landscape.");
+  });
+
+  it("does show error message when there is Organisaion but no Spaces are returned", async () => {
+    const rpcMock = {
+      invoke: jest.fn().mockImplementation((funcName) => {
+        if (funcName === "getOrgs") {
+          return Promise.resolve([{ guid: "32432423", label: "aaaaa" }]);
+        } else if (funcName === "getSelectedTarget") {
+          return Promise.resolve({ guid: "00000000", org: "cccccc" });
+        } else if (funcName === "getSpaces") {
+          return Promise.resolve([]);
+        }
+      }),
+    };
+
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "aaaaa",
+        },
+        rpc: rpcMock,
+        isLoggedIn: false,
+      },
+      global,
+    });
+
+    await wrapper.setData({
+      spaceMissing: true,
+    });
+
+    // Trigger watch by changing isLoggedIn prop
+    await wrapper.setProps({ isLoggedIn: true });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.vm.selectedOrg).to.deep.equal({ label: "aaaaa", guid: "32432423" });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.selectedSpace).to.deep.equal({});
+    expect(wrapper.text()).contain("There is no Space defined for the org you selected.");
   });
 
   it("updates selectedOrg when an organization is selected", async () => {
@@ -304,5 +588,100 @@ describe("CFTarget.vue", () => {
 
     // Assert that selectedSpace is updated correctly
     expect(wrapper.vm.selectedSpace).to.deep.equal({ guid: "space-guid-1", label: "Space 1" });
+  });
+
+  it("update selectedOrg and clears selected space when Organization is changed", async () => {
+    const rpcMock = {
+      invoke: jest.fn().mockImplementation((funcName) => {
+        if (funcName === "getOrgs") {
+          return Promise.resolve([
+            { guid: "32432423", label: "aaaaa" },
+            { guid: "47423742", label: "bbbb" },
+          ]);
+        } else if (funcName === "getSelectedTarget") {
+          return Promise.resolve({ guid: "00000000", org: "cccccc" });
+        } else if (funcName === "getSpaces") {
+          return Promise.resolve([
+            {
+              label: "space1",
+              guid: "xxxxxxxx",
+              orgGUID: "32432423",
+            },
+          ]);
+        }
+      }),
+    };
+
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "aaaaa",
+        },
+        rpc: rpcMock,
+        isLoggedIn: false,
+      },
+      global,
+    });
+
+    // Trigger watch by changing isLoggedIn prop
+    await wrapper.setProps({ isLoggedIn: true });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    wrapper.vm.updateSelectedOrg({ target: { value: "bbbb" } });
+
+    expect(wrapper.vm.selectedOrg).to.deep.equal({ guid: "47423742", label: "bbbb", selected: false });
+    expect(wrapper.vm.selectedSpace).to.deep.equal({});
+  });
+
+  it("update selectedSpace when new space is passed", async () => {
+    const rpcMock = {
+      invoke: jest.fn().mockImplementation((funcName) => {
+        if (funcName === "getOrgs") {
+          return Promise.resolve([{ guid: "32432423", label: "aaaaa" }]);
+        } else if (funcName === "getSelectedTarget") {
+          return Promise.resolve({ guid: "00000000", org: "cccccc" });
+        } else if (funcName === "getSpaces") {
+          return Promise.resolve([]);
+        }
+      }),
+    };
+
+    const wrapper = shallowMount(CFTarget, {
+      props: {
+        target: {
+          currentOrg: "aaaaa",
+        },
+        rpc: rpcMock,
+        isLoggedIn: false,
+      },
+      global,
+    });
+
+    await wrapper.setData({
+      spaces: [
+        {
+          label: "space1",
+          guid: "xxxxxxxx",
+          orgGUID: "32432423",
+          selected: true,
+        },
+        {
+          label: "space2",
+          guid: "yyyyyyyy",
+          orgGUID: "47423742",
+        },
+      ],
+    });
+    // Trigger watch by changing isLoggedIn prop
+    await wrapper.setProps({ isLoggedIn: true });
+
+    // Wait for Vue to update the component
+    await wrapper.vm.$nextTick();
+
+    wrapper.vm.updateSelectedSpace({ target: { value: "space2" } });
+
+    expect(wrapper.vm.selectedSpace).to.deep.equal({ guid: "yyyyyyyy", label: "space2", orgGUID: "47423742" });
   });
 });
