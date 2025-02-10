@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [7.5.0](https://github.com/SAP/cloud-foundry-tools/compare/v7.4.5...v7.5.0) (2025-02-10)
+
+### Bug Fixes
+
+- adding back the missing clip icon in the passphrase input field ([63aa214](https://github.com/SAP/cloud-foundry-tools/commit/63aa21498c7778224f38d9b1a0c4954557b42c77))
+- address live demo comments ([0ae1abb](https://github.com/SAP/cloud-foundry-tools/commit/0ae1abbb647a4c191afbdebbe3caecc78b49ed12))
+- icon inside vscode-button added id for codicon link ([aa530e6](https://github.com/SAP/cloud-foundry-tools/commit/aa530e6601234449bf488c92dd46ac65725c3c96))
+- reverting selection of first org in list ([a839de7](https://github.com/SAP/cloud-foundry-tools/commit/a839de7c2d9c426b684434b0490cc5f8615a55be))
+- updating user facing messages ([8421d55](https://github.com/SAP/cloud-foundry-tools/commit/8421d55d7cfc32fd16d49992546673ab287d0458))
+
+### Features
+
+- devxcore-3010 cf missing next steps after signing in to cf adding org and space ([ae116e4](https://github.com/SAP/cloud-foundry-tools/commit/ae116e4e81bd4310c60e070d77c6052783f4f29f))
+- migrate to vscode elements ([22547a5](https://github.com/SAP/cloud-foundry-tools/commit/22547a5a9e0c3425212c8220f17ee7ba0469bbce))
+
 ## [7.4.5](https://github.com/SAP/cloud-foundry-tools/compare/v7.4.4...v7.4.5) (2024-10-14)
 
 **Note:** Version bump only for package root
