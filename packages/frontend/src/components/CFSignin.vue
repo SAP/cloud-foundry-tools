@@ -88,12 +88,6 @@
         <span class="subtitle-color-field">Enter your SSO Passcode </span><span class="text-danger">*</span>
         <br />
 
-        <!-- The following doesn't work and don't recognize the codicon icon -->
-        <!-- <vscode-icon slot="content-after" name="clippy" title="clippy" action-icon></vscode-icon> -->
-
-        <!-- The following does work and recognize the codicon icon -->
-        <!-- <span class="codicon codicon-clippy"></span> -->
-
         <vscode-textfield
           ref="psc"
           v-model="passcode"
@@ -103,7 +97,7 @@
           @keyup="btnStatus"
           @input="(p) => (passcode = p.target.value)"
         >
-          <vscode-icon
+          <span
             slot="content-after"
             v-tooltip="{
               text: 'Paste the generated passcode',
@@ -112,10 +106,12 @@
                 width: '155px',
               },
             }"
-            name="clippy"
-            action-icon
-            @click="paste"
-          ></vscode-icon>
+            class="tooltip"
+          >
+            <div class="clippy-button" @click="paste">
+              <span class="codicon codicon-clippy"></span>
+            </div>
+          </span>
         </vscode-textfield>
       </div>
       <br />
@@ -308,6 +304,19 @@ a:hover {
 .sso-info-icon {
   padding-top: 2px;
   color: var(--vscode-textLink-foreground, #006ab1);
+}
+.clippy-button {
+  border-color: transparent;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 5px;
+  color: currentcolor;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+}
+.clippy-button:hover {
+  background-color: var(--vscode-toolbar-hoverBackground, rgba(184, 184, 184, 0.31));
 }
 .tooltip {
   display: flex;
