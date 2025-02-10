@@ -6,7 +6,7 @@
     <div :style="{ display: loggedInVisibility }" class="logged-in-visibility">
       <div style="display: flex">
         <span className="codicon codicon-pass signin-icon" />
-        You are signed in to Cloud Foundry.
+        {{ "You are signed in to Cloud Foundry." + (orgAndSpaceSet ? "" : " You can now set the Org and Space.") }}
       </div>
     </div>
     <br /><br />
@@ -59,8 +59,10 @@
       </div>
 
       <vscode-radio-group orientation="horizontal" :value="ssoOrCredentials" @change="setSSO">
-        <vscode-radio id="radioCredentials" value="Credentials"> Credentials </vscode-radio>
-        <vscode-radio id="radioSSO" value="SSO"> SSO Passcode </vscode-radio>
+        <vscode-radio id="radioCredentials" value="Credentials" :checked="ssoOrCredentials === 'Credentials'">
+          Credentials
+        </vscode-radio>
+        <vscode-radio id="radioSSO" value="SSO" :checked="ssoOrCredentials === 'SSO'"> SSO Passcode </vscode-radio>
       </vscode-radio-group>
 
       <div id="sso-div" :style="{ display: ssoVisibility }">
@@ -86,23 +88,16 @@
         <span class="subtitle-color-field">Enter your SSO Passcode </span><span class="text-danger">*</span>
         <br />
 
-        <!-- The following doesn't work and don't recognize the codicon icon -->
-        <!-- <vscode-icon slot="content-after" name="clippy" title="clippy" action-icon></vscode-icon> -->
-
-        <!-- The following does work and recognize the codicon icon -->
-        <!-- <span class="codicon codicon-clippy"></span> -->
-
         <vscode-textfield
           ref="psc"
           v-model="passcode"
           class="pt-8"
           size="47"
           placeholder="Enter your passcode"
-          :value="passcode"
           @keyup="btnStatus"
           @input="(p) => (passcode = p.target.value)"
         >
-          <vscode-icon
+          <span
             slot="content-after"
             v-tooltip="{
               text: 'Paste the generated passcode',
@@ -111,10 +106,12 @@
                 width: '155px',
               },
             }"
-            name="clippy"
-            action-icon
-            @click="paste"
-          ></vscode-icon>
+            class="tooltip"
+          >
+            <div class="clippy-button" @click="paste">
+              <span class="codicon codicon-clippy"></span>
+            </div>
+          </span>
         </vscode-textfield>
       </div>
       <br />
@@ -125,7 +122,6 @@
         <vscode-textfield
           v-model="username"
           class="pt-8"
-          :value="username"
           size="50"
           placeholder="User ID"
           @keyup="btnStatus"
@@ -138,7 +134,6 @@
         <vscode-textfield
           v-model="password"
           class="pt-8"
-          :value="password"
           type="password"
           size="50"
           @keyup="btnStatus"
@@ -169,6 +164,10 @@ export default {
     },
     rpc: {
       type: Object,
+      required: true,
+    },
+    orgAndSpaceSet: {
+      type: Boolean,
       required: true,
     },
   },
@@ -229,8 +228,8 @@ export default {
       }
     },
     setEndpoint(val) {
-      this.endpoint = val.target.value.replace(/ /g, "");
-      this.isCFEndpointValid = this.endpoint !== "" && this.$refs?.cfendpointInput?.control?.validity?.valid;
+      this.endpoint = val.target.value.replace(/ /g, "").replace(/\/$/, "");
+      this.isCFEndpointValid = this.endpoint !== "" && this.$refs?.cfendpointInput?.validity?.valid;
     },
     paste() {
       navigator.clipboard.readText().then((clipText) => {
@@ -305,6 +304,19 @@ a:hover {
 .sso-info-icon {
   padding-top: 2px;
   color: var(--vscode-textLink-foreground, #006ab1);
+}
+.clippy-button {
+  border-color: transparent;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 5px;
+  color: currentcolor;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+}
+.clippy-button:hover {
+  background-color: var(--vscode-toolbar-hoverBackground, rgba(184, 184, 184, 0.31));
 }
 .tooltip {
   display: flex;

@@ -19,11 +19,14 @@ const global = {
     VscodeRadio: {
       template: "<button></button>",
     },
-    VscodeTextField: {
+    VscodeTextfield: {
       template: "<div></div>",
     },
     VscodeButton: {
       template: "<button></button>",
+    },
+    VscodeIcon: {
+      template: "<span></span>",
     },
   },
 };
@@ -35,6 +38,7 @@ describe("CFSignin.vue", () => {
       props: {
         target: {},
         rpc: {},
+        orgAndSpaceSet: false,
       },
     });
     expect(wrapper.exists()).to.be.true;
@@ -49,6 +53,7 @@ describe("CFSignin.vue", () => {
           isLoggedIn: false,
         },
         rpc: {},
+        orgAndSpaceSet: false,
       },
     });
 
@@ -95,6 +100,7 @@ describe("CFSignin.vue", () => {
           isLoggedIn: false,
         },
         rpc: {},
+        orgAndSpaceSet: false,
       },
     });
 
@@ -113,11 +119,19 @@ describe("CFSignin.vue", () => {
         rpc: {
           invoke: jest.fn().mockResolvedValue(true), // Mock RPC to return success
         },
+        orgAndSpaceSet: false,
       },
     });
+    // Set endPoint to be the default one
+    wrapper.vm.setEndpoint({ target: { value: "" } });
+
+    // Set SSO target to be Credentials
+    wrapper.vm.setSSO({ target: { value: "Credentials" } });
 
     // Set valid username and password or passcode
     wrapper.setData({ username: "validUsername", password: "validPassword" });
+
+    const invokeSpy = jest.spyOn(wrapper.props().rpc, "invoke");
 
     // Trigger the SigninClicked method
     await wrapper.vm.SigninClicked();
@@ -125,6 +139,13 @@ describe("CFSignin.vue", () => {
     // Assert that authentication failed message is not displayed and isLoggedIn is set to true
     expect(wrapper.vm.authFailed).to.equal("");
     expect(wrapper.vm.isLoggedIn).to.be.true;
+    // Check that loginClick was called with correct params
+    expect(invokeSpy.mock.calls[0][0]).to.be.equals("loginClick");
+    expect(invokeSpy.mock.calls[0][1][0]).to.deep.equal({
+      endpoint: "https://example.com",
+      user: "validUsername",
+      password: "validPassword",
+    });
   });
 
   it("handles successful sign-in with valid SSO", async () => {
@@ -147,6 +168,7 @@ describe("CFSignin.vue", () => {
             return true;
           },
         },
+        orgAndSpaceSet: false,
       },
     });
 
@@ -174,6 +196,7 @@ describe("CFSignin.vue", () => {
         rpc: {
           invoke: jest.fn().mockResolvedValue(false), // Mock RPC to return failure
         },
+        orgAndSpaceSet: false,
       },
     });
 
@@ -199,6 +222,7 @@ describe("CFSignin.vue", () => {
         rpc: {
           invoke: jest.fn().mockResolvedValue(true), // Mock RPC to return success
         },
+        orgAndSpaceSet: false,
       },
     });
 
@@ -218,6 +242,7 @@ describe("CFSignin.vue", () => {
           isLoggedIn: false,
         },
         rpc: {},
+        orgAndSpaceSet: false,
       },
     });
 
@@ -231,7 +256,7 @@ describe("CFSignin.vue", () => {
     expect(wrapper.vm.ssoOrCredentials).to.equal("Credentials");
   });
 
-  it("should enable the button when conditions are met", async () => {
+  it("should set correct button state when conditions are met", async () => {
     const wrapper = shallowMount(CFSignin, {
       global,
       props: {
@@ -240,10 +265,11 @@ describe("CFSignin.vue", () => {
           isLoggedIn: false,
         },
         rpc: {},
+        orgAndSpaceSet: false,
       },
     });
 
-    // Set some initial values to trigger button enabling
+    // Set enabled credentials data
     await wrapper.setData({
       endpoint: "https://example.com", // Set a valid endpoint
       isCFEndpointValid: true,
@@ -257,6 +283,34 @@ describe("CFSignin.vue", () => {
 
     // Check that the button is enabled
     expect(wrapper.vm.disableButton).to.be.false;
+
+    // Set enabled sso data
+    await wrapper.setData({
+      endpoint: "https://example.com", // Set a valid endpoint
+      isCFEndpointValid: true,
+      ssoOrCredentials: "SSO",
+      passcode: "passcode",
+    });
+
+    // Trigger the btnStatus method
+    await wrapper.vm.btnStatus();
+
+    // Check that the button is enabled
+    expect(wrapper.vm.disableButton).to.be.false;
+
+    // Set disabled sso data
+    await wrapper.setData({
+      endpoint: "https://example.com", // Set a valid endpoint
+      isCFEndpointValid: true,
+      ssoOrCredentials: "SSO",
+      passcode: "",
+    });
+
+    // Trigger the btnStatus method
+    await wrapper.vm.btnStatus();
+
+    // Check that the button is enabled
+    expect(wrapper.vm.disableButton).to.be.true;
   });
 
   it("should disable the button when conditions are not met", async () => {
@@ -268,6 +322,7 @@ describe("CFSignin.vue", () => {
           isLoggedIn: false,
         },
         rpc: {},
+        orgAndSpaceSet: false,
       },
     });
 
@@ -296,6 +351,7 @@ describe("CFSignin.vue", () => {
           isLoggedIn: false,
         },
         rpc: {},
+        orgAndSpaceSet: false,
       },
     });
 
@@ -312,5 +368,59 @@ describe("CFSignin.vue", () => {
 
     // Check if endpoint is correctly set
     expect(wrapper.vm.endpoint).to.be.equals(invalidEndpoint);
+  });
+
+  it("handles successful open passcode link", async () => {
+    const wrapper = shallowMount(CFSignin, {
+      global,
+      props: {
+        target: {
+          defaultEndpoint: "https://example.com",
+          isLoggedIn: true,
+        },
+        rpc: {
+          invoke: jest.fn().mockResolvedValue(true), // Mock RPC to return success
+        },
+        orgAndSpaceSet: false,
+      },
+    });
+
+    const invokeSpy = jest.spyOn(wrapper.props().rpc, "invoke");
+
+    // Trigger the method that should call openPasscodeLink
+    await wrapper.vm.openPasscodeLink();
+
+    // Check that openPasscodeLink was called
+    expect(invokeSpy.mock.calls[0][0]).to.be.equals("openPasscodeLink");
+  });
+
+  it("handles successful paste", async () => {
+    // Mock the clipboard API
+    navigator.clipboard = {
+      readText: jest.fn().mockResolvedValue("mocked-passcode"),
+    };
+
+    const wrapper = shallowMount(CFSignin, {
+      global,
+      props: {
+        target: {
+          defaultEndpoint: "https://example.com",
+          isLoggedIn: true,
+        },
+        rpc: {
+          invoke: jest.fn().mockResolvedValue(true), // Mock RPC to return success
+        },
+        orgAndSpaceSet: false,
+      },
+    });
+
+    // Trigger the paste method
+    wrapper.vm.paste();
+
+    // Assert the passcode is set correctly
+    wrapper.vm.$nextTick(() => {
+      expect(wrapper.vm.passcode).to.be.equals("mocked-passcode");
+      expect(wrapper.vm.$refs.psc.value).to.be.equals("mocked-passcode");
+    });
   });
 });
