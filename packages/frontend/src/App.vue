@@ -85,6 +85,7 @@ export default {
   },
   mounted() {
     this.init();
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
   },
   methods: {
     updateOrgAndSpaceSet(val) {
