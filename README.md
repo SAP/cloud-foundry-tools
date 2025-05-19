@@ -46,14 +46,6 @@ This VSCode extension provides tools for easy application development with Cloud
 
 ---
 
-### How to set up logger preferences
-
-![Alt text](media/settings.png?raw=true "Settings")
-
-[back to top](#table-of-contents)
-
----
-
 ## Known Issues
 
 - Mostly needs handling failure situation and nice cancelation option for long running steps.
