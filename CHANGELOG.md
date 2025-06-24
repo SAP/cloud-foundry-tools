@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.5.1](https://github.com/SAP/cloud-foundry-tools/compare/v7.5.0...v7.5.1) (2025-06-24)
+
+### Bug Fixes
+
+- `paste` is not happening in cloud foundry `sign in` page ([#301](https://github.com/SAP/cloud-foundry-tools/issues/301)) ([0385390](https://github.com/SAP/cloud-foundry-tools/commit/0385390328284840464673a665778c2e7a8511df))
+- prevent webview default `contextmenu` ([#300](https://github.com/SAP/cloud-foundry-tools/issues/300)) ([e79a1cb](https://github.com/SAP/cloud-foundry-tools/commit/e79a1cbdb2702e060ada5909aff7d8e15675c3a1))
+
 # [7.5.0](https://github.com/SAP/cloud-foundry-tools/compare/v7.4.5...v7.5.0) (2025-02-10)
 
 ### Bug Fixes

@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.5.1](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.5.0...v7.5.1) (2025-06-24)
+
+**Note:** Version bump only for package vscode-wing-cf-tools
+
 # [7.5.0](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.4.5...v7.5.0) (2025-02-10)
 
 **Note:** Version bump only for package vscode-wing-cf-tools
