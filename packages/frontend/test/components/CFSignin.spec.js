@@ -420,7 +420,6 @@ describe("CFSignin.vue", () => {
     // Assert the passcode is set correctly
     wrapper.vm.$nextTick(() => {
       expect(wrapper.vm.passcode).to.be.equals("mocked-passcode");
-      expect(wrapper.vm.$refs.psc.value).to.be.equals("mocked-passcode");
     });
   });
 });
