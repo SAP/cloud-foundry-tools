@@ -90,12 +90,12 @@
 
         <vscode-textfield
           ref="psc"
-          v-model="passcode"
+          :value="passcode"
           class="pt-8"
           size="47"
           placeholder="Enter your passcode"
           @keyup="btnStatus"
-          @input="(p) => (passcode = p.target.value)"
+          @input="onPasscodeInput"
         >
           <span
             slot="content-after"
@@ -234,9 +234,12 @@ export default {
     paste() {
       navigator.clipboard.readText().then((clipText) => {
         this.passcode = clipText;
-        this.$refs.psc.value = this.passcode;
         this.btnStatus();
       });
+    },
+    onPasscodeInput(val) {
+      this.passcode = val.target.value;
+      this.btnStatus();
     },
     setSSO(val) {
       this.ssoOrCredentials = val.target.value;
