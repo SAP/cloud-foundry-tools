@@ -18,7 +18,12 @@
     <template v-if="!orgMissing">
       <span class="subtitle-color-field">Select Cloud Foundry Organization </span><span class="text-danger">*</span
       ><br />
-      <vscode-single-select :value="selectedOrg.label" class="cf-drop-down mt-8" @change="updateSelectedOrg">
+      <vscode-single-select
+        ref="orgSelect"
+        :value="selectedOrg.label"
+        class="cf-drop-down mt-8"
+        @change="updateSelectedOrg"
+      >
         <vscode-option disabled value=""></vscode-option>
         <vscode-option v-for="org in optOrganizations" :key="org.guid" :value="org.label" :selected="org.selected">{{
           org.label
@@ -102,6 +107,22 @@ export default {
         this.getOrgAndSpace();
       }
     },
+  },
+  mounted() {
+    console.log("orgMissing changed:");
+    this.$nextTick(() => {
+      const orgSelect = this.$refs.orgSelect;
+      if (orgSelect && orgSelect.shadowRoot && !orgSelect.shadowRoot.querySelector("style[data-org-option-style]")) {
+        const style = document.createElement("style");
+        style.setAttribute("data-org-option-style", "true");
+        style.textContent = `
+              li.option {
+                height: auto;
+              }
+            `;
+        orgSelect.shadowRoot.appendChild(style);
+      }
+    });
   },
   updated() {
     if (this.currentOrg === "") {
@@ -218,6 +239,7 @@ export default {
 }
 .cf-drop-down {
   min-width: 400px;
+  max-width: 400px;
   width: fit-content;
   padding: 0px 0px 2px 0px;
 }
