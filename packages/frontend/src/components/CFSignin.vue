@@ -243,7 +243,7 @@ export default {
     },
     setSSO(val) {
       this.ssoOrCredentials = val.target.value;
-      this.disableButton = true;
+      this.btnStatus();
     },
     SigninClicked() {
       let payload = {};
