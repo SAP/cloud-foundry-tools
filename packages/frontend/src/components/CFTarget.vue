@@ -32,6 +32,7 @@
       <br /><br />
       <span class="subtitle-color-field">Select Cloud Foundry Space </span><span class="text-danger">*</span><br />
       <vscode-single-select
+        ref="spaceSelect"
         :disabled="!optSpaces.length"
         :value="selectedSpace.label"
         class="cf-drop-down mt-8"
@@ -109,19 +110,9 @@ export default {
     },
   },
   mounted() {
-    console.log("orgMissing changed:");
     this.$nextTick(() => {
-      const orgSelect = this.$refs.orgSelect;
-      if (orgSelect && orgSelect.shadowRoot && !orgSelect.shadowRoot.querySelector("style[data-org-option-style]")) {
-        const style = document.createElement("style");
-        style.setAttribute("data-org-option-style", "true");
-        style.textContent = `
-              li.option {
-                height: auto;
-              }
-            `;
-        orgSelect.shadowRoot.appendChild(style);
-      }
+      this.injectOptionStyle(this.$refs.orgSelect, "org");
+      this.injectOptionStyle(this.$refs.spaceSelect, "space");
     });
   },
   updated() {
@@ -134,6 +125,18 @@ export default {
     this.$emit("orgAndSpaceSet", this.isApplyButtonDisabled);
   },
   methods: {
+    injectOptionStyle(ref, type) {
+      if (ref && ref.shadowRoot && !ref.shadowRoot.querySelector(`style[data-${type}-option-style]`)) {
+        const style = document.createElement("style");
+        style.setAttribute(`data-${type}-option-style`, "true");
+        style.textContent = `
+          li.option {
+            height: auto;
+          }
+        `;
+        ref.shadowRoot.appendChild(style);
+      }
+    },
     updateSelectedOrg(newOrg) {
       this.selectedOrg = _.find(this.orgs, (org) => org.label === newOrg.target.value);
       this.selectSpace(undefined);
