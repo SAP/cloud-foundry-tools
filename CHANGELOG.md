@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.5.2](https://github.com/SAP/cloud-foundry-tools/compare/v7.5.1...v7.5.2) (2025-08-06)
+
+### Bug Fixes
+
+- organization dropdown wrapping ([5e69cf8](https://github.com/SAP/cloud-foundry-tools/commit/5e69cf8408cfa2f7eb45e5fc3ebaee38842568ef))
+- sign in button disabled state ([208eb68](https://github.com/SAP/cloud-foundry-tools/commit/208eb680372ce54fd176eabcd88c49a8f97bafde))
+- space dropdown wrapping ([b7e9f4f](https://github.com/SAP/cloud-foundry-tools/commit/b7e9f4fb6bf71ca50497b3e1f0d1daf702756674))
+
 ## [7.5.1](https://github.com/SAP/cloud-foundry-tools/compare/v7.5.0...v7.5.1) (2025-06-24)
 
 ### Bug Fixes
