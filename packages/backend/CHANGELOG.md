@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [8.0.0](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.5.2...v8.0.0) (2025-08-20)
+
+### Features
+
+- package name and publisher are changed ([#304](https://github.com/sap-staging/cloud-foundry-tools/issues/304)) ([33e586d](https://github.com/sap-staging/cloud-foundry-tools/commit/33e586d67270602128d3c4c17179ac632a7c82a5))
+
+### BREAKING CHANGES
+
+- VS Code Marketplace Publishing Support
+
 ## [7.5.2](https://github.com/sap-staging/cloud-foundry-tools/compare/v7.5.1...v7.5.2) (2025-08-06)
 
 **Note:** Version bump only for package vscode-wing-cf-tools
