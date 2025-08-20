@@ -7,16 +7,16 @@
   "license": "Apache 2.0",
   "publisher": "SAP",
   "scripts": {
+    "build": "vite build",
+    "build-dev": "vite build --mode development",
     "ci": "npm-run-all clean build test",
     "ci:artifacts_only": "npm-run-all clean build",
     "clean": "rimraf ./dist ./coverage",
     "dev": "vite",
-    "build": "vite build",
-    "build-dev": "vite build --mode development",
-    "test": "jest -w 1 --colors",
-    "serve": "vite preview",
     "format:fix": "prettier --print-width 120 --write \"**/*.@(js|ts|json|md|vue)\" --ignore-path=.gitignore",
-    "format:validate": "prettier --print-width 120 --check \"**/*.@(js|ts|json|md|vue)\" --ignore-path=.gitignore"
+    "format:validate": "prettier --print-width 120 --check \"**/*.@(js|ts|json|md|vue)\" --ignore-path=.gitignore",
+    "serve": "vite preview",
+    "test": "jest -w 1 --colors"
   },
   "browserslist": [
     "> 1%",
@@ -24,9 +24,9 @@
   ],
   "eslintConfig": {
     "env": {
+      "es2022": true,
       "jest": true,
-      "node": true,
-      "es2022": true
+      "node": true
     },
     "extends": [
       "plugin:vue/vue3-recommended",

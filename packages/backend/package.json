@@ -1,5 +1,5 @@
 {
-  "name": "vscode-wing-cf-tools",
+  "name": "vscode-cf-tools",
   "displayName": "Cloud Foundry Tools",
   "version": "7.5.2",
   "private": true,
@@ -15,8 +15,7 @@
     "url": "https://github.com/sap-staging/cloud-foundry-tools.git"
   },
   "license": "Apache 2.0",
-  "author": "SAP SE",
-  "publisher": "SAP",
+  "publisher": "SAPOSS",
   "main": "./dist/extension.js",
   "scripts": {
     "build": "npm-run-all clean compile webpack-dev frontend:all",
