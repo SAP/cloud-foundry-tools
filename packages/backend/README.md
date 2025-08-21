@@ -1,68 +1,63 @@
-[![CircleCI](https://circleci.com/gh/SAP/cloud-foundry-tools.svg?style=svg)](https://circleci.com/gh/SAP/cloud-foundry-tools)
-[![Coverage Status](https://coveralls.io/repos/github/SAP/cloud-foundry-tools/badge.svg?branch=master)](https://coveralls.io/github/SAP/cloud-foundry-tools?branch=master)
+# Cloud Foundry Tools
 
-# cloud-foundry-tools
-
-This VSCode extension provides tools for easy application development with Cloud Foundry. Its' tools contains such functionality as "Login to Cloud Foundry", "Create service", "Bind service", "Unbind service", etc.
-
-## Table of contents
-
-- [Features](#features)
-- [Dependencies](#dependencies)
-- [How to Run Locally](#how-to-run-locally)
-- [How to set up logger preferences](#how-to-set-up-logger-preferences)
-- [Known Issues](#known-issues)
-
----
+This VS Code extension provides tools for easy application development with Cloud Foundry.
 
 ## Features
 
-- a new View-Container of vscode, with a new View is added titled "Cloud Foundry".
-
-[back to top](#table-of-contents)
-
----
-
-## Dependencies
-
-- cf-cli tool [v7.2.0](https://github.com/cloudfoundry/cli/releases/tag/v7.2.0)
-- cf-cli `targets` [see here](https://github.com/guidowb/cf-targets-plugin)
-- cf-cli called `cf-service-info` (go plugin for cf-cli tool that provides resource binding functionality)
-
-[back to top](#table-of-contents)
+- Login to Cloud Foundry
+- Create, bind, and unbind services
+- Adds a new View-Container in VS Code titled **Cloud Foundry**
+- Provides commands for Cloud Foundry development and management
 
 ---
 
-### How to run locally
+## Table of Contents
 
-- clone the repo
-- open it in a vscode
-- execute `yarn` and `ci:artifacts_only`
-- run the launch config 'Run Extension'
-- see available commands via `Command palette` (with prefix `CF`)
-
-[back to top](#table-of-contents)
+- [Features](#features)
+- [Prerequisite Dependencies](#prerequisite-dependencies)
+- [How to Run Locally](#how-to-run-locally)
+- [Logger Preferences](#logger-preferences)
+- [Known Issues](#known-issues)
+- [Contributing](#contributing)
 
 ---
 
-### How to set up logger preferences
+## Prerequisite Dependencies
 
-![Alt text](media/settings.png?raw=true "Settings")
+- [cf-cli v8.7.4](https://github.com/cloudfoundry/cli/releases/tag/v8.7.4)
+- [cf-cli targets plugin](https://github.com/guidowb/cf-targets-plugin)
+- `cf-service-info` (cf plugin for resource binding functionality):
 
-[back to top](#table-of-contents)
+  ```sh
+  npm install -g '@sap/cf-tools-local'
+  ```
+
+---
+
+## How to Run Locally
+
+1. Clone the repository
+2. Open it in VS Code
+3. Run `yarn` and then `yarn ci:artifacts_only`
+4. Launch the extension using the 'Run Extension' launch configuration
+5. Access available commands via the Command Palette (prefix: `CF`)
+
+---
+
+## Logger Preferences
+
+You can configure logger preferences in the extension settings:
+
+![Screenshot showing the settings of the Cloud Foundry Tools extension](https://raw.githubusercontent.com/SAP/cloud-foundry-tools/main/packages/backend/media/settings.png)
 
 ---
 
 ## Known Issues
 
-- Mostly needs handling failure situation and nice cancelation option for long running steps.
-
-[back to top](#table-of-contents)
+- Improved failure handling and cancellation options for long-running steps are needed.
 
 ---
 
 ## Contributing
 
-Contributing information can be found in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
-
-[back to top](#table-of-contents)
+See [CONTRIBUTING.md](https://github.com/SAP/cloud-foundry-tools/blob/main/CONTRIBUTING.md) for contribution guidelines.

@@ -8,11 +8,11 @@
     "Other"
   ],
   "bugs": {
-    "url": "https://github.com/sap-staging/cloud-foundry-tools.git/issues"
+    "url": "https://github.com/SAP/cloud-foundry-tools.git/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sap-staging/cloud-foundry-tools.git"
+    "url": "https://github.com/SAP/cloud-foundry-tools.git"
   },
   "license": "Apache 2.0",
   "publisher": "SAP",
@@ -34,7 +34,9 @@
     "webpack-dev": "webpack --mode development",
     "webpack-dev:watch": "webpack --mode development --watch"
   },
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"
