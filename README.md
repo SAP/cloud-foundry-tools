@@ -48,7 +48,7 @@ This VSCode extension provides tools for easy application development with Cloud
 
 ### How to set up logger preferences
 
-![Alt text](media/settings.png?raw=true "Settings")
+![Screenshot showing the settings of the Cloud Foundry Tools extension on SAP Business Application Studio](packages/backend/media/settings.png "Settings")
 
 [back to top](#table-of-contents)
 
