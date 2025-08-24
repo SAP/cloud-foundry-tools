@@ -2,6 +2,9 @@
   "references": [
     {
       "path": "./packages/backend"
+    },
+    {
+      "path": "./packages/wrapper"
     }
   ],
   // needed to avoid trying to compile other .ts files in this repo
