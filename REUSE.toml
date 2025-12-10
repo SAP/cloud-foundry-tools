@@ -1,0 +1,10 @@
+version = 1
+SPDX-PackageName = "cloud-foundry-tools-api"
+SPDX-PackageSupplier = "Alexander Gilin <alexander.gilin@sap.com>"
+SPDX-PackageDownloadLocation = "https://github.com/SAP/cloud-foundry-tools-api"
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2021 SAP SE or an SAP affiliate company and yeoman-ui contributors"
+SPDX-License-Identifier = "Apache-2.0"
