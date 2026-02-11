@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [8.1.0](https://github.com/SAP/cloud-foundry-tools/compare/v8.0.2...v8.1.0) (2026-02-11)
+
+### Bug Fixes
+
+- format ([ffab236](https://github.com/SAP/cloud-foundry-tools/commit/ffab236413168d63f783be9e8f484cb27c0289fb))
+
+### Features
+
+- update lodash dependencies ([e2fd273](https://github.com/SAP/cloud-foundry-tools/commit/e2fd273a9090dda7f54eece3fcac6b00ffac0493))
+
 ## [8.0.2](https://github.com/SAP/cloud-foundry-tools/compare/v8.0.1...v8.0.2) (2025-12-09)
 
 **Note:** Version bump only for package vscode-cf-tools
