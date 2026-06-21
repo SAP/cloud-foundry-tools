@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.1.2](https://github.com/SAP/cloud-foundry-tools/compare/v8.1.0...v8.1.2) (2026-06-21)
+
+### Bug Fixes
+
+- fall back to direct CF lookup when UPS not found in list ([#311](https://github.com/SAP/cloud-foundry-tools/issues/311)) ([4086b95](https://github.com/SAP/cloud-foundry-tools/commit/4086b95aadcd60b740b1ddb47d378fd2d2ba9fcc))
+
 ## [8.1.1](https://github.com/SAP/cloud-foundry-tools/compare/v8.1.0...v8.1.1) (2026-06-21)
 
 ### Bug Fixes
