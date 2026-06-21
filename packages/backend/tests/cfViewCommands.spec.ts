@@ -756,11 +756,37 @@ describe("cfViewCommands tests", () => {
     it("ok:: path selected, service is ServiceTypeInfo type, no ups, services found, required service not found", async () => {
       commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves(services);
       commandsMock.expects("updateInstanceNameAndTags").never();
+      cfLocalMock.expects("cfGetInstanceMetadata").withExactArgs("not-existed").rejects(new Error("not found"));
       vscodeWindowMock
         .expects("showErrorMessage")
         .withArgs(messages.no_services_instance_byname_found("not-existed"))
         .resolves();
       expect(await cfViewCommands.cmdBindLocal(service, { path, ignore: true }, "not-existed")).to.be.undefined;
+    });
+
+    it("ok:: path selected, service is ServiceTypeInfo type, no ups, service not in list but found via direct lookup (CF eventual consistency)", async () => {
+      // Simulate CF list API returning stale results: services[0] missing, only services[1] present
+      commandsMock.expects("getAvailableServices").withExactArgs(opts).resolves([services[1]]);
+      commandsMock.expects("updateInstanceNameAndTags").never();
+      cfLocalMock
+        .expects("cfGetInstanceMetadata")
+        .withExactArgs(services[0].label)
+        .resolves({ serviceName: services[0].label, service: service[0].plan, plan_guid: "GUID" });
+      vscodeWindowMock
+        .expects("withProgress")
+        .withArgs({
+          location: nsVsMock.testVscode.ProgressLocation.Notification,
+          title: messages.binding_service_to_file,
+          cancellable: false,
+        })
+        .resolves();
+      vscodeWindowMock
+        .expects("showInformationMessage")
+        .withExactArgs(messages.service_bound_successful(services[0].label))
+        .resolves();
+      expect(await cfViewCommands.cmdBindLocal(service, { path, ignore: true }, services[0].label)).deep.equal({
+        instanceName: services[0].label,
+      });
     });
 
     it("ok:: path selected, service is ServiceTypeInfo type, no services, services found, ups selected, quote-vcap is true", async () => {

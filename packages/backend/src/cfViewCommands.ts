@@ -406,9 +406,13 @@ async function collectBindDetails(
           await updateInstanceNameAndTags(availableServices, serviceTypeInfo, instanceNames, tags);
         }
       } else {
-        const foundInstance = _.find(availableServices, ["label", requstedInstance]);
+        let foundInstance = _.find(availableServices, ["label", requstedInstance]);
         if (!foundInstance) {
-          throw new Error(messages.no_services_instance_byname_found(requstedInstance));
+          foundInstance = await getServiceInstanceInfo(requstedInstance).catch(() => undefined);
+          if (!foundInstance) {
+            throw new Error(messages.no_services_instance_byname_found(requstedInstance));
+          }
+          availableServices.push(foundInstance);
         }
         instanceNames.push(foundInstance.label);
         tags.push(serviceTypeInfos[0].tag);
