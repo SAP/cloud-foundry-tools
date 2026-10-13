@@ -25,37 +25,42 @@ Run extension locally: open repo in VS Code, run `yarn ci:artifacts_only`, then 
 
 ## Testing
 
-Tests use Mocha + Chai; coverage via Istanbul/Nyc.
+The backend and wrapper use Mocha + Chai with Istanbul/Nyc coverage. The frontend uses Jest.
 
 ```sh
-# from a specific sub-package directory:
-yarn test       # mocha (no coverage)
-yarn coverage   # nyc mocha
+# inside packages/backend or packages/wrapper:
+yarn test
+yarn coverage
 
-# full CI build (format + lint + tests + coverage merge):
-yarn ci         # from repo root
+# inside packages/frontend:
+yarn test
+
+# from the repository root: build, lint, test, and merge coverage
+yarn ci
 ```
+
+The frontend does not define a `coverage` script.
 
 ## CI/CD & Deployment
 
 GitHub Actions (`.github/workflows/`):
 
 - **`ci.yml`** — runs `yarn ci` on Node 20/22/24 for pushes and PRs to `main*` branches.
-- **`release.yml`** — triggered by `v*.*.*` tags; runs `yarn release:publish` (Lerna publish from-git).
+- **`release.yml`** — triggered by `v*.*.*` tags; runs `yarn ci` and creates a GitHub Release containing `packages/*/*.vsix`. It does not run `release:publish`.
 - **`commitlint.yml`** — enforces conventional commit message format.
 
 To cut a release:
 
 ```sh
 yarn run release:version   # lerna version --force-publish (bumps, commits, tags)
-# push the tag — GitHub Actions publishes to npm automatically
+# the pushed tag triggers the GitHub Release workflow
 ```
 
 ## Configuration
 
 The extension reads VS Code settings (declared under `contributes.configuration` in `packages/backend/package.json`). Logger preferences are configurable via VS Code Settings UI (search "CF").
 
-No `.env` files or secrets are required for local development. The runtime dependency is CF CLI v8 — install from https://github.com/cloudfoundry/cli/releases.
+No `.env` files or secrets are required for local development. External CLI prerequisites include CF CLI v8, the `targets` plugin, and the service-info plugin documented in `packages/backend/README.md`. Install CF CLI from https://github.com/cloudfoundry/cli/releases.
 
 ## Prerequisites
 

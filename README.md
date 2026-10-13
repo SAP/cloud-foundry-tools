@@ -67,3 +67,12 @@ This VSCode extension provides tools for easy application development with Cloud
 Contributing information can be found in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 [back to top](#table-of-contents)
+
+## Architecture and configuration
+
+The Lerna/Yarn monorepo contains `packages/backend` (VS Code commands, CF tree view
+and local bindings), `packages/frontend` (Vue 3/Vite webview), and `packages/wrapper`
+(deprecated wrapper). The backend builds the frontend and copies its output into
+`dist/media/` for the webview. Runtime settings, including target display and logging,
+are declared in `packages/backend/package.json` under `contributes.configuration`;
+configure them through VS Code Settings. CF operations require CLI login/target state.
