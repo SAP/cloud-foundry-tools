@@ -1,3 +1,6 @@
+> [!WARNING]
+> **This repository has moved to [SAP/app-studio-toolkit/projects/cloud-foundry-tools](https://github.com/SAP/app-studio-toolkit/tree/main/projects/cloud-foundry-tools).**
+
 [![Coverage Status](https://coveralls.io/repos/github/SAP/cloud-foundry-tools/badge.svg?branch=main)](https://coveralls.io/github/SAP/cloud-foundry-tools?branch=main)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![REUSE status](https://api.reuse.software/badge/github.com/SAP/cloud-foundry-tools)](https://api.reuse.software/info/github.com/SAP/cloud-foundry-tools)
